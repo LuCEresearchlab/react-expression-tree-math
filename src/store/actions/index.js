@@ -54,13 +54,7 @@ const actions = [
   },
   {
     name: 'updateNode',
-    action: ({
-      updatedEdges,
-      pieces,
-      piecesPosition,
-      width,
-      parentEdges,
-    }) => ({
+    action: ({ updatedEdges, pieces, piecesPosition, width, parentEdges }) => ({
       type: 'updateNode',
       payload: {
         updatedEdges,
@@ -73,11 +67,7 @@ const actions = [
   },
   {
     name: 'updateNodeCoordinates',
-    action: ({
-      updatedEdges,
-      nodeId,
-      updatedNode,
-    }) => ({
+    action: ({ updatedEdges, nodeId, updatedNode }) => ({
       type: 'updateNodeCoordinates',
       payload: {
         updatedEdges,
@@ -88,11 +78,7 @@ const actions = [
   },
   {
     name: 'updateNodeCoordinatesAndFinishDragging',
-    action: ({
-      updatedEdges,
-      nodeId,
-      updatedNode,
-    }) => ({
+    action: ({ updatedEdges, nodeId, updatedNode }) => ({
       type: 'updateNodeCoordinatesAndFinishDragging',
       payload: {
         updatedEdges,
@@ -201,10 +187,7 @@ const actions = [
   },
   {
     name: 'updateChildEdge',
-    action: ({
-      edgeId,
-      newEdge,
-    }) => ({
+    action: ({ edgeId, newEdge }) => ({
       type: 'updateChildEdge',
       payload: {
         edgeId,
@@ -214,10 +197,7 @@ const actions = [
   },
   {
     name: 'updateParentEdge',
-    action: ({
-      edgeId,
-      newEdge,
-    }) => ({
+    action: ({ edgeId, newEdge }) => ({
       type: 'updateParentEdge',
       payload: {
         edgeId,
@@ -266,10 +246,7 @@ const actions = [
   },
   {
     name: 'updateDragEdgeParentCoordinates',
-    action: ({
-      x,
-      y,
-    }) => ({
+    action: ({ x, y }) => ({
       type: 'updateDragEdgeParentCoordinates',
       payload: {
         x,
@@ -279,10 +256,7 @@ const actions = [
   },
   {
     name: 'updateDragEdgeChildCoordinates',
-    action: ({
-      x,
-      y,
-    }) => ({
+    action: ({ x, y }) => ({
       type: 'updateDragEdgeChildCoordinates',
       payload: {
         x,
@@ -292,13 +266,7 @@ const actions = [
   },
   {
     name: 'setNodeEditability',
-    action: ({
-      nodeId,
-      allowLabel,
-      allowDelete,
-      allowValue,
-      allowType,
-    }) => ({
+    action: ({ nodeId, allowLabel, allowDelete, allowValue, allowType }) => ({
       type: 'setNodeEditability',
       payload: {
         nodeId,
@@ -336,12 +304,7 @@ const actions = [
   },
   {
     name: 'setStartingOrderedNodes',
-    action: ({
-      nodes,
-      edges,
-      stagePos,
-      stageScale,
-    }) => ({
+    action: ({ nodes, edges, stagePos, stageScale }) => ({
       type: 'setStartingOrderedNodes',
       payload: {
         nodes,
@@ -353,12 +316,7 @@ const actions = [
   },
   {
     name: 'setOrderedNodes',
-    action: ({
-      nodes,
-      edges,
-      stagePos,
-      stageScale,
-    }) => ({
+    action: ({ nodes, edges, stagePos, stageScale }) => ({
       type: 'setOrderedNodes',
       payload: {
         nodes,
@@ -546,10 +504,7 @@ const actions = [
   },
   {
     name: 'setStagePositionAndScale',
-    action: ({
-      stagePos,
-      stageScale,
-    }) => ({
+    action: ({ stagePos, stageScale }) => ({
       type: 'setStagePositionAndScale',
       payload: {
         stagePos,
@@ -612,6 +567,31 @@ const actions = [
     name: 'resetRootNode',
     action: () => ({
       type: 'resetRootNode',
+    }),
+  },
+  // Math Input
+  {
+    name: 'toggleMathInput',
+    action: () => ({
+      type: 'toggleMathInput',
+    }),
+  },
+  {
+    name: 'setMathLatex',
+    action: (mathLatex) => ({
+      type: 'setMathLatex',
+      payload: {
+        mathLatex,
+      },
+    }),
+  },
+  {
+    name: 'setMathOperator',
+    action: (mathOperator) => ({
+      type: 'setMathOperator',
+      payload: {
+        mathOperator,
+      },
     }),
   },
 ];

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
+import { InputComponent } from 'react-math-formula-editor';
 import ToolbarActions from './toolbar/ToolbarActions';
 
 import EditorDrawer from './drawer/EditorDrawer';
@@ -68,12 +69,19 @@ function StageDrawer({
   nodePaddingY,
   nodeStyle,
   drawerPlaceholders,
+  isMathInputOpen,
+  toggleMathInput,
+  currentLatex,
+  setCurrentLatex,
+  currentOperator,
+  setCurrentOperator,
 }) {
   const [isDialogConfigResetOpen, setIsDialogConfigResetOpen] = useState(false);
   const [isDialogEditorInfoOpen, setIsDialogEditorInfoOpen] = useState(false);
 
   const {
     showDrawerButton,
+    showMathInputButton,
     showEditorInfoButton,
     showStateResetButton,
     showUndoButton,
@@ -106,7 +114,9 @@ function StageDrawer({
               selectedRootNode={selectedRootNode}
               isFullScreen={isFullScreen}
               isDrawerOpen={isDrawerOpen}
+              isMathInputOpen={isMathInputOpen}
               showDrawerButton={showDrawerButton}
+              showMathInputButton={showMathInputButton}
               showEditorInfoButton={showEditorInfoButton}
               showStateResetButton={showStateResetButton}
               showUndoButton={showUndoButton}
@@ -120,6 +130,7 @@ function StageDrawer({
               showTakeScreenshotButton={showTakeScreenshotButton}
               showFullScreenButton={showFullScreenButton}
               handleDrawerButtonAction={toggleDrawer}
+              handleMathInputButtonAction={toggleMathInput}
               handleEditorInfoButtonAction={handleEditorInfoButtonAction}
               handleStateResetButtonAction={handleStateResetButtonAction}
               handleUndoButtonAction={handleUndoButtonAction}
@@ -127,10 +138,14 @@ function StageDrawer({
               handleZoomOutButtonAction={handleZoomOutButtonAction}
               handleZoomInButtonAction={handleZoomInButtonAction}
               handleZoomToFitButtonAction={handleZoomToFitButtonAction}
-              handleZoomToActualSizeButtonAction={handleZoomToActualSizeButtonAction}
+              handleZoomToActualSizeButtonAction={
+                handleZoomToActualSizeButtonAction
+              }
               handleReorderNodesButtonAction={handleReorderNodesButtonAction}
               handleUploadStateButtonAction={handleUploadStateButtonAction}
-              handleTakeScreenshotButtonAction={handleTakeScreenshotButtonAction}
+              handleTakeScreenshotButtonAction={
+                handleTakeScreenshotButtonAction
+              }
               handleFullScreenButtonAction={handleFullScreenButtonAction}
               hasStateToUndo={hasStateToUndo}
               hasStateToRedo={hasStateToRedo}
@@ -148,10 +163,18 @@ function StageDrawer({
               handleUpdateLabelPiecesChange={handleUpdateLabelPiecesChange}
               handleUpdateNodeTypeChange={handleUpdateNodeTypeChange}
               handleUpdateNodeValueChange={handleUpdateNodeValueChange}
-              handleSelectedNodeEditableLabelChange={handleSelectedNodeEditableLabelChange}
-              handleSelectedNodeEditableDeleteChange={handleSelectedNodeEditableDeleteChange}
-              handleSelectedNodeEditableTypeChange={handleSelectedNodeEditableTypeChange}
-              handleSelectedNodeEditableValueChange={handleSelectedNodeEditableValueChange}
+              handleSelectedNodeEditableLabelChange={
+                handleSelectedNodeEditableLabelChange
+              }
+              handleSelectedNodeEditableDeleteChange={
+                handleSelectedNodeEditableDeleteChange
+              }
+              handleSelectedNodeEditableTypeChange={
+                handleSelectedNodeEditableTypeChange
+              }
+              handleSelectedNodeEditableValueChange={
+                handleSelectedNodeEditableValueChange
+              }
               templateNodeTypesAndValues={templateNodeTypesAndValues}
               createNodeInputValue={createNodeInputValue}
               updateLabelInputValue={updateLabelInputValue}
@@ -168,10 +191,24 @@ function StageDrawer({
               nodePaddingX={nodePaddingX}
               nodePaddingY={nodePaddingY}
               nodeStyle={nodeStyle}
-              createNodeInputPlaceholder={drawerPlaceholders.createNodeInputPlaceholder}
-              editNodeInputPlaceholder={drawerPlaceholders.editNodeInputPlaceholder}
+              createNodeInputPlaceholder={
+                drawerPlaceholders.createNodeInputPlaceholder
+              }
+              editNodeInputPlaceholder={
+                drawerPlaceholders.editNodeInputPlaceholder
+              }
               typeInputPlaceholder={drawerPlaceholders.typeInputPlaceholder}
               valueInputPlaceholder={drawerPlaceholders.valueInputPlaceholder}
+            />
+          )}
+          {isMathInputOpen && (
+            <InputComponent
+              currentLatex={currentLatex}
+              setCurrentLatex={setCurrentLatex}
+              currentOperator={currentOperator}
+              setCurrentOperator={setCurrentOperator}
+              toggleIsCreatingNode={toggleIsCreatingNode}
+              isCreatingNode={isCreatingNode}
             />
           )}
           <DialogConfirmReset
@@ -223,6 +260,7 @@ StageDrawer.propTypes = {
   showToolbar: PropTypes.bool,
   showToolbarButtons: PropTypes.shape({
     showDrawerButton: PropTypes.bool,
+    showMathInputButton: PropTypes.bool,
     showEditorInfoButton: PropTypes.bool,
     showStateResetButton: PropTypes.bool,
     showUndoButton: PropTypes.bool,
@@ -352,6 +390,11 @@ StageDrawer.propTypes = {
     typeInputPlaceholder: PropTypes.string,
     valueInputPlaceholder: PropTypes.string,
   }),
+  toggleMathInput: PropTypes.func,
+  currentLatex: PropTypes.string,
+  setCurrentLatex: PropTypes.func,
+  currentOperator: PropTypes.string,
+  setCurrentOperator: PropTypes.func,
 };
 
 StageDrawer.defaultProps = {
@@ -371,6 +414,7 @@ StageDrawer.defaultProps = {
   showToolbar: true,
   showToolbarButtons: {
     showDrawerButton: true,
+    showMathInputButton: true,
     showEditorInfoButton: true,
     showStateResetButton: true,
     showUndoButton: true,
@@ -431,6 +475,11 @@ StageDrawer.defaultProps = {
   nodePaddingY: 12,
   nodeStyle: {},
   drawerPlaceholders: {},
+  toggleMathInput: () => {},
+  currentLatex: '',
+  setCurrentLatex: () => {},
+  currentOperator: '',
+  setCurrentOperator: () => {},
 };
 
 export default StageDrawer;

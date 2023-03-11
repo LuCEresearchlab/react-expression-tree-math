@@ -18,7 +18,7 @@ Example with initial object state and final nodes:
     showUploadStateButton: true,
     showTakeScreenshotButton: true,
     showFullScreenButton: true,
-  }} 
+  }}
   showDrawer={true}
   showDrawerSections={{
     addNodeField: true,
@@ -34,10 +34,7 @@ Example with initial object state and final nodes:
     multiEdgeOnNodeConnector: true,
   }}
   connectorPlaceholder="#"
-  templateNodes={[
-    '#?#:#',
-    '#[#]',
-  ]}
+  templateNodes={['#?#:#', '#[#]']}
   allowFreeTypeUpdate={true}
   allowFreeValueUpdate={true}
   templateNodeTypesAndValues={{
@@ -49,141 +46,141 @@ Example with initial object state and final nodes:
     Null: ['null'],
   }}
   nodes={{
-    "n0": {
-      "pieces": ["#", "+", "#"],
-      "x": 320,
-      "y": 90,
-      "type": "Number",
-      "value": "10",
-      "editable": {
-        "label": false,
-        "type": false,
-        "value": false,
-        "delete": false,
+    n0: {
+      pieces: ['#', '+', '#'],
+      x: 320,
+      y: 90,
+      type: 'Number',
+      value: '10',
+      editable: {
+        label: false,
+        type: false,
+        value: false,
+        delete: false,
       },
     },
-    "n1": {
-      "pieces": ["#", "-", "#"],
-      "x": 320,
-      "y": 120,
-      "type": "Boolean",
-      "value": "true",
-      "editable": {
-        "label": true,
-        "type": false,
-        "value": false,
-        "delete": false,
+    n1: {
+      pieces: ['#', '-', '#'],
+      x: 320,
+      y: 120,
+      type: 'Boolean',
+      value: 'true',
+      editable: {
+        label: true,
+        type: false,
+        value: false,
+        delete: false,
       },
     },
-    "n2": {
-      "pieces": ["#", "/", "#"],
-      "x": 320,
-      "y": 150,
-      "type": "Object",
-      "value": "",
-      "editable": {
-        "label": false,
-        "type": true,
-        "value": false,
-        "delete": false,
+    n2: {
+      pieces: ['#', '/', '#'],
+      x: 320,
+      y: 150,
+      type: 'Object',
+      value: '',
+      editable: {
+        label: false,
+        type: true,
+        value: false,
+        delete: false,
       },
     },
-    "n3": {
-      "pieces": ["1"],
-      "x": 320,
-      "y": 190,
-      "type": "",
-      "value": "",
-      "editable": {
-        "label": false,
-        "type": false,
-        "value": true,
-        "delete": false,
+    n3: {
+      pieces: ['1'],
+      x: 320,
+      y: 190,
+      type: '',
+      value: '',
+      editable: {
+        label: false,
+        type: false,
+        value: true,
+        delete: false,
       },
     },
-    "n4": {
-      "pieces": ["2"],
-      "x": 320,
-      "y": 190,
-      "type": "",
-      "value": "",
-      "editable": {
-        "label": true,
-        "type": false,
-        "value": false,
-        "delete": true,
+    n4: {
+      pieces: ['2'],
+      x: 320,
+      y: 190,
+      type: '',
+      value: '',
+      editable: {
+        label: true,
+        type: false,
+        value: false,
+        delete: true,
       },
     },
-    "n5": {
-      "pieces": ["3"],
-      "x": 460,
-      "y": 230,
-      "type": "",
-      "value": "",
+    n5: {
+      pieces: ['3'],
+      x: 460,
+      y: 230,
+      type: '',
+      value: '',
     },
-    "n6": {
-      "pieces": ["#", "+", "#"],
-      "x": 320,
-      "y": 190,
-      "type": "",
-      "value": "",
+    n6: {
+      pieces: ['#', '+', '#'],
+      x: 320,
+      y: 190,
+      type: '',
+      value: '',
     },
-    "n7": {
-      "pieces": ["5"],
-      "x": 520,
-      "y": 190,
-      "type": "",
-      "value": "5",
+    n7: {
+      pieces: ['5'],
+      x: 520,
+      y: 190,
+      type: '',
+      value: '5',
     },
-    "n8": {
-      "pieces": ["6"],
-      "x": 520,
-      "y": 190,
-      "type": "",
-      "value": "6",
+    n8: {
+      pieces: ['6'],
+      x: 520,
+      y: 190,
+      type: '',
+      value: '6',
     },
-    "n9": {
-      "pieces": ["7"],
-      "x": 520,
-      "y": 190,
-      "type": "",
-      "value": "7",
+    n9: {
+      pieces: ['7'],
+      x: 520,
+      y: 190,
+      type: '',
+      value: '7',
     },
   }}
   edges={{
-    "e0": {
-      parentNodeId: "n0",
-      childNodeId: "n1",
+    e0: {
+      parentNodeId: 'n0',
+      childNodeId: 'n1',
       parentPieceId: 0,
     },
-    "e1": {
-      parentNodeId: "n0",
-      childNodeId: "n2",
+    e1: {
+      parentNodeId: 'n0',
+      childNodeId: 'n2',
       parentPieceId: 2,
     },
-    "e2": {
-      parentNodeId: "n1",
-      childNodeId: "n3",
+    e2: {
+      parentNodeId: 'n1',
+      childNodeId: 'n3',
       parentPieceId: 0,
     },
-    "e3": {
-      parentNodeId: "n1",
-      childNodeId: "n4",
+    e3: {
+      parentNodeId: 'n1',
+      childNodeId: 'n4',
       parentPieceId: 2,
     },
-    "e4": {
-      parentNodeId: "n2",
-      childNodeId: "n5",
+    e4: {
+      parentNodeId: 'n2',
+      childNodeId: 'n5',
       parentPieceId: 0,
     },
-    "e5": {
-      parentNodeId: "n2",
-      childNodeId: "n6",
+    e5: {
+      parentNodeId: 'n2',
+      childNodeId: 'n6',
       parentPieceId: 2,
     },
   }}
-  stageScale={{x: 1.2, y: 1.2}}
-  stagePos={{x:40, y: 200}}
+  stageScale={{ x: 1.2, y: 1.2 }}
+  stagePos={{ x: 40, y: 200 }}
   selectedRootNode={'n0'}
   highlightedNodes={['n4', 'n5', 'does not exist', 'n6']}
   highlightedEdges={['e0', 'e1', 'e2']}
@@ -206,6 +203,7 @@ Example with initial array state:
   showToolbar={true}
   showToolbarButtons={{
     showDrawerButton: true,
+    showMathInputButton: true,
     showEditorInfoButton: true,
     showStateResetButton: true,
     showUndoButton: true,
@@ -217,7 +215,7 @@ Example with initial array state:
     showUploadStateButton: true,
     showTakeScreenshotButton: true,
     showFullScreenButton: true,
-  }} 
+  }}
   showDrawer={true}
   showDrawerSections={{
     addNodeField: true,
@@ -232,10 +230,7 @@ Example with initial array state:
     multiEdgeOnNodeConnector: true,
   }}
   connectorPlaceholder="#"
-  templateNodes={[
-    '#?#:#',
-    '#[#]',
-  ]}
+  templateNodes={['#?#:#', '#[#]']}
   allowFreeTypeUpdate={true}
   allowFreeValueUpdate={true}
   templateNodeTypesAndValues={{
@@ -248,86 +243,86 @@ Example with initial array state:
   }}
   nodes={[
     {
-    "id": "_1",
-    "pieces": ["1"],
-    "x": 424.597500066782,
-    "y": 299,
-    "width": 38.40234375,
-    "type": "",
-    "value": "",
+      id: '_1',
+      pieces: ['1'],
+      x: 424.597500066782,
+      y: 299,
+      width: 38.40234375,
+      type: '',
+      value: '',
     },
     {
-    "id": "_2",
-    "pieces": ["2"],
-    "x": 553.9999470992326,
-    "y": 300,
-    "width": 38.40234375,
-    "type": "",
-    "value": "",
+      id: '_2',
+      pieces: ['2'],
+      x: 553.9999470992326,
+      y: 300,
+      width: 38.40234375,
+      type: '',
+      value: '',
     },
     {
-    "id": "_3",
-    "pieces": ["3"],
-    "x": 600.5999999999999,
-    "y": 200,
-    "width": 38.40234375,
-    "type": "",
-    "value": "",
+      id: '_3',
+      pieces: ['3'],
+      x: 600.5999999999999,
+      y: 200,
+      width: 38.40234375,
+      type: '',
+      value: '',
     },
     {
-    "id": "_4",
-    "pieces": ["", "#", "+", "#", ""],
-    "x": 460.99765625,
-    "y": 200,
-    "width": 89.60234375,
-    "type": "",
-    "value": "",
+      id: '_4',
+      pieces: ['', '#', '+', '#', ''],
+      x: 460.99765625,
+      y: 200,
+      width: 89.60234375,
+      type: '',
+      value: '',
     },
     {
-    "id": "_5",
-    "pieces": ["", "#", "+", "#", ""],
-    "x": 503.65468061056725,
-    "y": 84.77273559570312,
-    "width": 89.60234375,
-    "type": "",
-    "value": "",
-    }
+      id: '_5',
+      pieces: ['', '#', '+', '#', ''],
+      x: 503.65468061056725,
+      y: 84.77273559570312,
+      width: 89.60234375,
+      type: '',
+      value: '',
+    },
   ]}
   edges={[
     {
-      "parentNodeId": "_4",
-      "parentPieceId": 1,
-      "childNodeId": "_1",
-      "id": "e5"
+      parentNodeId: '_4',
+      parentPieceId: 1,
+      childNodeId: '_1',
+      id: 'e5',
     },
     {
-      "parentNodeId": "_4",
-      "parentPieceId": 3,
-      "childNodeId": "_2",
-      "id": "e6"
+      parentNodeId: '_4',
+      parentPieceId: 3,
+      childNodeId: '_2',
+      id: 'e6',
     },
     {
-      "parentNodeId": "_5",
-      "parentPieceId": 1,
-      "childNodeId": "_4",
-      "id": "e7"
+      parentNodeId: '_5',
+      parentPieceId: 1,
+      childNodeId: '_4',
+      id: 'e7',
     },
     {
-      "parentNodeId": "_5",
-      "parentPieceId": 3,
-      "childNodeId": "_3",
-      "id": "e8"
-    }
+      parentNodeId: '_5',
+      parentPieceId: 3,
+      childNodeId: '_3',
+      id: 'e8',
+    },
   ]}
-  stageScale={{x: 1.2, y: 1.2}}
-  stagePos={{x:40, y: 200}}
+  stageScale={{ x: 1.2, y: 1.2 }}
+  stagePos={{ x: 40, y: 200 }}
 />
 ```
 
 Example without initial state:
 
 ```js
-<ExpressionTreeEditor 
+<ExpressionTreeEditor
   height={700}
   fullDisabled={false}
   allowedErrors={{
@@ -362,11 +357,14 @@ import { useRef } from 'react';
 
 const reference = useRef(null);
 
-;
 <div>
   <button onClick={() => reference.current.resetEdges()}>Reset Edges</button>
-  <button onClick={() => reference.current.resetTypeLabels()}>Reset Type Labels</button>
-  <button onClick={() => reference.current.resetValueLabels()}>Reset Value Labels</button>
+  <button onClick={() => reference.current.resetTypeLabels()}>
+    Reset Type Labels
+  </button>
+  <button onClick={() => reference.current.resetValueLabels()}>
+    Reset Value Labels
+  </button>
   <button onClick={() => reference.current.resetRootNode()}>Reset Root</button>
   <ExpressionTreeEditor
     reference={reference}
@@ -387,7 +385,7 @@ const reference = useRef(null);
       showUploadStateButton: true,
       showTakeScreenshotButton: true,
       showFullScreenButton: true,
-    }} 
+    }}
     showDrawer={true}
     showDrawerSections={{
       addNodeField: true,
@@ -402,14 +400,17 @@ const reference = useRef(null);
       multiEdgeOnNodeConnector: true,
     }}
     connectorPlaceholder="#"
-    templateNodes={[
-      '#?#:#',
-      '#[#]',
-    ]}
+    templateNodes={['#?#:#', '#[#]']}
     allowFreeTypeUpdate={true}
     allowFreeValueUpdate={true}
     templateNodeTypesAndValues={{
-      String: ['"Hello"', '"World!"', '"a.toUpperCase() ==== " + a.toUpperCase()', '" "', '"Hello World!"'],
+      String: [
+        '"Hello"',
+        '"World!"',
+        '"a.toUpperCase() ==== " + a.toUpperCase()',
+        '" "',
+        '"Hello World!"',
+      ],
       Number: ['1', '2'],
       Boolean: ['true', 'false'],
       Object: [],
@@ -417,114 +418,114 @@ const reference = useRef(null);
       Null: ['null'],
     }}
     nodes={{
-      "n0": {
-        "pieces": ["#", "+", "#"],
-        "x": 320,
-        "y": 90,
-        "type": "Number",
-        "value": "10",
+      n0: {
+        pieces: ['#', '+', '#'],
+        x: 320,
+        y: 90,
+        type: 'Number',
+        value: '10',
       },
-      "n1": {
-        "pieces": ["#", "-", "#"],
-        "x": 320,
-        "y": 120,
-        "type": "Boolean",
-        "value": "true",
+      n1: {
+        pieces: ['#', '-', '#'],
+        x: 320,
+        y: 120,
+        type: 'Boolean',
+        value: 'true',
       },
-      "n2": {
-        "pieces": ["#", "/", "#"],
-        "x": 320,
-        "y": 150,
-        "type": "Object",
-        "value": "",
+      n2: {
+        pieces: ['#', '/', '#'],
+        x: 320,
+        y: 150,
+        type: 'Object',
+        value: '',
       },
-      "n3": {
-        "pieces": ["1"],
-        "x": 320,
-        "y": 190,
-        "type": "",
-        "value": "",
+      n3: {
+        pieces: ['1'],
+        x: 320,
+        y: 190,
+        type: '',
+        value: '',
       },
-      "n4": {
-        "pieces": ["2"],
-        "x": 320,
-        "y": 190,
-        "type": "",
-        "value": "",
+      n4: {
+        pieces: ['2'],
+        x: 320,
+        y: 190,
+        type: '',
+        value: '',
       },
-      "n5": {
-        "pieces": ["3"],
-        "x": 460,
-        "y": 230,
-        "type": "",
-        "value": "",
+      n5: {
+        pieces: ['3'],
+        x: 460,
+        y: 230,
+        type: '',
+        value: '',
       },
-      "n6": {
-        "pieces": ["#", "+", "#"],
-        "x": 320,
-        "y": 190,
-        "type": "",
-        "value": "",
+      n6: {
+        pieces: ['#', '+', '#'],
+        x: 320,
+        y: 190,
+        type: '',
+        value: '',
       },
-      "n7": {
-        "pieces": ["5"],
-        "x": 520,
-        "y": 190,
-        "type": "",
-        "value": "5",
+      n7: {
+        pieces: ['5'],
+        x: 520,
+        y: 190,
+        type: '',
+        value: '5',
       },
-      "n8": {
-        "pieces": ["6"],
-        "x": 520,
-        "y": 190,
-        "type": "",
-        "value": "6",
+      n8: {
+        pieces: ['6'],
+        x: 520,
+        y: 190,
+        type: '',
+        value: '6',
       },
-      "n9": {
-        "pieces": ["7"],
-        "x": 520,
-        "y": 190,
-        "type": "",
-        "value": "7",
+      n9: {
+        pieces: ['7'],
+        x: 520,
+        y: 190,
+        type: '',
+        value: '7',
       },
     }}
     edges={{
-      "e0": {
-        parentNodeId: "n0",
-        childNodeId: "n1",
+      e0: {
+        parentNodeId: 'n0',
+        childNodeId: 'n1',
         parentPieceId: 0,
       },
-      "e1": {
-        parentNodeId: "n0",
-        childNodeId: "n2",
+      e1: {
+        parentNodeId: 'n0',
+        childNodeId: 'n2',
         parentPieceId: 2,
       },
-      "e2": {
-        parentNodeId: "n1",
-        childNodeId: "n3",
+      e2: {
+        parentNodeId: 'n1',
+        childNodeId: 'n3',
         parentPieceId: 0,
       },
-      "e3": {
-        parentNodeId: "n1",
-        childNodeId: "n4",
+      e3: {
+        parentNodeId: 'n1',
+        childNodeId: 'n4',
         parentPieceId: 2,
       },
-      "e4": {
-        parentNodeId: "n2",
-        childNodeId: "n5",
+      e4: {
+        parentNodeId: 'n2',
+        childNodeId: 'n5',
         parentPieceId: 0,
       },
-      "e5": {
-        parentNodeId: "n2",
-        childNodeId: "n6",
+      e5: {
+        parentNodeId: 'n2',
+        childNodeId: 'n6',
         parentPieceId: 2,
       },
     }}
-    stageScale={{x: 1.2, y: 1.2}}
-    stagePos={{x:40, y: 200}}
+    stageScale={{ x: 1.2, y: 1.2 }}
+    stagePos={{ x: 40, y: 200 }}
     selectedRootNode={'n0'}
     highlightedNodes={['n4', 'n5', 'does not exist', 'n6']}
     highlightedEdges={['e0', 'e1', 'e2']}
   />
-</div>
+</div>;
 ```

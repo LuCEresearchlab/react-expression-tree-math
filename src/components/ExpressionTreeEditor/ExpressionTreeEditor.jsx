@@ -1,7 +1,5 @@
 import Konva from 'konva';
-import {
-  Stage, Layer, Rect, Transformer,
-} from 'react-konva';
+import { Stage, Layer, Rect, Transformer } from 'react-konva';
 
 import React, {
   useCallback,
@@ -17,15 +15,13 @@ import fscreen from 'fscreen';
 import { addMetadataFromBase64DataURI } from 'meta-png';
 
 import { createTheme, ThemeProvider } from '@material-ui/core/styles';
+import FontFaceObserver from 'fontfaceobserver';
 import Node from '../Node/Node';
 import Edge from '../Edge/Edge';
 import DragEdge from '../DragEdge/DragEdge';
 import StageDrawer from '../StageDrawer/StageDrawer';
 
-import {
-  arraysAreEqual,
-  exportState,
-} from '../../utils/state';
+import { arraysAreEqual, exportState } from '../../utils/state';
 
 import {
   checkIsCreatingLoop,
@@ -36,9 +32,7 @@ import {
   checkSamePreviousChild,
 } from '../../utils/addEdge';
 
-import {
-  layout,
-} from '../../utils/layout';
+import { layout } from '../../utils/layout';
 
 import useStore from '../../hooks/useStore';
 import useKeypress from '../../hooks/useKeypress';
@@ -46,7 +40,6 @@ import useContainerWidthOnWindowResize from '../../hooks/useContainerWidthOnWind
 
 import { defaultProps } from '../../store/initialState';
 
-import FontFaceObserver from 'fontfaceobserver';
 import '@fontsource/roboto-mono/300.css';
 
 // Key used to store and retrieve metadata in PNG files.
@@ -103,7 +96,7 @@ function ExpressionTreeEditor({
   selectionRectangleStyle,
   toolbarPrimaryColor,
   toolbarSecondaryColor,
-  drawerPlaceholders
+  drawerPlaceholders,
 }) {
   const containerRef = useRef();
   const containerWidth = useContainerWidthOnWindowResize(containerRef);
@@ -168,6 +161,9 @@ function ExpressionTreeEditor({
     currentError,
     undoState,
     redoState,
+    isMathInputOpen,
+    mathLatex,
+    mathOperator,
   } = store;
 
   const {
@@ -223,6 +219,10 @@ function ExpressionTreeEditor({
     resetTypeLabels,
     resetValueLabels,
     resetRootNode,
+    // Math Input
+    toggleMathInput,
+    setMathLatex,
+    setMathOperator,
   } = actions;
 
   const {
@@ -282,7 +282,11 @@ function ExpressionTreeEditor({
         piecesPosition,
         width: nodeWidth,
       };
-      const updatedEdges = updateEdgeChildCoordinates(connectedEdgesIds, edges, tempNode);
+      const updatedEdges = updateEdgeChildCoordinates(
+        connectedEdgesIds,
+        edges,
+        tempNode,
+      );
       updateNode({
         pieces,
         piecesPosition,
@@ -322,7 +326,7 @@ function ExpressionTreeEditor({
 
   const handleZoomOutButtonAction = useCallback(() => {
     const zoomFactor = 1.1;
-    //zoomStage(1 / zoomFactor); TODO: remove zoomStage function
+    // zoomStage(1 / zoomFactor); TODO: remove zoomStage function
     const { current } = stageRef;
     const oldScale = current.scaleX();
     const oldX = current.x();
@@ -340,7 +344,7 @@ function ExpressionTreeEditor({
 
   const handleZoomInButtonAction = useCallback(() => {
     const zoomFactor = 1.1;
-    //zoomStage(zoomFactor); TODO: remove zoomStage function
+    // zoomStage(zoomFactor); TODO: remove zoomStage function
     const { current } = stageRef;
     const oldScale = current.scaleX();
     const oldX = current.x();
@@ -360,12 +364,12 @@ function ExpressionTreeEditor({
     const zoomFactor = 1.05;
     e.evt.preventDefault();
     if (isFullDisabled) {
-      return; //TODO: What's the connection between mouse wheel zoom and full screen?
+      return; // TODO: What's the connection between mouse wheel zoom and full screen?
     }
     // don't zoom if small Y change
     if (Math.abs(e.evt.deltaY) < 5) return;
     const { current } = stageRef;
-    const zoomMultiplier = e.evt.deltaY < 0 ? zoomFactor : (1 / zoomFactor);
+    const zoomMultiplier = e.evt.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
     const oldScale = current.scaleX();
     const newScale = oldScale * zoomMultiplier;
 
@@ -429,12 +433,15 @@ function ExpressionTreeEditor({
     });
   };
 
-  const handleReorderNodesButtonAction = useCallback((initialValue, noHistory) => {
-    const tempNodes = initialValue && initialValue.nodes ? initialValue.nodes : nodes;
-    const tempEdges = initialValue && initialValue.edges ? initialValue.edges : edges;
+  const handleReorderNodesButtonAction = useCallback(
+    (initialValue, noHistory) => {
+      const tempNodes =
+        initialValue && initialValue.nodes ? initialValue.nodes : nodes;
+      const tempEdges =
+        initialValue && initialValue.edges ? initialValue.edges : edges;
 
-    //TODO: Determine whether need to clone nodes before calling layout
-    /*
+      // TODO: Determine whether need to clone nodes before calling layout
+      /*
     // Call old layout (reorder) code
     const orderedNodes = reorderNodes(
       nodes,
@@ -442,62 +449,67 @@ function ExpressionTreeEditor({
       selectedRootNode,
     );
     */
-    // Structured clone is a deep clone
-    // https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
-    // eslint-disable-next-line no-undef
-    const orderedNodes = structuredClone(tempNodes);
-    // const orderedNodes = tempNodes;
-    const [diagramWidth, diagramHeight] = layout(
-      orderedNodes,
-      tempEdges,
-      selectedRootNode,
-    );
-    //console.log('node layout: diagram width: ', diagramWidth, 'diagram height: ', diagramHeight);
+      // Structured clone is a deep clone
+      // https://developer.mozilla.org/en-US/docs/Web/API/structuredClone
+      // eslint-disable-next-line no-undef
+      const orderedNodes = structuredClone(tempNodes);
+      // const orderedNodes = tempNodes;
+      const [diagramWidth, diagramHeight] = layout(
+        orderedNodes,
+        tempEdges,
+        selectedRootNode,
+      );
+      // console.log('node layout: diagram width: ', diagramWidth, 'diagram height: ', diagramHeight);
 
-    const orderedEdges = computeEdgesCoordinates(tempEdges, orderedNodes);
-    const position = { x: 0, y: 0 };
-    const scale = { x: 1, y: 1 };
+      const orderedEdges = computeEdgesCoordinates(tempEdges, orderedNodes);
+      const position = { x: 0, y: 0 };
+      const scale = { x: 1, y: 1 };
 
-    if (noHistory) {
-      setStartingOrderedNodes({
-        nodes: orderedNodes,
-        edges: orderedEdges,
-        stagePos: position,
-        stageScale: scale,
-      });
-    } else {
-      setOrderedNodes({
-        nodes: orderedNodes,
-        edges: orderedEdges,
-        stagePos: position,
-        stageScale: scale,
-      });
-    }
-  });
+      if (noHistory) {
+        setStartingOrderedNodes({
+          nodes: orderedNodes,
+          edges: orderedEdges,
+          stagePos: position,
+          stageScale: scale,
+        });
+      } else {
+        setOrderedNodes({
+          nodes: orderedNodes,
+          edges: orderedEdges,
+          stagePos: position,
+          stageScale: scale,
+        });
+      }
+    },
+  );
 
-  const handleUploadStateButtonAction = useCallback(({
-    nodes: uploadNodes,
-    edges: uploadEdges,
-    selectedRootNode: uploadSelectedRootNode,
-    stagePos: uploadStagePos,
-    stageScale: uploadStageScale,
-    connectorPlaceholder: uploadConnectorPlaceholder,
-  }) => {
-    stageReset({
+  const handleUploadStateButtonAction = useCallback(
+    ({
       nodes: uploadNodes,
       edges: uploadEdges,
       selectedRootNode: uploadSelectedRootNode,
       stagePos: uploadStagePos,
       stageScale: uploadStageScale,
       connectorPlaceholder: uploadConnectorPlaceholder,
-    });
-  });
+    }) => {
+      stageReset({
+        nodes: uploadNodes,
+        edges: uploadEdges,
+        selectedRootNode: uploadSelectedRootNode,
+        stagePos: uploadStagePos,
+        stageScale: uploadStageScale,
+        connectorPlaceholder: uploadConnectorPlaceholder,
+      });
+    },
+  );
 
   // Prepare the UI for image download (e.g., hiding unwanted nodes).
   // Should be called with inverse is false (default behavior) before downloading,
   // and with inverse === true after the download to reset the status.
   const handlePrepareUIForImageDownload = useCallback((inverse = false) => {
-    stageRef.current.find('.deleteButton').forEach((shape) => shape.visible(inverse));
+    stageRef.current
+      .find('.deleteButton')
+      .forEach((shape) => shape.visible(inverse));
   });
 
   // downloading the image of the current visible stage portion
@@ -520,14 +532,20 @@ function ExpressionTreeEditor({
       const downloadElement = document.createElement('a');
       const boundingBox = layerRef.current.getClientRect();
       const padding = 10; // Add a padding of 10 pixel all around the bounding box
-      const imageBase64 = stageRef.current.toCanvas({
-        pixelRatio: 2,
-        x: boundingBox.x - padding,
-        y: boundingBox.y - padding,
-        width: boundingBox.width + 2 * padding,
-        height: boundingBox.height + 2 * padding,
-      }).toDataURL();
-      downloadElement.href = addMetadataFromBase64DataURI(imageBase64, ET_KEY, jsonRepr);
+      const imageBase64 = stageRef.current
+        .toCanvas({
+          pixelRatio: 2,
+          x: boundingBox.x - padding,
+          y: boundingBox.y - padding,
+          width: boundingBox.width + 2 * padding,
+          height: boundingBox.height + 2 * padding,
+        })
+        .toDataURL();
+      downloadElement.href = addMetadataFromBase64DataURI(
+        imageBase64,
+        ET_KEY,
+        jsonRepr,
+      );
       downloadElement.download = 'expression_editor_image.png';
       document.body.appendChild(downloadElement);
       downloadElement.click();
@@ -620,7 +638,10 @@ function ExpressionTreeEditor({
     });
     parentEdges.forEach((pieceEdges, pieceId) => {
       pieceEdges.forEach((id) => {
-        const { parentX, parentY } = computeEdgeParentCoordinates(updatedNode, pieceId);
+        const { parentX, parentY } = computeEdgeParentCoordinates(
+          updatedNode,
+          pieceId,
+        );
         updatedEdges[id] = {
           ...edges[id],
           parentX,
@@ -636,7 +657,10 @@ function ExpressionTreeEditor({
   });
 
   const handleResetState = () => {
-    const { sanitizedNodes, sanitizedEdges } = sanitizeNodesAndEdges(propNodes, propEdges);
+    const { sanitizedNodes, sanitizedEdges } = sanitizeNodesAndEdges(
+      propNodes,
+      propEdges,
+    );
     stageReset({
       nodes: sanitizedNodes,
       selectedNode: propSelectedNode,
@@ -645,18 +669,28 @@ function ExpressionTreeEditor({
       selectedRootNode: propSelectedRootNode,
       stagePos: propStagePos || defaultProps.stagePos,
       stageScale: propStageScale || defaultProps.stageScale,
-      connectorPlaceholder: propConnectorPlaceholder || defaultProps.connectorPlaceholder,
+      connectorPlaceholder:
+        propConnectorPlaceholder || defaultProps.connectorPlaceholder,
     });
 
     if (autolayout) {
-      handleReorderNodesButtonAction({ nodes: sanitizedNodes, edges: sanitizedEdges });
+      handleReorderNodesButtonAction({
+        nodes: sanitizedNodes,
+        edges: sanitizedEdges,
+      });
     }
   };
 
   useEffect(() => {
     if (autolayout) {
-      const { sanitizedNodes, sanitizedEdges } = sanitizeNodesAndEdges(propNodes, propEdges);
-      handleReorderNodesButtonAction({ nodes: sanitizedNodes, edges: sanitizedEdges }, true);
+      const { sanitizedNodes, sanitizedEdges } = sanitizeNodesAndEdges(
+        propNodes,
+        propEdges,
+      );
+      handleReorderNodesButtonAction(
+        { nodes: sanitizedNodes, edges: sanitizedEdges },
+        true,
+      );
     }
   }, [propNodes, propEdges]);
 
@@ -664,9 +698,11 @@ function ExpressionTreeEditor({
     if (createNodeDescription && createNodeStageRef.current) {
       const node = createNodeStageRef.current.findOne('#create-node');
       if (node) {
-        const imageBase64 = node.toCanvas({
-          pixelRatio: 2,
-        }).toDataURL();
+        const imageBase64 = node
+          .toCanvas({
+            pixelRatio: 2,
+          })
+          .toDataURL();
       }
     }
   }, [createNodeDescription]);
@@ -679,9 +715,11 @@ function ExpressionTreeEditor({
           // console.log(n);
         });
         if (node) {
-          const imageBase64 = node.toCanvas({
-            pixelRatio: 2,
-          }).toDataURL();
+          const imageBase64 = node
+            .toCanvas({
+              pixelRatio: 2,
+            })
+            .toDataURL();
 
           // console.log(imageBase64);
         }
@@ -722,12 +760,16 @@ function ExpressionTreeEditor({
   }, [selectedEdge]);
 
   // Set the theme primary and secondary colors according to the received props
-  const theme = useMemo(() => createTheme({
-    palette: {
-      primary: { main: toolbarPrimaryColor },
-      secondary: { main: toolbarSecondaryColor },
-    },
-  }), [toolbarPrimaryColor, toolbarSecondaryColor]);
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          primary: { main: toolbarPrimaryColor },
+          secondary: { main: toolbarSecondaryColor },
+        },
+      }),
+    [toolbarPrimaryColor, toolbarSecondaryColor],
+  );
 
   // State hooks
   const [isDraggingSelectionRect, setIsDraggingSelectionRect] = useState(false);
@@ -757,75 +799,77 @@ function ExpressionTreeEditor({
     containerRef.current.style.cursor = cursor;
   }, []);
 
-  const {
-    isBackpasceOrDeleteKeyPressed,
-    isEscapedKeyPressed,
-  } = useKeypress(containerRef, isFullDisabled);
+  const { isBackpasceOrDeleteKeyPressed, isEscapedKeyPressed } = useKeypress(
+    containerRef,
+    isFullDisabled,
+  );
 
-  const handleConnectorDragStart = useCallback((isParent, nodeId, x, y, pieceId) => {
-    if (!isParent) {
-      const edgeId = nodes[nodeId].childEdges[0];
-      const edge = edges[edgeId];
-      if (edge) {
-        const parentPieceX = computeLabelPiecesXCoordinatePositions(
-          nodes[edge.parentNodeId].pieces,
-        )[edge.parentPieceId];
-        const parentPos = computeEdgeParentPos(
-          edge.parentNodeId,
-          parentPieceX,
-          nodes,
-          fontSize,
-          placeholderWidth,
-        );
-        setDragEdge({
-          originalEdgeId: edge.id,
-          updateParent: false,
-          parentNodeId: edge.parentNodeId,
-          parentPieceId: edge.parentPieceId,
-          parentX: parentPos.x,
-          parentY: parentPos.y - fontSize / 2,
-          childX: x,
-          childY: y,
-        });
+  const handleConnectorDragStart = useCallback(
+    (isParent, nodeId, x, y, pieceId) => {
+      if (!isParent) {
+        const edgeId = nodes[nodeId].childEdges[0];
+        const edge = edges[edgeId];
+        if (edge) {
+          const parentPieceX = computeLabelPiecesXCoordinatePositions(
+            nodes[edge.parentNodeId].pieces,
+          )[edge.parentPieceId];
+          const parentPos = computeEdgeParentPos(
+            edge.parentNodeId,
+            parentPieceX,
+            nodes,
+            fontSize,
+            placeholderWidth,
+          );
+          setDragEdge({
+            originalEdgeId: edge.id,
+            updateParent: false,
+            parentNodeId: edge.parentNodeId,
+            parentPieceId: edge.parentPieceId,
+            parentX: parentPos.x,
+            parentY: parentPos.y - fontSize / 2,
+            childX: x,
+            childY: y,
+          });
+        } else {
+          setDragEdge({
+            originalEdgeId: null,
+            updateParent: true,
+            childNodeId: nodeId,
+            childX: x,
+            childY: y,
+            parentX: x,
+            parentY: y,
+          });
+        }
       } else {
-        setDragEdge({
-          originalEdgeId: null,
-          updateParent: true,
-          childNodeId: nodeId,
-          childX: x,
-          childY: y,
-          parentX: x,
-          parentY: y,
-        });
+        const edgeId = nodes[nodeId].parentEdges[pieceId][0];
+        const edge = edges[edgeId];
+        if (edge) {
+          const childPos = computeEdgeChildPos(edge.childNodeId, nodes);
+          setDragEdge({
+            originalEdgeId: edge.id,
+            updateParent: true,
+            childNodeId: edge.childNodeId,
+            childX: childPos.x,
+            childY: childPos.y,
+            parentX: x,
+            parentY: y,
+          });
+        } else {
+          setDragEdge({
+            originalEdgeId: null,
+            updateParent: false,
+            parentNodeId: nodeId,
+            parentPieceId: pieceId,
+            parentX: x,
+            parentY: y,
+            childX: x,
+            childY: y,
+          });
+        }
       }
-    } else {
-      const edgeId = nodes[nodeId].parentEdges[pieceId][0];
-      const edge = edges[edgeId];
-      if (edge) {
-        const childPos = computeEdgeChildPos(edge.childNodeId, nodes);
-        setDragEdge({
-          originalEdgeId: edge.id,
-          updateParent: true,
-          childNodeId: edge.childNodeId,
-          childX: childPos.x,
-          childY: childPos.y,
-          parentX: x,
-          parentY: y,
-        });
-      } else {
-        setDragEdge({
-          originalEdgeId: null,
-          updateParent: false,
-          parentNodeId: nodeId,
-          parentPieceId: pieceId,
-          parentX: x,
-          parentY: y,
-          childX: x,
-          childY: y,
-        });
-      }
-    }
-  });
+    },
+  );
 
   const handleConnectorDragMove = useCallback(() => {
     const pointerPos = stageRef.current.getPointerPosition();
@@ -868,12 +912,11 @@ function ExpressionTreeEditor({
       const childNode = nodes[childNodeId];
       const parentNode = nodes[parentNodeId];
 
-      const {
-        childX,
-        childY,
-        parentX,
-        parentY,
-      } = computeEdgeCoordinates(childNode, parentNode, parentPieceId);
+      const { childX, childY, parentX, parentY } = computeEdgeCoordinates(
+        childNode,
+        parentNode,
+        parentPieceId,
+      );
 
       const updateEdge = isParentUpdate ? updateParentEdge : updateChildEdge;
       updateEdge({
@@ -890,13 +933,10 @@ function ExpressionTreeEditor({
 
     const fulfillNewEdge = (edge) => {
       const { childNodeId, parentNodeId, parentPieceId } = edge;
-      const {
-        width: nodeWidth,
-      } = nodes[childNodeId];
-      const {
-        pieces: parentPieces,
-      } = nodes[parentNodeId];
-      const parentPieceX = computeLabelPiecesXCoordinatePositions(parentPieces)[parentPieceId];
+      const { width: nodeWidth } = nodes[childNodeId];
+      const { pieces: parentPieces } = nodes[parentNodeId];
+      const parentPieceX =
+        computeLabelPiecesXCoordinatePositions(parentPieces)[parentPieceId];
       const { x: childX, y: childY } = nodes[childNodeId];
       const { x: parentX, y: parentY } = nodes[parentNodeId];
 
@@ -910,10 +950,8 @@ function ExpressionTreeEditor({
     };
 
     const pointerPos = stageRef.current.getPointerPosition();
-    const {
-      updateParent: isParentTheTarget,
-      originalEdgeId: oldEdgeId,
-    } = dragEdge;
+    const { updateParent: isParentTheTarget, originalEdgeId: oldEdgeId } =
+      dragEdge;
 
     if (isParentTheTarget) {
       const targetParentPiece = closestParentPiece(
@@ -940,20 +978,26 @@ function ExpressionTreeEditor({
         };
 
         checkSamePreviousParent(oldEdge, targetParentPiece)
-          .then(() => checkSameNodeTarget(targetParentPiece, dragEdge.childNodeId))
-          .then(() => checkIsMultiEdgeOnParentConnector(
-            allowedErrors.multiEdgeOnHoleConnector,
-            targetParentPiece,
-            nodes,
-          ))
-          .then(() => checkIsCreatingLoop(
-            allowedErrors.loop,
-            nodes[oldEdge.childNodeId],
-            [targetParentPiece.parentNodeId],
-            edges,
-            nodes,
-            connectorPlaceholder,
-          ))
+          .then(() =>
+            checkSameNodeTarget(targetParentPiece, dragEdge.childNodeId),
+          )
+          .then(() =>
+            checkIsMultiEdgeOnParentConnector(
+              allowedErrors.multiEdgeOnHoleConnector,
+              targetParentPiece,
+              nodes,
+            ),
+          )
+          .then(() =>
+            checkIsCreatingLoop(
+              allowedErrors.loop,
+              nodes[oldEdge.childNodeId],
+              [targetParentPiece.parentNodeId],
+              edges,
+              nodes,
+              connectorPlaceholder,
+            ),
+          )
           .then(() => fulfillUpdate(oldEdgeId, newEdge, true))
           .catch(rejectCallback);
       } else {
@@ -970,19 +1014,23 @@ function ExpressionTreeEditor({
         };
 
         checkSameNodeTarget(targetParentPiece, newEdge.childNodeId)
-          .then(() => checkIsMultiEdgeOnParentConnector(
-            allowedErrors.multiEdgeOnHoleConnector,
-            targetParentPiece,
-            nodes,
-          ))
-          .then(() => checkIsCreatingLoop(
-            allowedErrors.loop,
-            nodes[newEdge.childNodeId],
-            [targetParentPiece.parentNodeId],
-            edges,
-            nodes,
-            connectorPlaceholder,
-          ))
+          .then(() =>
+            checkIsMultiEdgeOnParentConnector(
+              allowedErrors.multiEdgeOnHoleConnector,
+              targetParentPiece,
+              nodes,
+            ),
+          )
+          .then(() =>
+            checkIsCreatingLoop(
+              allowedErrors.loop,
+              nodes[newEdge.childNodeId],
+              [targetParentPiece.parentNodeId],
+              edges,
+              nodes,
+              connectorPlaceholder,
+            ),
+          )
           .then(() => fulfillNewEdge(newEdge))
           .catch(rejectCallback);
       }
@@ -1012,19 +1060,23 @@ function ExpressionTreeEditor({
 
         checkSamePreviousChild(oldEdge, targetChildId)
           .then(() => checkSameNodeTarget(oldEdge, targetChildId))
-          .then(() => checkIsMultiEdgeOnChildConnector(
-            allowedErrors.multiEdgeOnNodeConnector,
-            targetChildId,
-            nodes,
-          ))
-          .then(() => checkIsCreatingLoop(
-            allowedErrors.loop,
-            nodes[targetChildId],
-            [oldEdge.parentNodeId],
-            edges,
-            nodes,
-            connectorPlaceholder,
-          ))
+          .then(() =>
+            checkIsMultiEdgeOnChildConnector(
+              allowedErrors.multiEdgeOnNodeConnector,
+              targetChildId,
+              nodes,
+            ),
+          )
+          .then(() =>
+            checkIsCreatingLoop(
+              allowedErrors.loop,
+              nodes[targetChildId],
+              [oldEdge.parentNodeId],
+              edges,
+              nodes,
+              connectorPlaceholder,
+            ),
+          )
           .then(() => fulfillUpdate(oldEdgeId, newEdge, false))
           .catch(rejectCallback);
       } else {
@@ -1041,19 +1093,23 @@ function ExpressionTreeEditor({
         };
 
         checkSameNodeTarget(newEdge, targetChildId)
-          .then(() => checkIsMultiEdgeOnChildConnector(
-            allowedErrors.multiEdgeOnHoleConnector,
-            targetChildId,
-            nodes,
-          ))
-          .then(() => checkIsCreatingLoop(
-            allowedErrors.loop,
-            nodes[targetChildId],
-            [newEdge.parentNodeId],
-            edges,
-            nodes,
-            connectorPlaceholder,
-          ))
+          .then(() =>
+            checkIsMultiEdgeOnChildConnector(
+              allowedErrors.multiEdgeOnHoleConnector,
+              targetChildId,
+              nodes,
+            ),
+          )
+          .then(() =>
+            checkIsCreatingLoop(
+              allowedErrors.loop,
+              nodes[targetChildId],
+              [newEdge.parentNodeId],
+              edges,
+              nodes,
+              connectorPlaceholder,
+            ),
+          )
           .then(() => fulfillNewEdge(newEdge))
           .catch(rejectCallback);
       }
@@ -1080,10 +1136,11 @@ function ExpressionTreeEditor({
       const x = e.target.x();
       const y = e.target.y();
 
-      const {
-        updatedEdges,
-        updatedNode,
-      } = handleUpdateNodeCoordinates(nodeId, x, y);
+      const { updatedEdges, updatedNode } = handleUpdateNodeCoordinates(
+        nodeId,
+        x,
+        y,
+      );
 
       updateNodeCoordinates({
         updatedEdges,
@@ -1103,10 +1160,11 @@ function ExpressionTreeEditor({
       const x = e.target.x();
       const y = e.target.y();
 
-      const {
-        updatedEdges,
-        updatedNode,
-      } = handleUpdateNodeCoordinates(nodeId, x, y);
+      const { updatedEdges, updatedNode } = handleUpdateNodeCoordinates(
+        nodeId,
+        x,
+        y,
+      );
 
       updateNodeCoordinatesAndFinishDragging({
         updatedEdges,
@@ -1180,7 +1238,11 @@ function ExpressionTreeEditor({
       handleCreateNode();
     } else {
       e.cancelBubble = true;
-      if (selectedEdge === undefined || selectedEdge === null || selectedEdge !== edgeId) {
+      if (
+        selectedEdge === undefined ||
+        selectedEdge === null ||
+        selectedEdge !== edgeId
+      ) {
         setSelectedEdge(edgeId);
       }
     }
@@ -1222,6 +1284,8 @@ function ExpressionTreeEditor({
     const newPos = e.target.absolutePosition();
     stageRef.current.position({ x: newPos.x, y: newPos.y });
   };
+
+  const handleMathLatexChange = () => {};
 
   return (
     <ThemeProvider theme={theme}>
@@ -1277,15 +1341,25 @@ function ExpressionTreeEditor({
           handleZoomOutButtonAction={handleZoomOutButtonAction}
           handleZoomInButtonAction={handleZoomInButtonAction}
           handleZoomToFitButtonAction={handleZoomToFitButtonAction}
-          handleZoomToActualSizeButtonAction={handleZoomToActualSizeButtonAction}
+          handleZoomToActualSizeButtonAction={
+            handleZoomToActualSizeButtonAction
+          }
           handleReorderNodesButtonAction={handleReorderNodesButtonAction}
           handleUploadStateButtonAction={handleUploadStateButtonAction}
           handleTakeScreenshotButtonAction={handleTakeScreenshotButtonAction}
           handleFullScreenButtonAction={handleFullScreenButtonAction}
-          handleSelectedNodeEditableLabelChange={handleSelectedNodeEditableLabelChange}
-          handleSelectedNodeEditableDeleteChange={handleSelectedNodeEditableDeleteChange}
-          handleSelectedNodeEditableTypeChange={handleSelectedNodeEditableTypeChange}
-          handleSelectedNodeEditableValueChange={handleSelectedNodeEditableValueChange}
+          handleSelectedNodeEditableLabelChange={
+            handleSelectedNodeEditableLabelChange
+          }
+          handleSelectedNodeEditableDeleteChange={
+            handleSelectedNodeEditableDeleteChange
+          }
+          handleSelectedNodeEditableTypeChange={
+            handleSelectedNodeEditableTypeChange
+          }
+          handleSelectedNodeEditableValueChange={
+            handleSelectedNodeEditableValueChange
+          }
           createNodeDescription={createNodeDescription}
           nodeFontSize={fontSize}
           nodeFontFamily={fontFamily}
@@ -1293,6 +1367,12 @@ function ExpressionTreeEditor({
           nodePaddingY={nodePaddingY}
           nodeStyle={nodeStyle}
           drawerPlaceholders={drawerPlaceholders}
+          isMathInputOpen={isMathInputOpen}
+          toggleMathInput={toggleMathInput}
+          currentLatex={mathLatex}
+          setCurrentLatex={setMathLatex}
+          currentOperator={mathOperator}
+          setCurrentOperator={setMathOperator}
         />
         <div>
           {/* Stage component containing the layer component */}
@@ -1305,15 +1385,15 @@ function ExpressionTreeEditor({
             onTap={handleStageClick}
             draggable={!isFullDisabled}
             onDragStart={
-              !isFullDisabled
-              && (() => {
+              !isFullDisabled &&
+              (() => {
                 setCursor('grabbing');
               })
             }
-            onDragMove={((e) => handleStageDragMove(e))}
+            onDragMove={(e) => handleStageDragMove(e)}
             onDragEnd={
-              !isFullDisabled
-              && (() => {
+              !isFullDisabled &&
+              (() => {
                 const newStagePos = stageRef.current.absolutePosition();
                 setStagePos(newStagePos);
                 setCursor('move');
@@ -1370,7 +1450,9 @@ function ExpressionTreeEditor({
                   handleConnectorDragStart={handleConnectorDragStart}
                   handleConnectorDragMove={handleConnectorDragMove}
                   handleConnectorDragEnd={handleConnectorDragEnd}
-                  computeLabelPiecesXCoordinatePositions={computeLabelPiecesXCoordinatePositions}
+                  computeLabelPiecesXCoordinatePositions={
+                    computeLabelPiecesXCoordinatePositions
+                  }
                   setCursor={setCursor}
                   // Style
                   placeholderWidth={placeholderWidth}
@@ -1381,25 +1463,51 @@ function ExpressionTreeEditor({
                   lineDraggingStrokeColor={edgeStyle.lineDraggingStrokeColor}
                   lineHighlightColor={edgeStyle.lineHighlightColor}
                   childConnectorRadiusSize={edgeStyle.childConnectorRadiusSize}
-                  childConnectorStrokeColor={edgeStyle.childConnectorStrokeColor}
-                  childConnectorStrokeWidth={edgeStyle.childConnectorStrokeWidth}
+                  childConnectorStrokeColor={
+                    edgeStyle.childConnectorStrokeColor
+                  }
+                  childConnectorStrokeWidth={
+                    edgeStyle.childConnectorStrokeWidth
+                  }
                   childConnectorFillColor={edgeStyle.childConnectorFillColor}
-                  childConnectorSelectedFillColor={edgeStyle.childConnectorSelectedFillColor}
-                  childConnectorDraggingFillColor={edgeStyle.childConnectorDraggingFillColor}
-                  childConnectorErrorFillColor={edgeStyle.childConnectorErrorFillColor}
-                  childConnectorHighlightFillColor={edgeStyle.childConnectorHighlightFillColor}
-                  parentConnectorRadiusSize={edgeStyle.parentConnectorRadiusSize}
-                  parentConnectorStrokeColor={edgeStyle.parentConnectorStrokeColor}
-                  parentConnectorStrokeWidth={edgeStyle.parentConnectorStrokeWidth}
+                  childConnectorSelectedFillColor={
+                    edgeStyle.childConnectorSelectedFillColor
+                  }
+                  childConnectorDraggingFillColor={
+                    edgeStyle.childConnectorDraggingFillColor
+                  }
+                  childConnectorErrorFillColor={
+                    edgeStyle.childConnectorErrorFillColor
+                  }
+                  childConnectorHighlightFillColor={
+                    edgeStyle.childConnectorHighlightFillColor
+                  }
+                  parentConnectorRadiusSize={
+                    edgeStyle.parentConnectorRadiusSize
+                  }
+                  parentConnectorStrokeColor={
+                    edgeStyle.parentConnectorStrokeColor
+                  }
+                  parentConnectorStrokeWidth={
+                    edgeStyle.parentConnectorStrokeWidth
+                  }
                   parentConnectorFillColor={edgeStyle.parentConnectorFillColor}
-                  parentConnectorSelectedFillColor={edgeStyle.parentConnectorSelectedFillColor}
-                  parentConnectorDraggingFillColor={edgeStyle.parentConnectorDraggingFillColor}
-                  parentConnectorErrorFillColor={edgeStyle.parentConnectorErrorFillColor}
-                  parentConnectorHighlightFillColor={edgeStyle.parentConnectorHighlightFillColor}
+                  parentConnectorSelectedFillColor={
+                    edgeStyle.parentConnectorSelectedFillColor
+                  }
+                  parentConnectorDraggingFillColor={
+                    edgeStyle.parentConnectorDraggingFillColor
+                  }
+                  parentConnectorErrorFillColor={
+                    edgeStyle.parentConnectorErrorFillColor
+                  }
+                  parentConnectorHighlightFillColor={
+                    edgeStyle.parentConnectorHighlightFillColor
+                  }
                 />
               ))}
               {/* Map all the state nodes */}
-              { Object.keys(nodes).map((id) => (
+              {Object.keys(nodes).map((id) => (
                 <Node
                   key={`Node-${id}`}
                   id={id}
@@ -1448,7 +1556,9 @@ function ExpressionTreeEditor({
                   nodeStrokeColor={nodeStyle.nodeStrokeColor}
                   nodeStrokeWidth={nodeStyle.nodeStrokeWidth}
                   nodeSelectedStrokeWidth={nodeStyle.nodeSelectedStrokeWidth}
-                  nodeHighlightedStrokeWidth={nodeStyle.nodeHighlightedStrokeWidth}
+                  nodeHighlightedStrokeWidth={
+                    nodeStyle.nodeHighlightedStrokeWidth
+                  }
                   nodeCornerRadius={nodeStyle.nodeCornerRadius}
                   nodeFillColor={nodeStyle.nodeFillColor}
                   nodeErrorColor={nodeStyle.nodeErrorColor}
@@ -1466,8 +1576,12 @@ function ExpressionTreeEditor({
                 ref={selectionRectRef}
                 x={Math.min(selectionRectStartPos.x, selectionRectEndPos.x)}
                 y={Math.min(selectionRectStartPos.y, selectionRectEndPos.y)}
-                width={Math.abs(selectionRectEndPos.x - selectionRectStartPos.x)}
-                height={Math.abs(selectionRectEndPos.y - selectionRectStartPos.y)}
+                width={Math.abs(
+                  selectionRectEndPos.x - selectionRectStartPos.x,
+                )}
+                height={Math.abs(
+                  selectionRectEndPos.y - selectionRectStartPos.y,
+                )}
                 fill={selectionRectangleStyle.fillColor}
                 visible={isSelectingRectVisible}
               />
@@ -1475,18 +1589,18 @@ function ExpressionTreeEditor({
               <Transformer
                 ref={transformerRef}
                 x={
-                  transformerRef.current
-                  && stageRef.current
-                  && (transformerRef.current.getClientRect().x
-                    - stageRef.current.absolutePosition().x)
-                    / stageRef.current.scale().x
+                  transformerRef.current &&
+                  stageRef.current &&
+                  (transformerRef.current.getClientRect().x -
+                    stageRef.current.absolutePosition().x) /
+                    stageRef.current.scale().x
                 }
                 y={
-                  transformerRef.current
-                  && stageRef.current
-                  && (transformerRef.current.getClientRect().y
-                    - stageRef.current.absolutePosition().y)
-                    / stageRef.current.scale().y
+                  transformerRef.current &&
+                  stageRef.current &&
+                  (transformerRef.current.getClientRect().y -
+                    stageRef.current.absolutePosition().y) /
+                    stageRef.current.scale().y
                 }
                 rotateEnabled={false}
                 resizeEnabled={false}
@@ -1502,14 +1616,30 @@ function ExpressionTreeEditor({
                   parentY={dragEdge.parentY}
                   lineStrokeWidth={dragEdgeStyle.lineStrokeWidth}
                   lineStrokeColor={dragEdgeStyle.lineStrokeColor}
-                  childConnectorRadiusSize={dragEdgeStyle.childConnectorRadiusSize}
-                  childConnectorFillColor={dragEdgeStyle.childConnectorFillColor}
-                  childConnectorStrokeWidth={dragEdgeStyle.childConnectorStrokeWidth}
-                  childConnectorStrokeColor={dragEdgeStyle.childConnectorStrokeColor}
-                  parentConnectorRadiusSize={dragEdgeStyle.parentConnectorRadiusSize}
-                  parentConnectorFillColor={dragEdgeStyle.parentConnectorFillColor}
-                  parentConnectorStrokeWidth={dragEdgeStyle.parentConnectorStrokeWidth}
-                  parentConnectorStrokeColor={dragEdgeStyle.parentConnectorStrokeColor}
+                  childConnectorRadiusSize={
+                    dragEdgeStyle.childConnectorRadiusSize
+                  }
+                  childConnectorFillColor={
+                    dragEdgeStyle.childConnectorFillColor
+                  }
+                  childConnectorStrokeWidth={
+                    dragEdgeStyle.childConnectorStrokeWidth
+                  }
+                  childConnectorStrokeColor={
+                    dragEdgeStyle.childConnectorStrokeColor
+                  }
+                  parentConnectorRadiusSize={
+                    dragEdgeStyle.parentConnectorRadiusSize
+                  }
+                  parentConnectorFillColor={
+                    dragEdgeStyle.parentConnectorFillColor
+                  }
+                  parentConnectorStrokeWidth={
+                    dragEdgeStyle.parentConnectorStrokeWidth
+                  }
+                  parentConnectorStrokeColor={
+                    dragEdgeStyle.parentConnectorStrokeColor
+                  }
                 />
               )}
             </Layer>
@@ -1517,11 +1647,7 @@ function ExpressionTreeEditor({
         </div>
       </div>
       <div style={{ display: 'none' }}>
-        <Stage
-          ref={createNodeStageRef}
-          width={0}
-          height={0}
-        >
+        <Stage ref={createNodeStageRef} width={0} height={0}>
           <Layer>
             {createNodeDescription ? (
               <Node
@@ -1545,7 +1671,9 @@ function ExpressionTreeEditor({
                 nodeStrokeColor={nodeStyle.nodeStrokeColor}
                 nodeStrokeWidth={nodeStyle.nodeStrokeWidth}
                 nodeSelectedStrokeWidth={nodeStyle.nodeSelectedStrokeWidth}
-                nodeHighlightedStrokeWidth={nodeStyle.nodeHighlightedStrokeWidth}
+                nodeHighlightedStrokeWidth={
+                  nodeStyle.nodeHighlightedStrokeWidth
+                }
                 nodeCornerRadius={nodeStyle.nodeCornerRadius}
                 nodeFillColor={nodeStyle.nodeFillColor}
                 nodeErrorColor={nodeStyle.nodeErrorColor}
@@ -1558,42 +1686,45 @@ function ExpressionTreeEditor({
                 typeValueStyle={nodeStyle.typeValueStyle}
               />
             ) : null}
-            {templateNodesDescription && templateNodesDescription.map((templateNode) => (
-              <Node
-                key={templateNode.id}
-                id={templateNode.id}
-                positionX={0}
-                positionY={0}
-                labelPieces={templateNode.pieces}
-                labelPiecesPosition={templateNode.piecesPosition}
-                typeText={templateNode.type}
-                valueText={templateNode.value}
-                nodeWidth={templateNode.width}
-                nodeHeight={templateNode.height}
-                childEdges={templateNode.childEdges}
-                parentEdges={templateNode.parentEdges}
-                isSelected={templateNode.isSelected}
-                connectorPlaceholder={connectorPlaceholder}
-                fontSize={fontSize}
-                fontFamily={fontFamily}
-                nodePaddingX={nodePaddingX}
-                nodePaddingY={nodePaddingY}
-                nodeStrokeColor={nodeStyle.nodeStrokeColor}
-                nodeStrokeWidth={nodeStyle.nodeStrokeWidth}
-                nodeSelectedStrokeWidth={nodeStyle.nodeSelectedStrokeWidth}
-                nodeHighlightedStrokeWidth={nodeStyle.nodeHighlightedStrokeWidth}
-                nodeCornerRadius={nodeStyle.nodeCornerRadius}
-                nodeFillColor={nodeStyle.nodeFillColor}
-                nodeErrorColor={nodeStyle.nodeErrorColor}
-                nodeSelectedColor={nodeStyle.nodeSelectedColor}
-                nodeFinalColor={nodeStyle.nodeFinalColor}
-                nodeHighlightedColor={nodeStyle.nodeHighlightedColor}
-                labelStyle={nodeStyle.labelStyle}
-                topConnectorStyle={nodeStyle.topConnectorStyle}
-                deleteButtonStyle={nodeStyle.deleteButtonStyle}
-                typeValueStyle={nodeStyle.typeValueStyle}
-              />
-            ))}
+            {templateNodesDescription &&
+              templateNodesDescription.map((templateNode) => (
+                <Node
+                  key={templateNode.id}
+                  id={templateNode.id}
+                  positionX={0}
+                  positionY={0}
+                  labelPieces={templateNode.pieces}
+                  labelPiecesPosition={templateNode.piecesPosition}
+                  typeText={templateNode.type}
+                  valueText={templateNode.value}
+                  nodeWidth={templateNode.width}
+                  nodeHeight={templateNode.height}
+                  childEdges={templateNode.childEdges}
+                  parentEdges={templateNode.parentEdges}
+                  isSelected={templateNode.isSelected}
+                  connectorPlaceholder={connectorPlaceholder}
+                  fontSize={fontSize}
+                  fontFamily={fontFamily}
+                  nodePaddingX={nodePaddingX}
+                  nodePaddingY={nodePaddingY}
+                  nodeStrokeColor={nodeStyle.nodeStrokeColor}
+                  nodeStrokeWidth={nodeStyle.nodeStrokeWidth}
+                  nodeSelectedStrokeWidth={nodeStyle.nodeSelectedStrokeWidth}
+                  nodeHighlightedStrokeWidth={
+                    nodeStyle.nodeHighlightedStrokeWidth
+                  }
+                  nodeCornerRadius={nodeStyle.nodeCornerRadius}
+                  nodeFillColor={nodeStyle.nodeFillColor}
+                  nodeErrorColor={nodeStyle.nodeErrorColor}
+                  nodeSelectedColor={nodeStyle.nodeSelectedColor}
+                  nodeFinalColor={nodeStyle.nodeFinalColor}
+                  nodeHighlightedColor={nodeStyle.nodeHighlightedColor}
+                  labelStyle={nodeStyle.labelStyle}
+                  topConnectorStyle={nodeStyle.topConnectorStyle}
+                  deleteButtonStyle={nodeStyle.deleteButtonStyle}
+                  typeValueStyle={nodeStyle.typeValueStyle}
+                />
+              ))}
           </Layer>
         </Stage>
       </div>
@@ -1632,6 +1763,7 @@ ExpressionTreeEditor.propTypes = {
   showToolbar: PropTypes.bool,
   showToolbarButtons: PropTypes.shape({
     showDrawerButton: PropTypes.bool,
+    showMathInputButton: PropTypes.bool,
     showEditorInfoButton: PropTypes.bool,
     showStateResetButton: PropTypes.bool,
     showUndoButton: PropTypes.bool,
@@ -1659,23 +1791,23 @@ ExpressionTreeEditor.propTypes = {
   allowFreeValueUpdate: PropTypes.bool,
   templateNodeTypesAndValues: PropTypes.shape({}),
   connectorPlaceholder: PropTypes.string,
-  nodes: PropTypes.objectOf(PropTypes.shape({
-    pieces: PropTypes.arrayOf(PropTypes.string),
-    x: PropTypes.number,
-    y: PropTypes.number,
-    type: PropTypes.string,
-    value: PropTypes.string,
-    editable: PropTypes.shape({
-      label: PropTypes.bool,
-      type: PropTypes.bool,
-      value: PropTypes.bool,
-      delete: PropTypes.bool,
+  nodes: PropTypes.objectOf(
+    PropTypes.shape({
+      pieces: PropTypes.arrayOf(PropTypes.string),
+      x: PropTypes.number,
+      y: PropTypes.number,
+      type: PropTypes.string,
+      value: PropTypes.string,
+      editable: PropTypes.shape({
+        label: PropTypes.bool,
+        type: PropTypes.bool,
+        value: PropTypes.bool,
+        delete: PropTypes.bool,
+      }),
     }),
-  })),
+  ),
   selectedNode: PropTypes.number,
-  edges: PropTypes.objectOf(PropTypes.shape({
-
-  })),
+  edges: PropTypes.objectOf(PropTypes.shape({})),
   selectedEdge: PropTypes.number,
   selectedRootNode: PropTypes.number,
   stagePos: PropTypes.shape({
@@ -1844,6 +1976,7 @@ ExpressionTreeEditor.defaultProps = {
   showToolbar: true,
   showToolbarButtons: {
     showDrawerButton: true,
+    showMathInputButton: true,
     showEditorInfoButton: true,
     showStateResetButton: true,
     showUndoButton: true,

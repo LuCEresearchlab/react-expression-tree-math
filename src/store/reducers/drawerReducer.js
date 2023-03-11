@@ -43,16 +43,18 @@ const reducers = {
   setAddEdgeErrorSnackbarMessage: (state, payload) => {
     const { addEdgeErrorMessage } = payload;
 
-    const {
-      currentAddEdgeErrorMessage,
-      currentIsAddEdgeErrorSnackbarOpen,
-    } = state;
+    const { currentAddEdgeErrorMessage, currentIsAddEdgeErrorSnackbarOpen } =
+      state;
     const isUndefined = addEdgeErrorMessage === undefined;
 
     return {
       ...state,
-      addEdgeErrorMessage: isUndefined ? currentAddEdgeErrorMessage : addEdgeErrorMessage,
-      isAddEdgeErrorSnackbarOpen: isUndefined ? currentIsAddEdgeErrorSnackbarOpen : true,
+      addEdgeErrorMessage: isUndefined
+        ? currentAddEdgeErrorMessage
+        : addEdgeErrorMessage,
+      isAddEdgeErrorSnackbarOpen: isUndefined
+        ? currentIsAddEdgeErrorSnackbarOpen
+        : true,
       dragEdge: null,
     };
   },
@@ -105,10 +107,7 @@ const reducers = {
     return {
       ...state,
       undoState: remainingUndoState,
-      redoState: [
-        currentState,
-        ...redoState,
-      ],
+      redoState: [currentState, ...redoState],
       ...lastUndoState,
     };
   },
@@ -129,10 +128,7 @@ const reducers = {
     return {
       ...state,
       redoState: remainingRedoState,
-      undoState: [
-        currentState,
-        ...undoState,
-      ],
+      undoState: [currentState, ...undoState],
       ...lastRedoState,
     };
   },

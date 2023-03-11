@@ -42,6 +42,10 @@ export const defaultProps = {
   // Undo - Redo
   undoState: [],
   redoState: [],
+  // Math Input
+  isMathInputOpen: false,
+  mathLatex: '\\text{Press a button}',
+  mathOperator: '',
 };
 
 export const createSanitizedUtilsProps = (
@@ -54,8 +58,10 @@ export const createSanitizedUtilsProps = (
 ) => ({
   sanitizedFontSize: propFontSize || defaultProps.fontSize,
   sanitizedFontFamily: propFontFamily || defaultProps.fontFamily,
-  sanitizedConnectorPlaceholder: propConnectorPlaceholder || defaultProps.connectorPlaceholder,
-  sanitizedPlaceholderWidth: propPlaceholderWidth || defaultProps.placeholderWidth,
+  sanitizedConnectorPlaceholder:
+    propConnectorPlaceholder || defaultProps.connectorPlaceholder,
+  sanitizedPlaceholderWidth:
+    propPlaceholderWidth || defaultProps.placeholderWidth,
   sanitizedNodePaddingX: propNodePaddingX || defaultProps.defaultNodePaddingX,
   sanitizedNodePaddingY: propNodePaddingY || defaultProps.defaultNodePaddingY,
 });
@@ -84,7 +90,8 @@ export const createInitialState = (
   fontFamily: fontFamily || defaultProps.fontFamily,
   nodePaddingX: nodePaddingX || defaultProps.defaultNodePaddingX,
   nodePaddingY: nodePaddingY || defaultProps.defaultNodePaddingY,
-  connectorPlaceholder: connectorPlaceholder || defaultProps.connectorPlaceholder,
+  connectorPlaceholder:
+    connectorPlaceholder || defaultProps.connectorPlaceholder,
   placeholderWidth: placeholderWidth || defaultProps.placeholderWidth,
   isDraggingNode: defaultProps.isDraggingNode,
   // Stage
@@ -114,11 +121,16 @@ export const createInitialState = (
   createNodeInputValue: defaultProps.createNodeInputValue,
   createNodeDescription: defaultProps.createNodeDescrpiton,
   templateNodes: templateNodes || defaultProps.templateNodes,
-  templateNodesDescription: templateNodesDescription || defaultProps.templateNodesDescription,
+  templateNodesDescription:
+    templateNodesDescription || defaultProps.templateNodesDescription,
   updateLabelInputValue: defaultProps.updateLabelInputValue,
   updateTypeInputValue: defaultProps.updateTypeInputValue,
   updateValueInputValue: defaultProps.updateValueInputValue,
   // Undo - Redo
   undoState: defaultProps.undoState,
   redoState: defaultProps.redoState,
+  // Math Input
+  isMathInputOpen: defaultProps.isMathInputOpen,
+  mathLatex: defaultProps.mathLatex,
+  mathOperator: defaultProps.mathOperator,
 });

@@ -22,13 +22,10 @@ import {
   UndoRounded,
   ZoomInRounded,
   ZoomOutRounded,
+  ExposureRounded,
 } from '@material-ui/icons';
 
-import {
-  Toolbar,
-  IconButton,
-  Tooltip,
-} from '@material-ui/core';
+import { Toolbar, IconButton, Tooltip } from '@material-ui/core';
 
 // Top bar and side drawer styles
 const useStyles = makeStyles(() => ({
@@ -84,6 +81,9 @@ function ToolbarActions({
   handleFullScreenButtonAction,
   hasStateToUndo,
   hasStateToRedo,
+  isMathInputOpen,
+  showMathInputButton,
+  handleMathInputButtonAction,
 }) {
   const classes = useStyles();
   const uploadButtonRef = useRef();
@@ -129,6 +129,20 @@ function ToolbarActions({
             onClick={handleDrawerButtonAction}
           >
             {isDrawerOpen ? <ChevronLeftRounded /> : <MenuRounded />}
+          </IconButton>
+        </Tooltip>
+      )}
+      {showMathInputButton && (
+        <Tooltip
+          title={!isMathInputOpen ? 'Open math input' : 'Close math input'}
+          placement="bottom"
+        >
+          <IconButton
+            className={classes.toolbarButton}
+            color="primary"
+            onClick={handleMathInputButtonAction}
+          >
+            <ExposureRounded />
           </IconButton>
         </Tooltip>
       )}
@@ -269,11 +283,7 @@ function ToolbarActions({
       )}
       {showFullScreenButton && (
         <Tooltip
-          title={
-            !isFullScreen
-              ? 'Enter full screen'
-              : 'Exit full screen'
-          }
+          title={!isFullScreen ? 'Enter full screen' : 'Exit full screen'}
           placement="bottom"
         >
           <IconButton
@@ -281,11 +291,7 @@ function ToolbarActions({
             color="primary"
             onClick={handleFullScreenButtonAction}
           >
-            {!isFullScreen ? (
-              <FullscreenRounded />
-            ) : (
-              <FullscreenExitRounded />
-            )}
+            {!isFullScreen ? <FullscreenRounded /> : <FullscreenExitRounded />}
           </IconButton>
         </Tooltip>
       )}
@@ -326,6 +332,9 @@ ToolbarActions.propTypes = {
   handleFullScreenButtonAction: PropTypes.func,
   hasStateToUndo: PropTypes.bool,
   hasStateToRedo: PropTypes.bool,
+  isMathInputOpen: PropTypes.bool,
+  showMathInputButton: PropTypes.bool,
+  handleMathInputButtonAction: PropTypes.func,
 };
 
 ToolbarActions.defaultProps = {
@@ -361,6 +370,9 @@ ToolbarActions.defaultProps = {
   handleFullScreenButtonAction: () => {},
   hasStateToUndo: false,
   hasStateToRedo: false,
+  isMathInputOpen: false,
+  showMathInputButton: true,
+  handleMathInputButtonAction: () => {},
 };
 
 export default ToolbarActions;
