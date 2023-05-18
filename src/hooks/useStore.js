@@ -2,7 +2,10 @@ import { useReducer, useMemo, useEffect } from 'react';
 
 import actions from '../store/actions';
 import reducer from '../store/reducers';
-import { createSanitizedUtilsProps, createInitialState } from '../store/initialState';
+import {
+  createSanitizedUtilsProps,
+  createInitialState,
+} from '../store/initialState';
 
 import createPositionUtils from '../utils/position';
 
@@ -31,71 +34,82 @@ function useStore({
     sanitizedPlaceholderWidth,
     sanitizedNodePaddingX,
     sanitizedNodePaddingY,
-  } = useMemo(() => (createSanitizedUtilsProps(
-    propFontSize,
-    propFontFamily,
-    propConnectorPlaceholder,
-    propPlaceholderWidth,
-    propNodePaddingX,
-    propNodePaddingY,
-  )), [
-    propFontSize,
-    propFontFamily,
-    propConnectorPlaceholder,
-    propPlaceholderWidth,
-    propNodePaddingX,
-    propNodePaddingY,
-  ]);
+  } = useMemo(
+    () =>
+      createSanitizedUtilsProps(
+        propFontSize,
+        propFontFamily,
+        propConnectorPlaceholder,
+        propPlaceholderWidth,
+        propNodePaddingX,
+        propNodePaddingY,
+      ),
+    [
+      propFontSize,
+      propFontFamily,
+      propConnectorPlaceholder,
+      propPlaceholderWidth,
+      propNodePaddingX,
+      propNodePaddingY,
+    ],
+  );
 
-  const utils = useMemo(() => createPositionUtils(
-    sanitizedFontSize,
-    sanitizedFontFamily,
-    sanitizedConnectorPlaceholder,
-    sanitizedPlaceholderWidth,
-    sanitizedNodePaddingX,
-    sanitizedNodePaddingY,
-  ), [
-    sanitizedFontSize,
-    sanitizedFontFamily,
-    sanitizedConnectorPlaceholder,
-    sanitizedPlaceholderWidth,
-    sanitizedNodePaddingX,
-    sanitizedNodePaddingY,
-  ]);
+  const utils = useMemo(
+    () =>
+      createPositionUtils(
+        sanitizedFontSize,
+        sanitizedFontFamily,
+        sanitizedConnectorPlaceholder,
+        sanitizedPlaceholderWidth,
+        sanitizedNodePaddingX,
+        sanitizedNodePaddingY,
+      ),
+    [
+      sanitizedFontSize,
+      sanitizedFontFamily,
+      sanitizedConnectorPlaceholder,
+      sanitizedPlaceholderWidth,
+      sanitizedNodePaddingX,
+      sanitizedNodePaddingY,
+    ],
+  );
 
-  const {
-    sanitizedNodes,
-    sanitizedEdges,
-  } = useMemo(() => (
-    utils.sanitizeNodesAndEdges(propNodes, propEdges)
-  ), [propNodes, propEdges, utils.sanitizeNodesAndEdges]);
+  const { sanitizedNodes, sanitizedEdges } = useMemo(
+    () => utils.sanitizeNodesAndEdges(propNodes, propEdges),
+    [propNodes, propEdges, utils.sanitizeNodesAndEdges],
+  );
 
   const templateNodesDescription = useMemo(() => {
     if (propTemplateNodes !== undefined && propTemplateNodes !== null) {
-      return propTemplateNodes.map((pieces) => utils.createNodeFromPieces(pieces));
+      return propTemplateNodes.map((pieces) =>
+        utils.createNodeFromPieces(pieces),
+      );
     }
     return null;
   }, []);
 
-  const [store, dispatch] = useReducer(reducer, createInitialState(
-    sanitizedNodes,
-    propSelectedNode,
-    sanitizedEdges,
-    propSelectedEdge,
-    propSelectedRootNode,
-    propStagePos,
-    propStageScale,
-    sanitizedConnectorPlaceholder,
-    sanitizedPlaceholderWidth,
-    sanitizedFontSize,
-    sanitizedFontFamily,
-    sanitizedNodePaddingX,
-    sanitizedNodePaddingY,
-    propTemplateNodes,
-    templateNodesDescription,
-    propHighlightedNodes,
-    propHighlightedEdges,
-  ));
+  const [store, dispatch] = useReducer(
+    reducer,
+    createInitialState(
+      sanitizedNodes,
+      propSelectedNode,
+      sanitizedEdges,
+      propSelectedEdge,
+      propSelectedRootNode,
+      propStagePos,
+      propStageScale,
+      sanitizedConnectorPlaceholder,
+      sanitizedPlaceholderWidth,
+      sanitizedFontSize,
+      sanitizedFontFamily,
+      sanitizedNodePaddingX,
+      sanitizedNodePaddingY,
+      propTemplateNodes,
+      templateNodesDescription,
+      propHighlightedNodes,
+      propHighlightedEdges,
+    ),
+  );
 
   const storeActions = useMemo(() => {
     const temp = actions.reduce((accumulator, item) => {
@@ -156,14 +170,24 @@ function useStore({
   }, [storeActions, propStageScale]);
 
   useEffect(() => {
-    if (sanitizedConnectorPlaceholder !== undefined && sanitizedConnectorPlaceholder !== null) {
-      storeActions.setConnectorPlaceholder({ connectorPlaceholder: sanitizedConnectorPlaceholder });
+    if (
+      sanitizedConnectorPlaceholder !== undefined &&
+      sanitizedConnectorPlaceholder !== null
+    ) {
+      storeActions.setConnectorPlaceholder({
+        connectorPlaceholder: sanitizedConnectorPlaceholder,
+      });
     }
   }, [storeActions, sanitizedConnectorPlaceholder]);
 
   useEffect(() => {
-    if (sanitizedPlaceholderWidth !== undefined && sanitizedPlaceholderWidth !== null) {
-      storeActions.setPlaceholderWidth({ placeholderWidth: sanitizedPlaceholderWidth });
+    if (
+      sanitizedPlaceholderWidth !== undefined &&
+      sanitizedPlaceholderWidth !== null
+    ) {
+      storeActions.setPlaceholderWidth({
+        placeholderWidth: sanitizedPlaceholderWidth,
+      });
     }
   }, [storeActions, sanitizedPlaceholderWidth]);
 

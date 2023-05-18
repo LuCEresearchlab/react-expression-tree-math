@@ -8,21 +8,21 @@ const reducers = {
     };
   },
 
-  setMathLatex: (state, payload) => {
-    const { mathLatex } = payload;
+  setCurrentMathSelection: (state, payload) => {
+    const { currentMathSelection } = payload;
 
     return {
       ...state,
-      mathLatex,
+      currentMathSelection,
     };
   },
 
-  setMathOperator: (state, payload) => {
-    const { mathOperator } = payload;
-
+  setIsCreatingMathNode: (state, payload) => {
+    const { setValue } = payload;
     return {
       ...state,
-      mathOperator,
+      isCreatingMathNode: setValue,
+      isCreatingNode: false,
     };
   },
 };

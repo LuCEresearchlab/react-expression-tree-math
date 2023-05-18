@@ -1,14 +1,10 @@
 /* eslint-disable arrow-body-style */
-import {
-  createEmptyEdge,
-} from '../../utils/state';
+import { createEmptyEdge } from "../../utils/state";
 
 const reducers = {
   // This reducer is used for setting up the initial stage, should not enable Undo and Redo
   setNodes: (state, payload) => {
-    const {
-      nodes,
-    } = payload;
+    const { nodes } = payload;
 
     return {
       ...state,
@@ -32,12 +28,14 @@ const reducers = {
       isSelected,
       childEdges,
       parentEdges,
+      isMathNode,
+      mathPieces,
     } = payload;
 
     const { undoState, nodes } = state;
 
     const newUndoState = {
-      action: 'createNode',
+      action: "createNode",
       nodes,
     };
 
@@ -59,21 +57,19 @@ const reducers = {
           isSelected,
           childEdges,
           parentEdges,
+          isMathNode,
+          mathPieces,
         },
       },
       isCreatingNode: false,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      isCreatingMathNode: false,
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   removeNode: (state, payload) => {
-    const {
-      nodeId,
-    } = payload;
+    const { nodeId } = payload;
 
     const {
       undoState,
@@ -88,13 +84,11 @@ const reducers = {
     } = state;
 
     // Remove node
-    const {
-      [nodeId]: toRemove,
-      ...remainingNodes
-    } = nodes;
+    const { [nodeId]: toRemove, ...remainingNodes } = nodes;
 
     // Check which edges need to be removed
-    const { childEdges: childEdgesToRemove, parentEdges: parentEdgesToRemove } = nodes[nodeId];
+    const { childEdges: childEdgesToRemove, parentEdges: parentEdgesToRemove } =
+      nodes[nodeId];
     const parentFlatEdgesToRemove = parentEdgesToRemove.flat();
     const edgesToRemove = childEdgesToRemove.concat(parentFlatEdgesToRemove);
 
@@ -110,17 +104,14 @@ const reducers = {
 
     const updatedNodes = {};
     childEdgesToRemove.forEach((id) => {
-      const {
-        parentNodeId,
-        parentPieceId,
-      } = edges[id];
+      const { parentNodeId, parentPieceId } = edges[id];
 
       const parentNode = remainingNodes[parentNodeId];
       const { parentEdges } = parentNode;
       const updatedParentEdges = [...parentEdges];
-      updatedParentEdges[parentPieceId] = updatedParentEdges[parentPieceId].filter(
-        (edgeId) => !edgesToRemove.includes(edgeId),
-      );
+      updatedParentEdges[parentPieceId] = updatedParentEdges[
+        parentPieceId
+      ].filter((edgeId) => !edgesToRemove.includes(edgeId));
 
       updatedNodes[parentNodeId] = {
         ...parentNode,
@@ -128,9 +119,7 @@ const reducers = {
       };
     });
     parentFlatEdgesToRemove.forEach((id) => {
-      const {
-        childNodeId,
-      } = edges[id];
+      const { childNodeId } = edges[id];
 
       const childNode = remainingNodes[childNodeId];
       const { childEdges } = childNode;
@@ -143,7 +132,7 @@ const reducers = {
     });
 
     const newUndoState = {
-      action: 'removeNode',
+      action: "removeNode",
       nodes,
       edges,
       isSelectedNodeEditable,
@@ -162,35 +151,22 @@ const reducers = {
       },
       edges: newEdges,
       isSelectedNodeEditable: selectedNode ? undefined : isSelectedNodeEditable,
-      updateLabelInputValue: selectedNode ? '' : updateLabelInputValue,
-      updateTypeInputValue: selectedNode ? '' : updateTypeInputValue,
-      updateValueInputValue: selectedNode ? '' : updateValueInputValue,
+      updateLabelInputValue: selectedNode ? "" : updateLabelInputValue,
+      updateTypeInputValue: selectedNode ? "" : updateTypeInputValue,
+      updateValueInputValue: selectedNode ? "" : updateValueInputValue,
       selectedNode: undefined,
-      selectedRootNode:
-        selectedRootNode === nodeId
-          ? null
-          : selectedRootNode,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      selectedRootNode: selectedRootNode === nodeId ? null : selectedRootNode,
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo enabled
   updateNode: (state, payload) => {
-    const {
-      updatedEdges,
-      pieces,
-      piecesPosition,
-      width,
-      parentEdges,
-    } = payload;
+    const { updatedEdges, pieces, piecesPosition, width, parentEdges } =
+      payload;
 
-    const {
-      undoState, nodes, edges, selectedNode,
-    } = state;
+    const { undoState, nodes, edges, selectedNode } = state;
     const node = nodes[selectedNode];
 
     const edgesToUpdate = Object.keys(updatedEdges);
@@ -230,7 +206,7 @@ const reducers = {
     }, {});
 
     const newUndoState = {
-      action: 'updateNode',
+      action: "updateNode",
       nodes,
       edges,
       selectedNode,
@@ -250,10 +226,7 @@ const reducers = {
         ...nodesToUpdate,
       },
       edges: newEdges,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
@@ -263,9 +236,7 @@ const reducers = {
    * in here we have the knowledge of the initial position of the nodes before dragging.
    */
   setIsDraggingNode: (state, payload) => {
-    const {
-      nodeId,
-    } = payload;
+    const { nodeId } = payload;
 
     const {
       undoState,
@@ -286,7 +257,7 @@ const reducers = {
     };
 
     const newUndoState = {
-      action: 'setIsDraggingNode',
+      action: "setIsDraggingNode",
       nodes,
       edges,
       selectedNode,
@@ -303,24 +274,17 @@ const reducers = {
       selectedNode: nodeId,
       selectedEdge: undefined,
       isSelectedNodeEditable,
-      updateLabelInputValue: node.pieces.join(''),
+      updateLabelInputValue: node.pieces.join(""),
       updateTypeInputValue: node.type,
       updateValueInputValue: node.value,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo: look at 'setIsDraggingNode'
   updateNodeCoordinates: (state, payload) => {
-    const {
-      updatedEdges,
-      nodeId,
-      updatedNode,
-    } = payload;
+    const { updatedEdges, nodeId, updatedNode } = payload;
 
     const { nodes, edges } = state;
     const oldNode = nodes[nodeId];
@@ -343,11 +307,7 @@ const reducers = {
 
   // Undo and Redo: look at 'setIsDraggingNode'
   updateNodeCoordinatesAndFinishDragging: (state, payload) => {
-    const {
-      updatedEdges,
-      nodeId,
-      updatedNode,
-    } = payload;
+    const { updatedEdges, nodeId, updatedNode } = payload;
 
     const { nodes, edges } = state;
     const oldNode = nodes[nodeId];
@@ -371,17 +331,19 @@ const reducers = {
 
   // Undo and Redo enabled
   updateNodeType: (state, payload) => {
-    const {
-      type,
-    } = payload;
+    const { type } = payload;
 
     const {
-      undoState, nodes, selectedNode, updateTypeInputValue, isSelectedNodeEditable,
+      undoState,
+      nodes,
+      selectedNode,
+      updateTypeInputValue,
+      isSelectedNodeEditable,
     } = state;
     const node = nodes[selectedNode];
 
     const newUndoState = {
-      action: 'updateNodeType',
+      action: "updateNodeType",
       nodes,
       selectedNode,
       updateTypeInputValue,
@@ -398,27 +360,26 @@ const reducers = {
         },
       },
       updateTypeInputValue: type,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo enabled
   updateNodeValue: (state, payload) => {
-    const {
-      value,
-    } = payload;
+    const { value } = payload;
 
     const {
-      undoState, nodes, selectedNode, updateTypeInputValue, isSelectedNodeEditable,
+      undoState,
+      nodes,
+      selectedNode,
+      updateTypeInputValue,
+      isSelectedNodeEditable,
     } = state;
     const node = nodes[selectedNode];
 
     const newUndoState = {
-      action: 'updateNodeValue',
+      action: "updateNodeValue",
       nodes,
       selectedNode,
       updateTypeInputValue,
@@ -435,19 +396,14 @@ const reducers = {
         },
       },
       updateValueInputValue: value,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // No Undo and Redo
   setSelectedNode: (state, payload) => {
-    const {
-      selectedNode,
-    } = payload;
+    const { selectedNode } = payload;
 
     const { nodes } = state;
     const node = nodes[selectedNode];
@@ -463,9 +419,10 @@ const reducers = {
       selectedNode,
       selectedEdge: undefined,
       isSelectedNodeEditable,
-      updateLabelInputValue: node.pieces.join(''),
+      updateLabelInputValue: node.pieces.join(""),
       updateTypeInputValue: node.type,
       updateValueInputValue: node.value,
+      isSelectedNodeMath: node.isMathNode,
     };
   },
 
@@ -474,21 +431,20 @@ const reducers = {
     ...state,
     selectedNode: undefined,
     isSelectedNodeEditable: undefined,
-    updateLabelInputValue: '',
-    updateTypeInputValue: '',
-    updateValueInputValue: '',
+    updateLabelInputValue: "",
+    updateTypeInputValue: "",
+    updateValueInputValue: "",
+    isSelectedNodeMath: undefined,
   }),
 
   // Undo and Redo enabled
   setSelectedRootNode: (state, payload) => {
-    const {
-      selectedRootNode,
-    } = payload;
+    const { selectedRootNode } = payload;
 
     const { undoState, selectedRootNode: oldSelectedRootNode } = state;
 
     const newUndoState = {
-      action: 'setSelectedRootNode',
+      action: "setSelectedRootNode",
       selectedRootNode: oldSelectedRootNode,
     };
 
@@ -499,10 +455,7 @@ const reducers = {
     return {
       ...state,
       selectedRootNode,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
@@ -511,7 +464,7 @@ const reducers = {
   clearSelectedRootNode: (state) => {
     const { undoState, selectedRootNode } = state;
     const newUndoState = {
-      action: 'clearSelectedRootNode',
+      action: "clearSelectedRootNode",
       selectedRootNode,
     };
 
@@ -522,10 +475,7 @@ const reducers = {
     return {
       ...state,
       selectedRootNode: undefined,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
@@ -535,16 +485,19 @@ const reducers = {
     const { highlightedNodes } = payload;
     const { nodes, highlightedNodes: currentHighlightedNodes } = state;
 
-    const oldHighlightedNodes = currentHighlightedNodes.reduce((accumulator, id) => {
-      const node = nodes[id];
-      if (node) {
-        accumulator[id] = {
-          ...node,
-          isHighlighted: false,
-        };
-      }
-      return accumulator;
-    }, {});
+    const oldHighlightedNodes = currentHighlightedNodes.reduce(
+      (accumulator, id) => {
+        const node = nodes[id];
+        if (node) {
+          accumulator[id] = {
+            ...node,
+            isHighlighted: false,
+          };
+        }
+        return accumulator;
+      },
+      {},
+    );
     const newHighlightedNodes = highlightedNodes.reduce((accumulator, id) => {
       const node = nodes[id];
       if (node) {
@@ -568,9 +521,7 @@ const reducers = {
 
   // This reducer is used for setting up the initial stage, should not enable Undo and Redo
   setEdges: (state, payload) => {
-    const {
-      edges,
-    } = payload;
+    const { edges } = payload;
 
     return {
       ...state,
@@ -612,13 +563,10 @@ const reducers = {
     const { parentEdges } = parentNode;
     const newParentEdges = [...parentEdges];
     const pieceEdges = newParentEdges[parentPieceId];
-    newParentEdges[parentPieceId] = [
-      ...pieceEdges,
-      addingEdgeId,
-    ];
+    newParentEdges[parentPieceId] = [...pieceEdges, addingEdgeId];
 
     const newUndoState = {
-      action: 'createEdge',
+      action: "createEdge",
       nodes,
       edges,
     };
@@ -629,16 +577,11 @@ const reducers = {
         ...nodes,
         [childNodeId]: {
           ...childNode,
-          childEdges: [
-            ...childEdges,
-            addingEdgeId,
-          ],
+          childEdges: [...childEdges, addingEdgeId],
         },
         [parentNodeId]: {
           ...parentNode,
-          parentEdges: [
-            ...newParentEdges,
-          ],
+          parentEdges: [...newParentEdges],
         },
       },
       edges: {
@@ -646,41 +589,27 @@ const reducers = {
         [addingEdgeId]: addingEdge,
       },
       dragEdge: null,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo enabled
   removeEdge: (state, payload) => {
-    const {
-      edgeId,
-    } = payload;
+    const { edgeId } = payload;
 
-    const {
-      undoState, nodes, edges,
-    } = state;
-    const {
-      [edgeId]: toRemove,
-      ...remainingEdges
-    } = edges;
+    const { undoState, nodes, edges } = state;
+    const { [edgeId]: toRemove, ...remainingEdges } = edges;
 
-    const {
-      childNodeId,
-      parentNodeId,
-      parentPieceId,
-    } = edges[edgeId];
+    const { childNodeId, parentNodeId, parentPieceId } = edges[edgeId];
 
     const childNode = nodes[childNodeId];
     const parentNode = nodes[parentNodeId];
     const { parentEdges } = parentNode;
     const updatedParentNodes = [...parentEdges];
-    updatedParentNodes[parentPieceId] = updatedParentNodes[parentPieceId].filter(
-      (id) => id !== edgeId,
-    );
+    updatedParentNodes[parentPieceId] = updatedParentNodes[
+      parentPieceId
+    ].filter((id) => id !== edgeId);
 
     const updatedNodes = {};
     updatedNodes[childNodeId] = {
@@ -693,7 +622,7 @@ const reducers = {
     };
 
     const newUndoState = {
-      action: 'removeEdge',
+      action: "removeEdge",
       nodes,
       edges,
       selectedEdge: edgeId,
@@ -710,36 +639,26 @@ const reducers = {
       },
       dragEdge: undefined,
       selectedEdge: undefined,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo enabled
   updateChildEdge: (state, payload) => {
-    const {
-      newEdge,
-      edgeId,
-    } = payload;
+    const { newEdge, edgeId } = payload;
 
     const { undoState, nodes, edges } = state;
 
     const oldEdge = edges[edgeId];
-    const {
-      childNodeId: oldChildNodeId,
-    } = oldEdge;
+    const { childNodeId: oldChildNodeId } = oldEdge;
     const oldChildNode = nodes[oldChildNodeId];
 
-    const {
-      childNodeId: newChildNodeId,
-    } = newEdge;
+    const { childNodeId: newChildNodeId } = newEdge;
     const newChildNode = nodes[newChildNodeId];
 
     const newUndoState = {
-      action: 'updateChildEdge',
+      action: "updateChildEdge",
       nodes,
       edges,
       selectedEdge: edgeId,
@@ -755,10 +674,7 @@ const reducers = {
         },
         [newChildNodeId]: {
           ...newChildNode,
-          childEdges: [
-            ...newChildNode.childEdges,
-            edgeId,
-          ],
+          childEdges: [...newChildNode.childEdges, edgeId],
         },
       },
       edges: {
@@ -766,33 +682,23 @@ const reducers = {
         [edgeId]: newEdge,
       },
       dragEdge: null,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo enabled
   updateParentEdge: (state, payload) => {
-    const {
-      newEdge,
-      edgeId,
-    } = payload;
+    const { newEdge, edgeId } = payload;
 
     const { undoState, nodes, edges } = state;
 
     const oldEdge = edges[edgeId];
-    const {
-      parentNodeId: oldParentNodeId,
-      parentPieceId: oldParentPieceId,
-    } = oldEdge;
+    const { parentNodeId: oldParentNodeId, parentPieceId: oldParentPieceId } =
+      oldEdge;
 
-    const {
-      parentNodeId: newParentNodeId,
-      parentPieceId: newParentPieceId,
-    } = newEdge;
+    const { parentNodeId: newParentNodeId, parentPieceId: newParentPieceId } =
+      newEdge;
 
     const oldParentNode = nodes[oldParentNodeId];
     const { parentEdges: oldParentEdges } = oldParentNode;
@@ -802,9 +708,9 @@ const reducers = {
     const updatedNodes = {};
     if (oldParentNodeId === newParentNodeId) {
       const updatedParentEdges = [...oldParentEdges];
-      updatedParentEdges[oldParentPieceId] = updatedParentEdges[oldParentPieceId].filter(
-        (id) => id !== edgeId,
-      );
+      updatedParentEdges[oldParentPieceId] = updatedParentEdges[
+        oldParentPieceId
+      ].filter((id) => id !== edgeId);
       updatedParentEdges[newParentPieceId] = [
         ...updatedParentEdges[newParentPieceId],
         edgeId,
@@ -816,9 +722,9 @@ const reducers = {
       };
     } else {
       const updatedOldParentEdges = [...oldParentEdges];
-      updatedOldParentEdges[oldParentPieceId] = updatedOldParentEdges[oldParentPieceId].filter(
-        (id) => id !== edgeId,
-      );
+      updatedOldParentEdges[oldParentPieceId] = updatedOldParentEdges[
+        oldParentPieceId
+      ].filter((id) => id !== edgeId);
 
       const updatedNewParentEdges = [...newParentEdges];
       updatedNewParentEdges[newParentPieceId] = [
@@ -837,7 +743,7 @@ const reducers = {
     }
 
     const newUndoState = {
-      action: 'updateParentEdge',
+      action: "updateParentEdge",
       nodes,
       edges,
       selectedEdge: edgeId,
@@ -854,28 +760,23 @@ const reducers = {
         [edgeId]: newEdge,
       },
       dragEdge: null,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // No Undo and Redo
   setSelectedEdge: (state, payload) => {
-    const {
-      selectedEdge,
-    } = payload;
+    const { selectedEdge } = payload;
 
     return {
       ...state,
       selectedEdge,
       selectedNode: undefined,
       isSelectedNodeEditable: undefined,
-      updateLabelInputValue: '',
-      updateTypeInputValue: '',
-      updateValueInputValue: '',
+      updateLabelInputValue: "",
+      updateTypeInputValue: "",
+      updateValueInputValue: "",
     };
   },
 
@@ -890,16 +791,19 @@ const reducers = {
     const { highlightedEdges } = payload;
     const { edges, highlightedEdges: currentHighlightedEdges } = state;
 
-    const oldHighlightedEdges = currentHighlightedEdges.reduce((accumulator, id) => {
-      const node = edges[id];
-      if (node) {
-        accumulator[id] = {
-          ...node,
-          isHighlighted: false,
-        };
-      }
-      return accumulator;
-    }, {});
+    const oldHighlightedEdges = currentHighlightedEdges.reduce(
+      (accumulator, id) => {
+        const node = edges[id];
+        if (node) {
+          accumulator[id] = {
+            ...node,
+            isHighlighted: false,
+          };
+        }
+        return accumulator;
+      },
+      {},
+    );
     const newHighlightedEdges = highlightedEdges.reduce((accumulator, id) => {
       const node = edges[id];
       if (node) {
@@ -940,10 +844,7 @@ const reducers = {
 
   // No Undo and Redo
   updateDragEdgeParentCoordinates: (state, payload) => {
-    const {
-      x,
-      y,
-    } = payload;
+    const { x, y } = payload;
 
     const { dragEdge } = state;
     return {
@@ -958,10 +859,7 @@ const reducers = {
 
   // No Undo and Redo
   updateDragEdgeChildCoordinates: (state, payload) => {
-    const {
-      x,
-      y,
-    } = payload;
+    const { x, y } = payload;
 
     const { dragEdge } = state;
 
@@ -1001,7 +899,7 @@ const reducers = {
     } = state;
 
     const newUndoState = {
-      action: 'stageReset',
+      action: "stageReset",
       nodes: oldNodes,
       selectedNode: oldSelectedNode,
       edges: oldEdges,
@@ -1023,22 +921,14 @@ const reducers = {
       stageScale,
       connectorPlaceholder,
       dragEdge: null,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // No Undo and Redo
   setStartingOrderedNodes: (state, payload) => {
-    const {
-      nodes,
-      edges,
-      stagePos,
-      stageScale,
-    } = payload;
+    const { nodes, edges, stagePos, stageScale } = payload;
 
     return {
       ...state,
@@ -1051,12 +941,7 @@ const reducers = {
 
   // Undo and Redo enabled
   setOrderedNodes: (state, payload) => {
-    const {
-      nodes,
-      edges,
-      stagePos,
-      stageScale,
-    } = payload;
+    const { nodes, edges, stagePos, stageScale } = payload;
 
     const {
       undoState,
@@ -1067,7 +952,7 @@ const reducers = {
     } = state;
 
     const newUndoState = {
-      action: 'setOrderedNodes',
+      action: "setOrderedNodes",
       nodes: oldNodes,
       edges: oldEdges,
       stagePos: oldStagePos,
@@ -1080,26 +965,20 @@ const reducers = {
       edges,
       stagePos,
       stageScale,
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },
 
   // Undo and Redo enabled
   setNodeEditability: (state, payload) => {
-    const {
-      nodeId,
-      allowLabel,
-      allowDelete,
-      allowValue,
-      allowType,
-    } = payload;
+    const { nodeId, allowLabel, allowDelete, allowValue, allowType } = payload;
 
     const {
-      undoState, nodes, selectedNode, isSelectedNodeEditable: oldiISelectedNodeEditable,
+      undoState,
+      nodes,
+      selectedNode,
+      isSelectedNodeEditable: oldiISelectedNodeEditable,
     } = state;
     const node = nodes[nodeId];
     const editable = {
@@ -1109,12 +988,11 @@ const reducers = {
       delete: allowDelete,
     };
 
-    const isSelectedNodeEditable = nodeId === selectedNode
-      ? editable
-      : nodes[selectedNode].editable;
+    const isSelectedNodeEditable =
+      nodeId === selectedNode ? editable : nodes[selectedNode].editable;
 
     const newUndoState = {
-      action: 'setNodeEditability',
+      action: "setNodeEditability",
       isSelectedNodeEditable: oldiISelectedNodeEditable,
       nodes,
     };
@@ -1129,10 +1007,7 @@ const reducers = {
           editable,
         },
       },
-      undoState: [
-        newUndoState,
-        ...undoState,
-      ],
+      undoState: [newUndoState, ...undoState],
       redoState: [],
     };
   },

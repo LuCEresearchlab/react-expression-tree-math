@@ -6,12 +6,14 @@ const reducers = {
     return {
       ...state,
       isCreatingNode: !isCreatingNode,
+      isCreatingMathNode: false,
     };
   },
 
   clearIsCreatingNode: (state) => ({
     ...state,
     isCreatingNode: false,
+    isCreatingMathNode: false,
   }),
 
   toggleDrawer: (state) => {
@@ -99,7 +101,7 @@ const reducers = {
 
     const currentState = {};
     changedKeys.forEach((key) => {
-      if (key !== 'action') {
+      if (key !== "action") {
         currentState[key] = state[key];
       }
     });
@@ -120,7 +122,7 @@ const reducers = {
 
     const currentState = {};
     changedKeys.forEach((key) => {
-      if (key !== 'action') {
+      if (key !== "action") {
         currentState[key] = state[key];
       }
     });

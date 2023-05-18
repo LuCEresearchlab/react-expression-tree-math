@@ -3,6 +3,7 @@ import globalsReducers from './globalsReducer';
 import strageReducers from './stageReducer';
 import drawerReducers from './drawerReducer';
 import mathInputReducers from './mathInputReducer';
+import commentsReducers from './commentsReducer';
 import utilityReducers from './utilityReducer';
 
 export const reducers = {
@@ -11,6 +12,7 @@ export const reducers = {
   ...treeReducers,
   ...drawerReducers,
   ...mathInputReducers,
+  ...commentsReducers,
   ...utilityReducers,
 };
 

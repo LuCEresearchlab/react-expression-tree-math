@@ -174,6 +174,7 @@ function EditorDrawer({
   editNodeInputPlaceholder,
   typeInputPlaceholder,
   valueInputPlaceholder,
+  isSelectedNodeMath,
 }) {
   const classes = useStyles();
 
@@ -191,7 +192,7 @@ function EditorDrawer({
       PaperProps={{ style: { position: 'relative' } }}
       BackdropProps={{ style: { position: 'relative' } }}
       ModalProps={{
-        container: (containerRef.current),
+        container: containerRef.current,
         style: {
           position: 'absolute',
         },
@@ -264,7 +265,10 @@ function EditorDrawer({
                     </InputAdornment>
                   ),
                 }}
-                placeholder={createNodeInputPlaceholder || `example: ${connectorPlaceholder} + ${connectorPlaceholder}`}
+                placeholder={
+                  createNodeInputPlaceholder ||
+                  `example: ${connectorPlaceholder} + ${connectorPlaceholder}`
+                }
                 margin="dense"
                 value={createNodeInputValue}
                 autoComplete="off"
@@ -278,10 +282,7 @@ function EditorDrawer({
             </div>
             {createNodeDescription !== undefined && (
               <div className={classes.drawerField}>
-                <Stage
-                  width={300}
-                  height={60}
-                >
+                <Stage width={300} height={60}>
                   <Layer>
                     <Node
                       id="example-node"
@@ -307,7 +308,9 @@ function EditorDrawer({
                       nodePaddingY={nodePaddingY}
                       nodeStrokeColor={nodeStyle.nodeStrokeColor}
                       nodeStrokeWidth={nodeStyle.nodeStrokeWidth}
-                      nodeSelectedStrokeWidth={nodeStyle.nodeSelectedStrokeWidth}
+                      nodeSelectedStrokeWidth={
+                        nodeStyle.nodeSelectedStrokeWidth
+                      }
                       nodeCornerRadius={nodeStyle.nodeCornerRadius}
                       nodeFillColor={nodeStyle.nodeFillColor}
                       nodeErrorColor={nodeStyle.nodeErrorColor}
@@ -334,9 +337,7 @@ function EditorDrawer({
               >
                 <Accordion>
                   <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography variant="body1">
-                      Suggested nodes:
-                    </Typography>
+                    <Typography variant="body1">Suggested nodes:</Typography>
                   </AccordionSummary>
                   <Divider />
                   <div className={classes.templateContainer}>
@@ -358,22 +359,22 @@ function EditorDrawer({
             </div>
           </div>
         )}
-        {(isSelectedNodeEditable && (
-          isSelectedNodeEditable.label
-            || isSelectedNodeEditable.type
-            || isSelectedNodeEditable.value
-        ))
-          && (showDrawerSections.editLabelField
-            || showDrawerSections.editTypeField
-            || showDrawerSections.editValueField) && (
+        {!isSelectedNodeMath &&
+          isSelectedNodeEditable &&
+          (isSelectedNodeEditable.label ||
+            isSelectedNodeEditable.type ||
+            isSelectedNodeEditable.value) &&
+          (showDrawerSections.editLabelField ||
+            showDrawerSections.editTypeField ||
+            showDrawerSections.editValueField) && (
             <div className={classes.drawerInfo}>
               <Typography variant="h6">Edit an existing node:</Typography>
             </div>
-        )}
-        {
-          showDrawerSections.editLabelField
-            && isSelectedNodeEditable
-            && isSelectedNodeEditable.label && (
+          )}
+        {showDrawerSections.editLabelField &&
+          !isSelectedNodeMath &&
+          isSelectedNodeEditable &&
+          isSelectedNodeEditable.label && (
             <>
               <div className={classes.drawerField}>
                 <TextField
@@ -388,9 +389,9 @@ function EditorDrawer({
                   InputProps={{
                     className: classes.input,
                     classes: {
-                      adornedEnd: classes.endAdornment
+                      adornedEnd: classes.endAdornment,
                     },
-                    endAdornment:
+                    endAdornment: (
                       <Tooltip title="Confirm change" placement="right">
                         <span>
                           <IconButton
@@ -402,8 +403,12 @@ function EditorDrawer({
                           </IconButton>
                         </span>
                       </Tooltip>
+                    ),
                   }}
-                  placeholder={editNodeInputPlaceholder || `example: ${connectorPlaceholder} + ${connectorPlaceholder}`}
+                  placeholder={
+                    editNodeInputPlaceholder ||
+                    `example: ${connectorPlaceholder} + ${connectorPlaceholder}`
+                  }
                   value={updateLabelInputValue}
                   margin="dense"
                   autoComplete="off"
@@ -416,168 +421,174 @@ function EditorDrawer({
                 />
               </div>
             </>
-        )}
-        {showDrawerSections.editTypeField
-          && isSelectedNodeEditable
-          && isSelectedNodeEditable.type
-          && (
-          <>
-            <div className={classes.drawerField}>
-              {/* <Typography variant="h6">Edit the type:</Typography> */}
-              {allowFreeTypeUpdate && (
-                <>
-                  <TextField
-                    className={classes.textField}
-                    variant="outlined"
-                    fullWidth
-                    size="medium"
-                    placeholder={typeInputPlaceholder}
-                    margin="dense"
-                    label="Type of this node"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    InputProps={{
-                      className: classes.input,
-                    }}
-                    autoComplete="off"
-                    value={updateTypeInputValue}
-                    onChange={(e) => handleUpdateNodeTypeChange(e.target.value)}
-                  />
-                </>
-              )}
-            </div>
-
-            {templateNodeTypesAndValues && (
-              <div className={classes.typeField}>
-                <FormLabel>Suggested types:</FormLabel>
-                <div>
-                  {Object.keys(templateNodeTypesAndValues).map((nodeType) => (
-                    <Chip
-                      key={nodeType}
-                      label={nodeType}
-                      className={classes.suggestionChip}
-                      onClick={() => handleUpdateNodeTypeChange(nodeType)}
+          )}
+        {showDrawerSections.editTypeField &&
+          isSelectedNodeEditable &&
+          isSelectedNodeEditable.type && (
+            <>
+              <div className={classes.drawerField}>
+                {/* <Typography variant="h6">Edit the type:</Typography> */}
+                {allowFreeTypeUpdate && (
+                  <>
+                    <TextField
+                      className={classes.textField}
+                      variant="outlined"
+                      fullWidth
+                      size="medium"
+                      placeholder={typeInputPlaceholder}
+                      margin="dense"
+                      label="Type of this node"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      InputProps={{
+                        className: classes.input,
+                      }}
+                      autoComplete="off"
+                      value={updateTypeInputValue}
+                      onChange={(e) =>
+                        handleUpdateNodeTypeChange(e.target.value)
+                      }
                     />
-                  ))}
-                </div>
+                  </>
+                )}
               </div>
-            )}
-          </>
-        )}
-        {showDrawerSections.editValueField
-          && isSelectedNodeEditable
-          && isSelectedNodeEditable.value
-          && (
-          <>
-            <div className={classes.drawerField}>
-              {/* <Typography variant="h6">Edit the type:</Typography> */}
-              {allowFreeValueUpdate && (
-                <>
-                  <TextField
-                    className={classes.textField}
-                    variant="outlined"
-                    fullWidth
-                    size="medium"
-                    placeholder={valueInputPlaceholder}
-                    margin="dense"
-                    label="Value of this node"
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    InputProps={{
-                      className: classes.input,
-                    }}
-                    autoComplete="off"
-                    value={updateValueInputValue}
-                    onChange={(e) => handleUpdateNodeValueChange(e.target.value)}
-                  />
-                </>
-              )}
-            </div>
 
-            {templateNodeTypesAndValues
-              && templateNodeTypesAndValues[updateTypeInputValue]
-              && templateNodeTypesAndValues[updateTypeInputValue].length > 0 && (
+              {templateNodeTypesAndValues && (
                 <div className={classes.typeField}>
-                  <FormLabel>Suggested values:</FormLabel>
+                  <FormLabel>Suggested types:</FormLabel>
                   <div>
-                    {templateNodeTypesAndValues[updateTypeInputValue].map((nodeValue) => (
+                    {Object.keys(templateNodeTypesAndValues).map((nodeType) => (
                       <Chip
-                        key={nodeValue}
-                        label={nodeValue}
+                        key={nodeType}
+                        label={nodeType}
                         className={classes.suggestionChip}
-                        onClick={() => handleUpdateNodeValueChange(nodeValue)}
+                        onClick={() => handleUpdateNodeTypeChange(nodeType)}
                       />
                     ))}
                   </div>
                 </div>
-            )}
-          </>
-        )}
-        {showDrawerSections.editFinalNodeField
-          && isSelectedNodeEditable
-          && (
-          <>
-            <div className={classes.drawerInfo}>
-              <Typography variant="h6">Edit node editability:</Typography>
-            </div>
-            <div className={classes.drawerField}>
-              <div>
-                <FormGroup row>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={(
-                        <Switch
-                          checked={isSelectedNodeEditable.delete}
-                          onClick={handleSelectedNodeEditableDeleteChange}
-                          name="editableDelete"
-                          color="primary"
-                        />
-                      )}
-                      label="Delete"
+              )}
+            </>
+          )}
+        {showDrawerSections.editValueField &&
+          isSelectedNodeEditable &&
+          isSelectedNodeEditable.value && (
+            <>
+              <div className={classes.drawerField}>
+                {/* <Typography variant="h6">Edit the type:</Typography> */}
+                {allowFreeValueUpdate && (
+                  <>
+                    <TextField
+                      className={classes.textField}
+                      variant="outlined"
+                      fullWidth
+                      size="medium"
+                      placeholder={valueInputPlaceholder}
+                      margin="dense"
+                      label="Value of this node"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      InputProps={{
+                        className: classes.input,
+                      }}
+                      autoComplete="off"
+                      value={updateValueInputValue}
+                      onChange={(e) =>
+                        handleUpdateNodeValueChange(e.target.value)
+                      }
                     />
-                    <FormControlLabel
-                      control={(
-                        <Switch
-                          checked={isSelectedNodeEditable.type}
-                          onClick={handleSelectedNodeEditableTypeChange}
-                          name="editableType"
-                          color="primary"
-                        />
-                      )}
-                      label="Type Label"
-                    />
-                  </FormGroup>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={(
-                        <Switch
-                          checked={isSelectedNodeEditable.label}
-                          onClick={handleSelectedNodeEditableLabelChange}
-                          name="editableLabel"
-                          color="primary"
-                        />
-                      )}
-                      label="Structure"
-                    />
-                    <FormControlLabel
-                      control={(
-                        <Switch
-                          checked={isSelectedNodeEditable.value}
-                          onClick={handleSelectedNodeEditableValueChange}
-                          name="editableValue"
-                          color="primary"
-                        />
-                      )}
-                      label="Value Label"
-                    />
-                  </FormGroup>
-                </FormGroup>
+                  </>
+                )}
               </div>
-            </div>
-          </>
-        )}
+
+              {templateNodeTypesAndValues &&
+                templateNodeTypesAndValues[updateTypeInputValue] &&
+                templateNodeTypesAndValues[updateTypeInputValue].length > 0 && (
+                  <div className={classes.typeField}>
+                    <FormLabel>Suggested values:</FormLabel>
+                    <div>
+                      {templateNodeTypesAndValues[updateTypeInputValue].map(
+                        (nodeValue) => (
+                          <Chip
+                            key={nodeValue}
+                            label={nodeValue}
+                            className={classes.suggestionChip}
+                            onClick={() =>
+                              handleUpdateNodeValueChange(nodeValue)
+                            }
+                          />
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+            </>
+          )}
+        {showDrawerSections.editFinalNodeField &&
+          !isSelectedNodeMath &&
+          isSelectedNodeEditable && (
+            <>
+              <div className={classes.drawerInfo}>
+                <Typography variant="h6">Edit node editability:</Typography>
+              </div>
+              <div className={classes.drawerField}>
+                <div>
+                  <FormGroup row>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={isSelectedNodeEditable.delete}
+                            onClick={handleSelectedNodeEditableDeleteChange}
+                            name="editableDelete"
+                            color="primary"
+                          />
+                        }
+                        label="Delete"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={isSelectedNodeEditable.type}
+                            onClick={handleSelectedNodeEditableTypeChange}
+                            name="editableType"
+                            color="primary"
+                          />
+                        }
+                        label="Type Label"
+                      />
+                    </FormGroup>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={isSelectedNodeEditable.label}
+                            onClick={handleSelectedNodeEditableLabelChange}
+                            name="editableLabel"
+                            color="primary"
+                          />
+                        }
+                        label="Structure"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={isSelectedNodeEditable.value}
+                            onClick={handleSelectedNodeEditableValueChange}
+                            name="editableValue"
+                            color="primary"
+                          />
+                        }
+                        label="Value Label"
+                      />
+                    </FormGroup>
+                  </FormGroup>
+                </div>
+              </div>
+            </>
+          )}
       </div>
     </Drawer>
   );
@@ -699,6 +710,7 @@ EditorDrawer.propTypes = {
       pointerHeight: PropTypes.number,
     }),
   }),
+  isSelectedNodeMath: PropTypes.bool,
 };
 
 EditorDrawer.defaultProps = {
@@ -745,6 +757,7 @@ EditorDrawer.defaultProps = {
   editNodeInputPlaceholder: null,
   typeInputPlaceholder: 'String, str, ...',
   valueInputPlaceholder: '42, "Hello World", ...',
+  isSelectedNodeMath: false,
 };
 
 export default EditorDrawer;

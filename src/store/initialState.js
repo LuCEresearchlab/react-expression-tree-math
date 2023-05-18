@@ -44,8 +44,11 @@ export const defaultProps = {
   redoState: [],
   // Math Input
   isMathInputOpen: false,
-  mathLatex: '\\text{Press a button}',
-  mathOperator: '',
+  currentMathSelection: [],
+  isCreatingMathNode: false,
+  isSelectedNodeMathNode: false,
+  // Comments
+  isCommentsOpen: false,
 };
 
 export const createSanitizedUtilsProps = (
@@ -131,6 +134,9 @@ export const createInitialState = (
   redoState: defaultProps.redoState,
   // Math Input
   isMathInputOpen: defaultProps.isMathInputOpen,
-  mathLatex: defaultProps.mathLatex,
-  mathOperator: defaultProps.mathOperator,
+  currentMathSelection: defaultProps.currentMathSelection,
+  isCreatingMathNode: defaultProps.isCreatingMathNode,
+  isSelectedNodeMathNode: defaultProps.isSelectedNodeMathNode,
+  // Comments
+  isCommentsOpen: defaultProps.isCommentsOpen,
 });

@@ -60,6 +60,8 @@ export function createEmptyNode(id) {
       value: true,
       delete: true,
     },
+    isMathNode: false,
+    mathPieces: [],
   };
 }
 

@@ -55,30 +55,30 @@ module.exports = {
   ],
 
   module: {
-    rules: [{
-      test: /\.(js|jsx)$/,
-      include: [path.resolve(__dirname, 'src')],
-      loader: 'babel-loader',
-    },
-    {
-      test: /\.css$/i,
-      use: [MiniCssExtractPlugin.loader, 'css-loader'],
-    },
-    {
-      test: /\.(woff|woff2|eot|ttf|otf)$/,
-      use: [
-        'file-loader',
-      ],
-    },
-    {
-      test: /worker\.js$/,
-      use: {
-        loader: 'worker-loader',
-        options: {
-          inline: 'no-fallback',
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        include: [path.resolve(__dirname, 'src')],
+        loader: 'babel-loader',
+      },
+      {
+        test: /\.css$/i,
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/,
+        use: ['file-loader'],
+      },
+      {
+        test: /worker\.js$/,
+        use: {
+          loader: 'worker-loader',
+          options: {
+            inline: 'no-fallback',
+          },
         },
       },
-    }],
+    ],
   },
 
   resolve: {
@@ -86,6 +86,7 @@ module.exports = {
     alias: {
       react: path.resolve(__dirname, './node_modules/react'),
       'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
+      '@material-ui': path.resolve(__dirname, './node_modules/@material-ui'),
     },
   },
 

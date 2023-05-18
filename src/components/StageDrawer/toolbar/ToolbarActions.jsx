@@ -23,6 +23,8 @@ import {
   ZoomInRounded,
   ZoomOutRounded,
   ExposureRounded,
+  SpeakerNotesRounded,
+  SpeakerNotesOffRounded,
 } from '@material-ui/icons';
 
 import { Toolbar, IconButton, Tooltip } from '@material-ui/core';
@@ -84,6 +86,9 @@ function ToolbarActions({
   isMathInputOpen,
   showMathInputButton,
   handleMathInputButtonAction,
+  isCommentsOpen,
+  showCommentsButton,
+  handleCommentsButtonAction,
 }) {
   const classes = useStyles();
   const uploadButtonRef = useRef();
@@ -295,6 +300,24 @@ function ToolbarActions({
           </IconButton>
         </Tooltip>
       )}
+      {showCommentsButton && (
+        <Tooltip
+          title={!isCommentsOpen ? 'Open comments tab' : 'Close comments tab'}
+          placement="bottom"
+        >
+          <IconButton
+            className={classes.toolbarButton}
+            color="primary"
+            onClick={handleCommentsButtonAction}
+          >
+            {!isCommentsOpen ? (
+              <SpeakerNotesRounded />
+            ) : (
+              <SpeakerNotesOffRounded />
+            )}
+          </IconButton>
+        </Tooltip>
+      )}
     </Toolbar>
   );
 }
@@ -335,6 +358,9 @@ ToolbarActions.propTypes = {
   isMathInputOpen: PropTypes.bool,
   showMathInputButton: PropTypes.bool,
   handleMathInputButtonAction: PropTypes.func,
+  isCommentsOpen: PropTypes.bool,
+  showCommentsButton: PropTypes.bool,
+  handleCommentsButtonAction: PropTypes.func,
 };
 
 ToolbarActions.defaultProps = {
@@ -373,6 +399,9 @@ ToolbarActions.defaultProps = {
   isMathInputOpen: false,
   showMathInputButton: true,
   handleMathInputButtonAction: () => {},
+  isCommentsOpen: false,
+  showCommentsButton: true,
+  handleCommentsButtonAction: () => {},
 };
 
 export default ToolbarActions;

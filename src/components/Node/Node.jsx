@@ -1,17 +1,11 @@
-import React, {
-  useMemo,
-  useCallback,
-} from 'react';
-import PropTypes from 'prop-types';
-import {
-  Group,
-  Rect,
-} from 'react-konva';
+import React, { useMemo, useCallback } from "react";
+import PropTypes from "prop-types";
+import { Group, Rect } from "react-konva";
 
-import NodeLabel from './NodeLabel/NodeLabel';
-import NodeDeleteButton from './NodeDeleteButton/NodeDeleteButton';
-import NodeTopConnector from './NodeTopConnector/NodeTopConnector';
-import NodeTypeValue from './NodeTypeValue/NodeTypeValue';
+import NodeLabel from "./NodeLabel/NodeLabel";
+import NodeDeleteButton from "./NodeDeleteButton/NodeDeleteButton";
+import NodeTopConnector from "./NodeTopConnector/NodeTopConnector";
+import NodeTypeValue from "./NodeTypeValue/NodeTypeValue";
 
 function Node({
   id,
@@ -70,6 +64,8 @@ function Node({
   topConnectorStyle,
   deleteButtonStyle,
   typeValueStyle,
+  isMathNode,
+  mathPieces,
 }) {
   const hasChildEdges = useMemo(() => childEdges.length > 0, [childEdges]);
 
@@ -105,23 +101,42 @@ function Node({
       return;
     }
 
-    const pieceId = e.target.getAttr('plugId');
-    handleConnectorDragStart(
-      true,
-      nodeId,
-      e.target.parent.parent.parent.x()
-        + e.target.parent.parent.x()
-        + e.target.parent.x()
-        + nodePaddingX
-        + labelPiecesPosition[pieceId]
-        + placeholderWidth / 2,
-      e.target.parent.parent.parent.y()
-        + e.target.parent.parent.y()
-        + e.target.parent.y()
-        + nodePaddingY
-        + fontSize / 2,
-      pieceId,
-    );
+    const pieceId = e.target.getAttr("plugId");
+
+    if (!isMathNode) {
+      handleConnectorDragStart(
+        true,
+        nodeId,
+        e.target.parent.parent.parent.x() +
+          e.target.parent.parent.x() +
+          e.target.parent.x() +
+          nodePaddingX +
+          labelPiecesPosition[pieceId] +
+          placeholderWidth / 2,
+        e.target.parent.parent.parent.y() +
+          e.target.parent.parent.y() +
+          e.target.parent.y() +
+          nodePaddingY +
+          fontSize / 2,
+        pieceId,
+      );
+    } else {
+      handleConnectorDragStart(
+        true,
+        nodeId,
+        e.target.parent.parent.parent.x() +
+          e.target.parent.parent.x() +
+          e.target.parent.x() +
+          e.target.x() +
+          e.target.width() / 2,
+        e.target.parent.parent.parent.y() +
+          e.target.parent.parent.y() +
+          e.target.parent.y() +
+          e.target.y() +
+          e.target.height() / 2,
+        pieceId,
+      );
+    }
   });
 
   const handleTopNodeConnectorDragStart = useCallback((e) => {
@@ -134,7 +149,7 @@ function Node({
     handleConnectorDragStart(
       false,
       id,
-      e.target.parent.parent.x() + e.target.parent.x() + (nodeWidth / 2),
+      e.target.parent.parent.x() + e.target.parent.x() + nodeWidth / 2,
       e.target.parent.parent.y() + e.target.parent.y(),
     );
   });
@@ -144,7 +159,7 @@ function Node({
     if (isFullDisabled) {
       return;
     }
-    setCursor('pointer');
+    setCursor("pointer");
   };
 
   const handleMouseLeave = (e) => {
@@ -152,7 +167,7 @@ function Node({
     if (isFullDisabled) {
       return;
     }
-    setCursor('default');
+    setCursor("default");
   };
 
   /**
@@ -161,10 +176,18 @@ function Node({
    *
    * @param {Object} stl
    */
-  const computeColor = (defaultColor, errorColor, selectedColor, finalColor, highlightColor) => {
-    if (currentErrorLocation
-      && currentErrorLocation.node
-      && currentErrorLocation.nodeId === id) {
+  const computeColor = (
+    defaultColor,
+    errorColor,
+    selectedColor,
+    finalColor,
+    highlightColor,
+  ) => {
+    if (
+      currentErrorLocation &&
+      currentErrorLocation.node &&
+      currentErrorLocation.nodeId === id
+    ) {
       return errorColor;
     }
     if (isSelected) {
@@ -185,7 +208,11 @@ function Node({
     return defaultColor;
   };
 
-  const computeStrokeWidth = (defaultStrokeWidth, selectedStrokeWidth, highlightedStrokeWidth) => {
+  const computeStrokeWidth = (
+    defaultStrokeWidth,
+    selectedStrokeWidth,
+    highlightedStrokeWidth,
+  ) => {
     if (isSelected) {
       return selectedStrokeWidth;
     }
@@ -222,7 +249,7 @@ function Node({
       onMouseLeave={handleMouseLeave}
     >
       <Rect
-        name="Node"
+        name='Node'
         key={`NodeRect-${id}`}
         width={nodeWidth}
         height={nodeHeight}
@@ -275,7 +302,9 @@ function Node({
         currentErrorLocation={currentErrorLocation}
         hasParentEdges={hasParentEdges}
         isFullDisabled={isFullDisabled}
-        handlePlaceholderConnectorDragStart={handlePlaceholderConnectorDragStart}
+        handlePlaceholderConnectorDragStart={
+          handlePlaceholderConnectorDragStart
+        }
         handleConnectorDragMove={handleConnectorDragMove}
         handleConnectorDragEnd={handleConnectorDragEnd}
         setCursor={setCursor}
@@ -294,6 +323,8 @@ function Node({
         connectorStrokeWidth={labelStyle.connectorStrokeWidth}
         connectorFillColor={labelStyle.connectorFillColor}
         connectorStrokeColor={labelStyle.connectorStrokeColor}
+        isMathNode={isMathNode}
+        mathPieces={mathPieces}
       />
       <NodeDeleteButton
         nodeId={id}
@@ -376,18 +407,9 @@ Node.propTypes = {
   editableDelete: PropTypes.bool,
   isSelected: PropTypes.bool,
   isSelectedRoot: PropTypes.bool,
-  isHighlighted: PropTypes.oneOf(
-    PropTypes.bool,
-    PropTypes.string,
-  ),
-  isTypeLabelHighlighted: PropTypes.oneOf(
-    PropTypes.bool,
-    PropTypes.string,
-  ),
-  isValueLabelHighlighted: PropTypes.oneOf(
-    PropTypes.bool,
-    PropTypes.string,
-  ),
+  isHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
+  isTypeLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
+  isValueLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   isFullDisabled: PropTypes.bool,
   handleNodeClick: PropTypes.func,
   handleNodeDblClick: PropTypes.func,
@@ -463,11 +485,23 @@ Node.propTypes = {
     pointerWidth: PropTypes.number,
     pointerHeight: PropTypes.number,
   }),
+  isMathNode: PropTypes.bool,
+  mathPieces: PropTypes.arrayOf(
+    PropTypes.shape({
+      type: PropTypes.string,
+      x: PropTypes.number,
+      width: PropTypes.number,
+      y: PropTypes.number,
+      height: PropTypes.number,
+      value: PropTypes.string,
+      fontSize: PropTypes.number,
+    }),
+  ),
 };
 
 Node.defaultProps = {
-  typeText: '',
-  valueText: '',
+  typeText: "",
+  valueText: "",
   childEdges: [],
   parentEdges: [],
   currentErrorLocation: null,
@@ -493,23 +527,25 @@ Node.defaultProps = {
   handleConnectorDragMove: () => {},
   handleConnectorDragEnd: () => {},
   fontSize: 24,
-  fontFamily: 'Roboto Mono, Courier',
+  fontFamily: "Roboto Mono, Courier",
   nodePaddingX: 12,
   nodePaddingY: 12,
-  nodeStrokeColor: '#000000',
+  nodeStrokeColor: "#000000",
   nodeStrokeWidth: 0,
   nodeSelectedStrokeWidth: 2,
   nodeHighlightedStrokeWidth: 0,
   nodeCornerRadius: 5,
-  nodeFillColor: '#208020',
-  nodeErrorColor: '#ff2f2f',
-  nodeSelectedColor: '#f2a200',
-  nodeFinalColor: '#208080',
-  nodeHighlightedColor: '#cc78c5',
+  nodeFillColor: "#208020",
+  nodeErrorColor: "#ff2f2f",
+  nodeSelectedColor: "#f2a200",
+  nodeFinalColor: "#208080",
+  nodeHighlightedColor: "#cc78c5",
   labelStyle: {},
   topConnectorStyle: {},
   deleteButtonStyle: {},
   typeValueStyle: {},
+  isMathNode: false,
+  mathPieces: [],
 };
 
 export default Node;

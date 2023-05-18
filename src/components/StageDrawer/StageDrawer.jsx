@@ -1,16 +1,17 @@
-import React, { useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useCallback } from "react";
+import PropTypes from "prop-types";
 
-import { InputComponent } from 'react-math-formula-editor';
-import ToolbarActions from './toolbar/ToolbarActions';
+import { InputComponent } from "react-math-formula-editor";
+import ToolbarActions from "./toolbar/ToolbarActions";
 
-import EditorDrawer from './drawer/EditorDrawer';
+import EditorDrawer from "./drawer/EditorDrawer";
+import CommentsDrawer from "./drawer/CommentsDrawer";
 
-import DialogEditorInfo from './dialogs/DialogEditorInfo';
-import DialogConfirmReset from './dialogs/DialogConfirmReset';
+import DialogEditorInfo from "./dialogs/DialogEditorInfo";
+import DialogConfirmReset from "./dialogs/DialogConfirmReset";
 
-import CreatingNodeSnackbar from './snackbars/CreatingNodeSnackbar';
-import AddEdgeErrorSnackbar from './snackbars/AddEdgeErrorSnackbar';
+import CreatingNodeSnackbar from "./snackbars/CreatingNodeSnackbar";
+import AddEdgeErrorSnackbar from "./snackbars/AddEdgeErrorSnackbar";
 
 function StageDrawer({
   containerRef,
@@ -70,11 +71,13 @@ function StageDrawer({
   nodeStyle,
   drawerPlaceholders,
   isMathInputOpen,
+  setCurrentMathSelection,
+  isCreatingMathNode,
+  setIsCreatingMathNode,
   toggleMathInput,
-  currentLatex,
-  setCurrentLatex,
-  currentOperator,
-  setCurrentOperator,
+  isSelectedNodeMath,
+  isCommentsOpen,
+  toggleComments,
 }) {
   const [isDialogConfigResetOpen, setIsDialogConfigResetOpen] = useState(false);
   const [isDialogEditorInfoOpen, setIsDialogEditorInfoOpen] = useState(false);
@@ -94,6 +97,7 @@ function StageDrawer({
     showUploadStateButton,
     showTakeScreenshotButton,
     showFullScreenButton,
+    showCommentsButton,
   } = showToolbarButtons;
 
   const handleEditorInfoButtonAction = useCallback(() => {
@@ -114,9 +118,7 @@ function StageDrawer({
               selectedRootNode={selectedRootNode}
               isFullScreen={isFullScreen}
               isDrawerOpen={isDrawerOpen}
-              isMathInputOpen={isMathInputOpen}
               showDrawerButton={showDrawerButton}
-              showMathInputButton={showMathInputButton}
               showEditorInfoButton={showEditorInfoButton}
               showStateResetButton={showStateResetButton}
               showUndoButton={showUndoButton}
@@ -130,7 +132,6 @@ function StageDrawer({
               showTakeScreenshotButton={showTakeScreenshotButton}
               showFullScreenButton={showFullScreenButton}
               handleDrawerButtonAction={toggleDrawer}
-              handleMathInputButtonAction={toggleMathInput}
               handleEditorInfoButtonAction={handleEditorInfoButtonAction}
               handleStateResetButtonAction={handleStateResetButtonAction}
               handleUndoButtonAction={handleUndoButtonAction}
@@ -149,6 +150,12 @@ function StageDrawer({
               handleFullScreenButtonAction={handleFullScreenButtonAction}
               hasStateToUndo={hasStateToUndo}
               hasStateToRedo={hasStateToRedo}
+              isMathInputOpen={isMathInputOpen}
+              showMathInputButton={showMathInputButton}
+              handleMathInputButtonAction={toggleMathInput}
+              isCommentsOpen={isCommentsOpen}
+              showCommentsButton={showCommentsButton}
+              handleCommentsButtonAction={toggleComments}
             />
           )}
           {showDrawer && (
@@ -199,16 +206,20 @@ function StageDrawer({
               }
               typeInputPlaceholder={drawerPlaceholders.typeInputPlaceholder}
               valueInputPlaceholder={drawerPlaceholders.valueInputPlaceholder}
+              isSelectedNodeMath={isSelectedNodeMath}
             />
           )}
           {isMathInputOpen && (
             <InputComponent
-              currentLatex={currentLatex}
-              setCurrentLatex={setCurrentLatex}
-              currentOperator={currentOperator}
-              setCurrentOperator={setCurrentOperator}
-              toggleIsCreatingNode={toggleIsCreatingNode}
-              isCreatingNode={isCreatingNode}
+              setCurrentMathSelection={setCurrentMathSelection}
+              isCreatingMathNode={isCreatingMathNode}
+              setIsCreatingMathNode={setIsCreatingMathNode}
+            />
+          )}
+          {isCommentsOpen && (
+            <CommentsDrawer
+              isCommentsOpen={isCommentsOpen}
+              containerRef={containerRef}
             />
           )}
           <DialogConfirmReset
@@ -230,6 +241,8 @@ function StageDrawer({
           <CreatingNodeSnackbar
             isCreatingNode={isCreatingNode}
             toggleIsCreatingNode={toggleIsCreatingNode}
+            isCreatingMathNode={isCreatingMathNode}
+            setIsCreatingMathNode={setIsCreatingMathNode}
           />
         </>
       )}
@@ -391,26 +404,29 @@ StageDrawer.propTypes = {
     valueInputPlaceholder: PropTypes.string,
   }),
   toggleMathInput: PropTypes.func,
-  currentLatex: PropTypes.string,
-  setCurrentLatex: PropTypes.func,
-  currentOperator: PropTypes.string,
-  setCurrentOperator: PropTypes.func,
+  setCurrentMathSelection: PropTypes.func,
+  isCreatingMathNode: PropTypes.bool,
+  setIsCreatingMathNode: PropTypes.func,
+  isSelectedNodeMath: PropTypes.bool,
+  isCommentsOpen: PropTypes.bool,
+  showCommentsButton: PropTypes.bool,
+  toggleComments: PropTypes.func,
 };
 
 StageDrawer.defaultProps = {
-  connectorPlaceholder: '{{}}',
+  connectorPlaceholder: "{{}}",
   selectedRootNode: undefined,
-  downloadKey: 'expressiontutor',
+  downloadKey: "expressiontutor",
   isCreatingNode: false,
   isAddEdgeErrorSnackbarOpen: false,
   isFullDisabled: false,
   isDrawerOpen: true,
   isFullScreen: false,
   isSelectedNodeEditable: undefined,
-  createNodeInputValue: '',
-  updateLabelInputValue: '',
-  updateTypeInputValue: '',
-  updateValueInputValue: '',
+  createNodeInputValue: "",
+  updateLabelInputValue: "",
+  updateTypeInputValue: "",
+  updateValueInputValue: "",
   showToolbar: true,
   showToolbarButtons: {
     showDrawerButton: true,
@@ -427,6 +443,7 @@ StageDrawer.defaultProps = {
     showUploadStateButton: true,
     showTakeScreenshotButton: true,
     showFullScreenButton: true,
+    showCommentsButton: true,
   },
   showDrawer: true,
   showDrawerSections: {
@@ -444,7 +461,7 @@ StageDrawer.defaultProps = {
   hasStateToUndo: false,
   hasStateToRedo: false,
   currentError: undefined,
-  addEdgeErrorMessage: '',
+  addEdgeErrorMessage: "",
   toggleIsAddEdgeErrorSnackbarOpen: () => {},
   toggleDrawer: () => {},
   toggleIsCreatingNode: () => {},
@@ -470,16 +487,18 @@ StageDrawer.defaultProps = {
   handleSelectedNodeEditableValueChange: () => {},
   createNodeDescription: undefined,
   nodeFontSize: 24,
-  nodeFontFamily: 'Roboto Mono, Courier',
+  nodeFontFamily: "Roboto Mono, Courier",
   nodePaddingX: 12,
   nodePaddingY: 12,
   nodeStyle: {},
   drawerPlaceholders: {},
   toggleMathInput: () => {},
-  currentLatex: '',
-  setCurrentLatex: () => {},
-  currentOperator: '',
-  setCurrentOperator: () => {},
+  setCurrentMathSelection: () => {},
+  isCreatingMathNode: false,
+  isSelectedNodeMath: false,
+  setIsCreatingMathNode: () => {},
+  isCommentsOpen: false,
+  toggleComments: () => {},
 };
 
 export default StageDrawer;

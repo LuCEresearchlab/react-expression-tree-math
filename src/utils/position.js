@@ -1,6 +1,6 @@
 /* eslint-disable no-loop-func */
-import Konva from 'konva';
-import { createEmptyEdge, createEmptyNode } from './state';
+import Konva from "konva";
+import { createEmptyEdge, createEmptyNode } from "./state";
 
 function distance(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
@@ -17,6 +17,8 @@ const createPositionUtils = (
   const placeholderMiddle = placeholderWidth / 2;
   const gapWidth = fontSize / 5;
 
+  const charWidth = 14.40234375;
+
   // Compute the edge's child position having the child node id
   const computeEdgeChildPos = (childNodeId, nodes) => {
     const node = nodes[childNodeId];
@@ -27,15 +29,11 @@ const createPositionUtils = (
   };
 
   // Compute the edge's parent position having the parent node and the parent piece ids,
-  const computeEdgeParentPos = (
-    parentNodeId,
-    parentPieceX,
-    nodes,
-  ) => {
+  const computeEdgeParentPos = (parentNodeId, parentPieceX, nodes) => {
     const node = nodes[parentNodeId];
     return {
       x: node.x + nodePaddingX + parentPieceX + placeholderMiddle,
-      y: node.y + nodePaddingY + fontSize,
+      y: node.y + nodePaddingY + fontSize / 2,
     };
   };
 
@@ -57,9 +55,7 @@ const createPositionUtils = (
   const computePiecesWidth = (pieces) => pieces.map(computePieceWidth);
 
   // Compute all the label pieces X coordinate positions
-  const computeLabelPiecesXCoordinatePositions = (
-    pieces,
-  ) => {
+  const computeLabelPiecesXCoordinatePositions = (pieces) => {
     const labelPiecesWidth = computePiecesWidth(pieces);
     let pieceX = 0;
     const xes = labelPiecesWidth.map((w) => {
@@ -71,18 +67,17 @@ const createPositionUtils = (
   };
 
   // Compute the node width
-  const computeNodeWidth = (
-    pieces,
-  ) => {
+  const computeNodeWidth = (pieces) => {
     const piecesWidth = computePiecesWidth(pieces);
     const totalGapsWidth = 2 * nodePaddingX + gapWidth * (pieces.length - 1);
-    const totalWidth = piecesWidth.reduce((acc, width) => acc + width, totalGapsWidth);
+    const totalWidth = piecesWidth.reduce(
+      (acc, width) => acc + width,
+      totalGapsWidth,
+    );
     return totalWidth;
   };
 
-  const computeNodeHeight = (
-    isEquation,
-  ) => {
+  const computeNodeHeight = (isEquation) => {
     if (isEquation) {
       // TODO change this value in the future to allow different heights
       return 2 * nodePaddingY + fontSize;
@@ -108,11 +103,7 @@ const createPositionUtils = (
   };
 
   // Compute the closest child notd given an (x, y) point coordinate
-  const closestChildId = (
-    x,
-    y,
-    nodes,
-  ) => {
+  const closestChildId = (x, y, nodes) => {
     let closestNodeId = null;
     let closestDist = null;
     Object.keys(nodes).forEach((id) => {
@@ -127,30 +118,51 @@ const createPositionUtils = (
   };
 
   // Compute the closest parent piece given an (x, y) point coordinate
-  const closestParentPiece = (
-    x,
-    y,
-    nodes,
-  ) => {
+  const closestParentPiece = (x, y, nodes) => {
     let closestPiece = null;
     let closestDist = Number.MAX_VALUE;
     Object.keys(nodes).forEach((id) => {
-      const { pieces } = nodes[id];
-      const piecesXCoordinates = computeLabelPiecesXCoordinatePositions(pieces);
-      pieces.forEach((piece, i) => {
-        if (piece === connectorPlaceholder) {
-          const pieceX = piecesXCoordinates[i];
-          const pos = computeEdgeParentPos(id, pieceX, nodes);
-          const dist = distance(pos.x, pos.y, x, y);
-          if (dist < fontSize && dist < closestDist) {
-            closestDist = dist;
-            closestPiece = {
-              parentNodeId: id,
-              parentPieceId: i,
-            };
+      if (!nodes[id].isMathNode) {
+        const { pieces } = nodes[id];
+        const piecesXCoordinates =
+          computeLabelPiecesXCoordinatePositions(pieces);
+        pieces.forEach((piece, i) => {
+          if (piece === connectorPlaceholder) {
+            const pieceX = piecesXCoordinates[i];
+            const pos = computeEdgeParentPos(id, pieceX, nodes);
+            const dist = distance(pos.x, pos.y, x, y);
+            if (dist < fontSize && dist < closestDist) {
+              closestDist = dist;
+              closestPiece = {
+                parentNodeId: id,
+                parentPieceId: i,
+              };
+            }
           }
-        }
-      });
+        });
+      } else {
+        const { mathPieces, x: nodeX, y: nodeY } = nodes[id];
+        mathPieces.forEach((mathPiece, i) => {
+          if (mathPiece.type === "hole") {
+            const pos = {
+              x: nodeX + mathPiece.x + mathPiece.width / 2,
+              y: nodeY + mathPiece.y + mathPiece.height / 2,
+            };
+            const dist = distance(pos.x, pos.y, x, y);
+            if (
+              Math.abs(x - pos.x) < mathPiece.width / 2 + fontSize &&
+              Math.abs(y - pos.y) < mathPiece.height / 2 + fontSize &&
+              dist < closestDist
+            ) {
+              closestDist = dist;
+              closestPiece = {
+                parentNodeId: id,
+                parentPieceId: i,
+              };
+            }
+          }
+        });
+      }
     });
     return closestPiece;
   };
@@ -164,33 +176,35 @@ const createPositionUtils = (
   ) => {
     const currentTreeDepth = previousTreeDepth + 1;
 
-    const currentVisitedNodes = [
-      ...previouslyVisitedNodes,
-      currentNode.id,
-    ];
+    const currentVisitedNodes = [...previouslyVisitedNodes, currentNode.id];
 
-    const orderedChilds = currentNode.pieces.reduce((accumulator, piece, pieceId) => {
-      if (piece === connectorPlaceholder) {
-        const edgesToParentIds = nodes[currentNode.id].parentEdges[pieceId];
-        const edgesToParent = edgesToParentIds.map((id) => edges[id]);
-        edgesToParent.forEach((edge) => {
-          const childNode = nodes[edge.childNodeId];
-          if (currentVisitedNodes.find((e) => e === childNode.id) === undefined) {
-            accumulator = [
-              ...accumulator,
-              ...reorderChildNodes(
-                childNode,
-                nodes,
-                edges,
-                currentVisitedNodes,
-                currentTreeDepth,
-              ),
-            ];
-          }
-        });
-      }
-      return accumulator;
-    }, []);
+    const orderedChilds = currentNode.pieces.reduce(
+      (accumulator, piece, pieceId) => {
+        if (piece === connectorPlaceholder) {
+          const edgesToParentIds = nodes[currentNode.id].parentEdges[pieceId];
+          const edgesToParent = edgesToParentIds.map((id) => edges[id]);
+          edgesToParent.forEach((edge) => {
+            const childNode = nodes[edge.childNodeId];
+            if (
+              currentVisitedNodes.find((e) => e === childNode.id) === undefined
+            ) {
+              accumulator = [
+                ...accumulator,
+                ...reorderChildNodes(
+                  childNode,
+                  nodes,
+                  edges,
+                  currentVisitedNodes,
+                  currentTreeDepth,
+                ),
+              ];
+            }
+          });
+        }
+        return accumulator;
+      },
+      [],
+    );
 
     return [
       {
@@ -210,13 +224,13 @@ const createPositionUtils = (
   ) => {
     const orderedNodesPositions = [];
     let depth = 0;
-    let currentDepthNodes = orderedNodes.filter((n) => (n.depth === depth));
+    let currentDepthNodes = orderedNodes.filter((n) => n.depth === depth);
     while (currentDepthNodes.length > 0) {
       if (depth === 0) {
         const node = nodes[currentDepthNodes[0].id];
         orderedNodesPositions.push({
           ...node,
-          x: startingX - (node.width / 2),
+          x: startingX - node.width / 2,
           y: startingY,
         });
       } else {
@@ -227,50 +241,40 @@ const createPositionUtils = (
           const node = nodes[n.id];
           nodeReference.push(node);
           if (index !== currentDepthNodes.length - 1) {
-            relativeNodePosition.push(relativeNodePosition[index]
-              + node.width + spaceBetweenNodes);
+            relativeNodePosition.push(
+              relativeNodePosition[index] + node.width + spaceBetweenNodes,
+            );
             totalLevelWidth += node.width + spaceBetweenNodes;
           } else {
-            relativeNodePosition.push(relativeNodePosition[index]
-              + node.width);
+            relativeNodePosition.push(relativeNodePosition[index] + node.width);
             totalLevelWidth += node.width;
           }
         });
 
-        const levelStartingX = startingX - (totalLevelWidth / 2);
+        const levelStartingX = startingX - totalLevelWidth / 2;
         currentDepthNodes.forEach((n, index) => {
           orderedNodesPositions.push({
             ...nodeReference[index],
             x: levelStartingX + relativeNodePosition[index],
-            y: startingY + (depth * 100),
+            y: startingY + depth * 100,
           });
         });
       }
 
       depth += 1;
-      currentDepthNodes = orderedNodes.filter((n) => (n.depth === depth));
+      currentDepthNodes = orderedNodes.filter((n) => n.depth === depth);
     }
 
     return orderedNodesPositions;
   };
 
-  const reorderNodes = (
-    nodes,
-    edges,
-    selectedRootNode,
-  ) => {
+  const reorderNodes = (nodes, edges, selectedRootNode) => {
     if (selectedRootNode === undefined || selectedRootNode === null) {
       return nodes;
     }
 
     const rootNode = nodes[selectedRootNode];
-    const orderedNodes = reorderChildNodes(
-      rootNode,
-      nodes,
-      edges,
-      [],
-      0,
-    );
+    const orderedNodes = reorderChildNodes(rootNode, nodes, edges, [], 0);
 
     const startingX = 550;
     const startingY = 100;
@@ -308,9 +312,7 @@ const createPositionUtils = (
   };
 
   const computeEdgeChildCoordinates = (childNode) => {
-    const {
-      width: childWidth,
-    } = childNode;
+    const { width: childWidth } = childNode;
 
     let { x: childX, y: childY } = childNode;
 
@@ -323,16 +325,19 @@ const createPositionUtils = (
   };
 
   const computeEdgeParentCoordinates = (parentNode, parentPieceId) => {
-    const {
-      pieces: parentPieces,
-    } = parentNode;
-    const parentPieceX = computeLabelPiecesXCoordinatePositions(parentPieces)[parentPieceId];
-
     let { x: parentX, y: parentY } = parentNode;
-
-    parentX += nodePaddingX + parentPieceX + placeholderWidth / 2;
-    parentY += nodePaddingY + fontSize / 2;
-
+    if (!parentNode.isMathNode) {
+      const { pieces: parentPieces } = parentNode;
+      const parentPieceX =
+        computeLabelPiecesXCoordinatePositions(parentPieces)[parentPieceId];
+      parentX += nodePaddingX + parentPieceX + placeholderWidth / 2;
+      parentY += nodePaddingY + fontSize / 2;
+    } else {
+      const { mathPieces: parentPieces } = parentNode;
+      const parentPiece = parentPieces[parentPieceId];
+      parentX += parentPiece.x + parentPiece.width / 2;
+      parentY += parentPiece.y + parentPiece.height / 2;
+    }
     return {
       parentX,
       parentY,
@@ -341,7 +346,10 @@ const createPositionUtils = (
 
   const computeEdgeCoordinates = (childNode, parentNode, parentPieceId) => {
     const { childX, childY } = computeEdgeChildCoordinates(childNode);
-    const { parentX, parentY } = computeEdgeParentCoordinates(parentNode, parentPieceId);
+    const { parentX, parentY } = computeEdgeParentCoordinates(
+      parentNode,
+      parentPieceId,
+    );
 
     return {
       childX,
@@ -351,23 +359,18 @@ const createPositionUtils = (
     };
   };
 
-  const computeEdgesCoordinates = (edges, nodes) => (
+  const computeEdgesCoordinates = (edges, nodes) =>
     Object.keys(edges).reduce((accumulator, id) => {
-      const {
-        childNodeId,
-        parentNodeId,
-        parentPieceId,
-      } = edges[id];
+      const { childNodeId, parentNodeId, parentPieceId } = edges[id];
 
       const childNode = nodes[childNodeId];
       const parentNode = nodes[parentNodeId];
 
-      const {
-        childX,
-        childY,
-        parentX,
-        parentY,
-      } = computeEdgeCoordinates(childNode, parentNode, parentPieceId);
+      const { childX, childY, parentX, parentY } = computeEdgeCoordinates(
+        childNode,
+        parentNode,
+        parentPieceId,
+      );
 
       accumulator[id] = {
         ...edges[id],
@@ -378,20 +381,13 @@ const createPositionUtils = (
         parentY,
       };
       return accumulator;
-    }, {})
-  );
+    }, {});
 
   const convertArrayNodesToObject = (nodes) => {
     const objectNodes = {};
     nodes.forEach((node) => {
       const id = `_${node.id}`;
-      const {
-        pieces,
-        x,
-        y,
-        type,
-        value,
-      } = node;
+      const { pieces, x, y, type, value } = node;
 
       objectNodes[id] = {
         id,
@@ -411,11 +407,7 @@ const createPositionUtils = (
       const newEdge = createEmptyEdge(edge.id);
       const { id } = newEdge;
 
-      const {
-        parentNodeId,
-        parentPieceId,
-        childNodeId,
-      } = edge;
+      const { parentNodeId, parentPieceId, childNodeId } = edge;
 
       objectEdges[id] = {
         ...newEdge,
@@ -435,15 +427,30 @@ const createPositionUtils = (
 
     const sanitizedNodes = Object.keys(nodes).reduce((accumulator, id) => {
       const newNode = createEmptyNode(id);
-      accumulator[id] = {
-        ...newNode,
-        ...nodes[id],
-        height: computeNodeHeight(nodes[id].isEquation),
-        width: computeNodeWidth(nodes[id].pieces),
-        piecesPosition: computeLabelPiecesXCoordinatePositions(nodes[id].pieces),
-        childEdges: [],
-        parentEdges: [],
-      };
+
+      if (nodes[id].isMathNode) {
+        const nodeSizes = computeMathNodeSizes(nodes[id].mathPieces);
+        accumulator[id] = {
+          ...newNode,
+          ...nodes[id],
+          height: nodeSizes.height,
+          width: nodeSizes.width,
+          childEdges: [],
+          parentEdges: [],
+        };
+      } else {
+        accumulator[id] = {
+          ...newNode,
+          ...nodes[id],
+          height: computeNodeHeight(nodes[id].isEquation),
+          width: computeNodeWidth(nodes[id].pieces),
+          piecesPosition: computeLabelPiecesXCoordinatePositions(
+            nodes[id].pieces,
+          ),
+          childEdges: [],
+          parentEdges: [],
+        };
+      }
 
       nodes[id].pieces.forEach(() => accumulator[id].parentEdges.push([]));
       return accumulator;
@@ -456,17 +463,15 @@ const createPositionUtils = (
     const sanitizedEdges = computeEdgesCoordinates(edges, sanitizedNodes);
 
     Object.keys(sanitizedEdges).forEach((id) => {
-      const {
-        childNodeId,
-        parentNodeId,
-        parentPieceId,
-      } = edges[id];
+      const { childNodeId, parentNodeId, parentPieceId } = edges[id];
 
       if (sanitizedNodes[childNodeId]) {
         sanitizedNodes[childNodeId].childEdges.push(id);
       }
-      if (sanitizedNodes[parentNodeId]
-          && sanitizedNodes[parentNodeId].parentEdges[parentPieceId]) {
+      if (
+        sanitizedNodes[parentNodeId] &&
+        sanitizedNodes[parentNodeId].parentEdges[parentPieceId]
+      ) {
         sanitizedNodes[parentNodeId].parentEdges[parentPieceId].push(id);
       }
     });
@@ -476,10 +481,7 @@ const createPositionUtils = (
 
   const updateEdgeChildCoordinates = (edgeIds, edges, childNode) => {
     const updatedEdges = edgeIds.reduce((accumulator, id) => {
-      const {
-        childX,
-        childY,
-      } = computeEdgeChildCoordinates(childNode);
+      const { childX, childY } = computeEdgeChildCoordinates(childNode);
 
       accumulator[id] = {
         ...edges[id],
@@ -497,7 +499,8 @@ const createPositionUtils = (
     const newNode = createEmptyNode(id);
 
     const labelPieces = parseLabelPieces(pieces);
-    const labelPiecesPosition = computeLabelPiecesXCoordinatePositions(labelPieces);
+    const labelPiecesPosition =
+      computeLabelPiecesXCoordinatePositions(labelPieces);
     const nodeWidth = computeNodeWidth(labelPieces);
     const nodeHeight = computeNodeHeight(false);
     const parentEdges = labelPieces.reduce((accumulator) => {
@@ -512,6 +515,76 @@ const createPositionUtils = (
       pieces: labelPieces,
       piecesPosition: labelPiecesPosition,
       parentEdges,
+    };
+  };
+
+  const computeMathNodeSizes = (pieces) => {
+    const boundingBox = {
+      minX: Math.min(...pieces.map((piece) => piece.x)),
+      maxX: Math.max(
+        ...pieces.map((piece) =>
+          piece.type == "hole"
+            ? piece.x + piece.width
+            : piece.x +
+              new Konva.Text({
+                text: piece.value,
+                fontFamily: "Roboto Mono, Courier",
+                fontSize: piece.fontSize,
+              }).getTextWidth(),
+        ),
+      ),
+      minY: Math.min(...pieces.map((piece) => piece.y)),
+      maxY: Math.max(
+        ...pieces.map((piece) =>
+          piece.type == "hole"
+            ? piece.y + piece.height
+            : piece.y + piece.fontSize,
+        ),
+      ),
+    };
+
+    return {
+      width: 2 * nodePaddingX + boundingBox.maxX - boundingBox.minX,
+      height: 2 * nodePaddingY + boundingBox.maxY - boundingBox.minY,
+    };
+  };
+
+  const createMathNodeFromPieces = (pieces, id) => {
+    const newNode = createEmptyNode(id);
+
+    // handle subscript index
+    if (pieces[0].subscript) {
+      const variable = pieces[0];
+      pieces.push({
+        type: "text",
+        x:
+          variable.x +
+          new Konva.Text({
+            text: variable.value,
+            fontFamily: "Roboto Mono, Courier",
+            fontSize: variable.fontSize,
+          }).getTextWidth() +
+          3,
+        y: variable.y + variable.fontSize * 0.6,
+        fontSize: variable.fontSize * 0.6,
+        value: variable.subscript,
+      });
+    }
+
+    const nodeSizes = computeMathNodeSizes(pieces);
+
+    const parentEdges = pieces.reduce((accumulator) => {
+      accumulator.push([]);
+      return accumulator;
+    }, []);
+
+    return {
+      ...newNode,
+      height: nodeSizes.height,
+      width: nodeSizes.width,
+      parentEdges,
+      isMathNode: true,
+      mathPieces: pieces,
     };
   };
 
@@ -532,6 +605,7 @@ const createPositionUtils = (
     computeEdgeChildCoordinates,
     computeEdgeParentCoordinates,
     reorderNodes,
+    createMathNodeFromPieces,
   };
 };
 
