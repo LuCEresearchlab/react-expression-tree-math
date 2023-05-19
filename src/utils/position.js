@@ -17,7 +17,9 @@ const createPositionUtils = (
   const placeholderMiddle = placeholderWidth / 2;
   const gapWidth = fontSize / 5;
 
-  const charWidth = 14.40234375;
+  // TODO adjust if fontFamily is changed from default
+  const unitFontSizeWidth = 0.60009765625;
+  const charWidth = fontSize * unitFontSizeWidth;
 
   // Compute the edge's child position having the child node id
   const computeEdgeChildPos = (childNodeId, nodes) => {
@@ -42,13 +44,7 @@ const createPositionUtils = (
     if (text === connectorPlaceholder) {
       return placeholderWidth;
     }
-    const konvaText = new Konva.Text({
-      text,
-      fontFamily,
-      fontSize,
-    });
-
-    return konvaText.getTextWidth();
+    return text.length * charWidth;
   };
 
   // Compute all the label pieces width
@@ -525,12 +521,7 @@ const createPositionUtils = (
         ...pieces.map((piece) =>
           piece.type == "hole"
             ? piece.x + piece.width
-            : piece.x +
-              new Konva.Text({
-                text: piece.value,
-                fontFamily: "Roboto Mono, Courier",
-                fontSize: piece.fontSize,
-              }).getTextWidth(),
+            : piece.x + unitFontSizeWidth * piece.fontSize * piece.value.length,
         ),
       ),
       minY: Math.min(...pieces.map((piece) => piece.y)),
@@ -559,11 +550,7 @@ const createPositionUtils = (
         type: "text",
         x:
           variable.x +
-          new Konva.Text({
-            text: variable.value,
-            fontFamily: "Roboto Mono, Courier",
-            fontSize: variable.fontSize,
-          }).getTextWidth() +
+          unitFontSizeWidth * variable.fontSize * variable.value.length +
           3,
         y: variable.y + variable.fontSize * 0.6,
         fontSize: variable.fontSize * 0.6,

@@ -39,6 +39,10 @@ function NodeLabel({
   const rectRef = useRef([]);
   const circleRef = useRef([]);
 
+  // Width of a character at fontSize: 1 (based on default font used)
+  // TODO adjust if fontFamily is changed from default
+  const unitFontSizeWidth = 0.60009765625;
+
   const positions = useMemo(
     () =>
       labelPieces.map((pieceText, i) => {
@@ -103,21 +107,19 @@ function NodeLabel({
       const mathPiece = mathPieces[0];
       if (mathPiece.periodicIndex && mathPiece.periodicIndex !== 0) {
         const margin = 12;
-        const noPeriodicTextWidth = new Konva.Text({
-          text: mathPiece.value.substring(
+        const noPeriodicTextWidth =
+          mathPiece.value.substring(
             0,
             mathPiece.value.length - mathPiece.periodicIndex,
-          ),
-          fontFamily,
-          fontSize: mathPiece.fontSize,
-        }).getTextWidth();
-        const periodicTextWidth = new Konva.Text({
-          text: mathPiece.value.substring(
+          ).length *
+          unitFontSizeWidth *
+          mathPiece.fontSize;
+        const periodicTextWidth =
+          mathPiece.value.substring(
             mathPiece.value.length - mathPiece.periodicIndex,
-          ),
-          fontFamily,
-          fontSize: mathPiece.fontSize,
-        }).getTextWidth();
+          ).length *
+          unitFontSizeWidth *
+          mathPiece.fontSize;
         return [
           margin + noPeriodicTextWidth,
           mathPiece.y - 2,

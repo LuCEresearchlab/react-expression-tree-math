@@ -260,25 +260,6 @@ function ExpressionTreeEditor({
         resetRootNode,
       };
     }
-
-    // TODO remove (width difference increasing fontSize by 1, with current fontFamily: 0.60009765625)
-    // let previousWidth = 0;
-    // for (let i = 1; i < 50; i++) {
-    //   const width = new Konva.Text({
-    //     text: "X",
-    //     fontFamily,
-    //     fontSize: i,
-    //   }).getTextWidth();
-    //   console.log(
-    //     "fontSize: " +
-    //       i +
-    //       "\nwidth: " +
-    //       width +
-    //       "\ndifference: " +
-    //       (width - previousWidth),
-    //   );
-    //   previousWidth = width;
-    // }
   }, []);
 
   const computeStageWidth = () => width || containerWidth;

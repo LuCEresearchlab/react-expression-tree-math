@@ -94,7 +94,7 @@ const nodePaddingX = 12;
 const nodePaddingY = 12;
 const fontSize = 24;
 const placeholderWidth = 16;
-const connectorPlaceholder = '{{}}'; // TODO: configurable hole regex
+const connectorPlaceholder = "{{}}"; // TODO: configurable hole regex
 const gapWidth = fontSize / 5;
 
 // constants used in layout computations below
@@ -114,7 +114,11 @@ const forestSingletonsGap = 100;
 // This way we can produce a layout on the server,
 // without access to the font and the canvas needed to measure text widths.
 // new Konva.Text({text: 'X', fontFamily: 'Roboto Mono, Courier', fontSize: 24}).getTextWidth()
-const charWidth = 14.40234375;
+
+// Width of a character at fontSize: 1 (based on default font used)
+// TODO adjust if fontFamily is changed from default
+const unitFontSizeWidth = 0.60009765625;
+const charWidth = fontSize * unitFontSizeWidth;
 
 // --- Structural functions
 export function isHolePiece(piece) {
@@ -132,13 +136,18 @@ export function isHolePiece(piece) {
  */
 export function getSortedChildIds(nodeId, nodes, edges) {
   return Object.keys(edges)
-    .filter(edgeId => edges[edgeId].parentNodeId === nodeId)
-    .sort((edgeId1, edgeId2) => edges[edgeId1].parentPieceId - edges[edgeId2].parentPieceId)
-    .map(edgeId => edges[edgeId].childNodeId);
+    .filter((edgeId) => edges[edgeId].parentNodeId === nodeId)
+    .sort(
+      (edgeId1, edgeId2) =>
+        edges[edgeId1].parentPieceId - edges[edgeId2].parentPieceId,
+    )
+    .map((edgeId) => edges[edgeId].childNodeId);
 }
 
 export function isRootId(nodeId, nodes, edges) {
-  return Object.keys(edges).every(edgeId => edges[edgeId].childNodeId !== nodeId);
+  return Object.keys(edges).every(
+    (edgeId) => edges[edgeId].childNodeId !== nodeId,
+  );
 }
 
 /**
@@ -150,23 +159,27 @@ export function isRootId(nodeId, nodes, edges) {
  * @returns true if the node with nodeId is a singleton node, false otherwise
  */
 export function isSingletonId(nodeId, nodes, edges) {
-  return Object.keys(edges).every(edgeId =>
-    edges[edgeId].childNodeId !== nodeId && edges[edgeId].parentNodeId !== nodeId);
+  return Object.keys(edges).every(
+    (edgeId) =>
+      edges[edgeId].childNodeId !== nodeId &&
+      edges[edgeId].parentNodeId !== nodeId,
+  );
 }
 
 export function getRootIds(nodes, edges) {
-  return Object.keys(nodes)
-    .filter(nodeId => isRootId(nodeId, nodes, edges));
+  return Object.keys(nodes).filter((nodeId) => isRootId(nodeId, nodes, edges));
 }
 
 export function getNonSingletonRootIds(nodes, edges) {
-  return getRootIds(nodes, edges)
-    .filter(nodeId => !isSingletonId(nodeId, nodes, edges));
+  return getRootIds(nodes, edges).filter(
+    (nodeId) => !isSingletonId(nodeId, nodes, edges),
+  );
 }
 
 export function getSingletonNodeIds(nodes, edges) {
-  return Object.keys(nodes)
-    .filter(nodeId => isSingletonId(nodeId, nodes, edges));
+  return Object.keys(nodes).filter((nodeId) =>
+    isSingletonId(nodeId, nodes, edges),
+  );
 }
 
 // --- Size computation functions
@@ -179,15 +192,19 @@ export function computeHolePieceWidth(piece) {
 }
 
 export function computePieceWidth(piece) {
-  return isHolePiece(piece) ? computeHolePieceWidth(piece) : computeTextPieceWidth(piece);
+  return isHolePiece(piece)
+    ? computeHolePieceWidth(piece)
+    : computeTextPieceWidth(piece);
 }
 
 export function computeNodeWidth(nodeId, nodes) {
   const node = nodes[nodeId];
   const width = node.pieces
-    .map(piece => computePieceWidth(piece))
+    .map((piece) => computePieceWidth(piece))
     .reduce((totalWidth, pieceWidth) => totalWidth + pieceWidth, 0);
-  return leftNodePadding + rightNodePadding + width + node.pieces.length * pieceGap;
+  return (
+    leftNodePadding + rightNodePadding + width + node.pieces.length * pieceGap
+  );
 }
 
 export function computeNodeHeight(nodeId, nodes) {
@@ -195,12 +212,13 @@ export function computeNodeHeight(nodeId, nodes) {
 }
 
 export function computeDescendantsWidth(rootId, nodes, edges) {
-  return getSortedChildIds(rootId, nodes, edges)
-    .reduce(
-      (width, childId, index) =>
-        (width + computeTreeWidth(childId, nodes, edges) + (index > 0 ? nodeHorizontalGap : 0)),
-      0
-    );
+  return getSortedChildIds(rootId, nodes, edges).reduce(
+    (width, childId, index) =>
+      width +
+      computeTreeWidth(childId, nodes, edges) +
+      (index > 0 ? nodeHorizontalGap : 0),
+    0,
+  );
 }
 
 export function computeTreeWidth(rootId, nodes, edges) {
@@ -211,13 +229,14 @@ export function computeTreeWidth(rootId, nodes, edges) {
 
 export function computeTreeHeight(rootId, nodes, edges) {
   const myHeight = computeNodeHeight(rootId, nodes);
-  const descendantsHeight = getSortedChildIds(rootId, nodes, edges)
-    .reduce(
-      (height, childId) =>
-        Math.max(height, computeTreeHeight(childId, nodes, edges)),
-      0
-    );
-  return myHeight + (descendantsHeight > 0 ? nodeVerticalGap + descendantsHeight : 0);
+  const descendantsHeight = getSortedChildIds(rootId, nodes, edges).reduce(
+    (height, childId) =>
+      Math.max(height, computeTreeHeight(childId, nodes, edges)),
+    0,
+  );
+  return (
+    myHeight + (descendantsHeight > 0 ? nodeVerticalGap + descendantsHeight : 0)
+  );
 }
 
 // --- Layout functions (they mutate the nodes!)
@@ -229,8 +248,10 @@ export function layoutTree(rootId, nodes, edges, x, y) {
   //console.log("  rootHeight", rootHeight);
   const descendantsWidth = computeDescendantsWidth(rootId, nodes, edges);
   //console.log("  descendantsWidth", descendantsWidth);
-  const rootIndent = rootWidth > descendantsWidth ? 0 : (descendantsWidth - rootWidth) / 2;
-  const descendantsIndent = rootWidth > descendantsWidth ? (rootWidth - descendantsWidth) / 2 : 0;
+  const rootIndent =
+    rootWidth > descendantsWidth ? 0 : (descendantsWidth - rootWidth) / 2;
+  const descendantsIndent =
+    rootWidth > descendantsWidth ? (rootWidth - descendantsWidth) / 2 : 0;
   let dx = x + descendantsIndent;
   const dy = y + rootHeight + nodeVerticalGap;
   const childIds = getSortedChildIds(rootId, nodes, edges);
@@ -261,17 +282,27 @@ export function layout(nodes, edges, selectedRootNodeId) {
   // width/height of forest part of the drawing
   let forestWidth = 0;
   let forestHeight = 0;
-  getNonSingletonRootIds(nodes, edges).forEach(rootId => {
-    const [width, height] = layoutTree(rootId, nodes, edges, x + forestWidth, y);
+  getNonSingletonRootIds(nodes, edges).forEach((rootId) => {
+    const [width, height] = layoutTree(
+      rootId,
+      nodes,
+      edges,
+      x + forestWidth,
+      y,
+    );
     forestWidth += width + treeGap;
     forestHeight = Math.max(forestHeight, height);
   });
   // width/height of singletons part of the drawing
   let singletonsWidth = 0;
   let singletonsHeight = 0;
-  getSingletonNodeIds(nodes, edges).forEach(nodeId => {
+  getSingletonNodeIds(nodes, edges).forEach((nodeId) => {
     const [width, height] = placeSingleton(
-      nodeId, nodes, edges, x + singletonsWidth, y + forestHeight + forestSingletonsGap
+      nodeId,
+      nodes,
+      edges,
+      x + singletonsWidth,
+      y + forestHeight + forestSingletonsGap,
     );
     singletonsWidth += width + nodeHorizontalGap;
     singletonsHeight = Math.max(singletonsHeight, height);
@@ -279,6 +310,6 @@ export function layout(nodes, edges, selectedRootNodeId) {
   // return width/height of the drawing
   return [
     Math.max(forestWidth, singletonsWidth),
-    forestHeight + forestSingletonsGap + singletonsHeight
+    forestHeight + forestSingletonsGap + singletonsHeight,
   ];
 }
