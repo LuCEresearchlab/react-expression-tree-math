@@ -1,29 +1,22 @@
 ```jsx
-import { useRef } from 'react';
-import Konva from 'konva';
-import { Stage, Layer } from 'react-konva';
-import Node from '../Node';
-import createPositionUtils from '../../../utils/position';
-import useContainerWidthOnWindowResize from '../../../hooks/useContainerWidthOnWindowResize';
+import { useRef } from "react";
+import Konva from "konva";
+import { Stage, Layer } from "react-konva";
+import Node from "../Node";
+import createPositionUtils from "../../../utils/position";
+import useContainerWidthOnWindowResize from "../../../hooks/useContainerWidthOnWindowResize";
 
-const { 
-  computeNodeWidth,
-  computeLabelPiecesXCoordinatePositions,
-} = createPositionUtils(24, 'Roboto Mono, Courier', "{{}}", 20, 12, 12)
+const { computeNodeWidth, computeLabelPiecesXCoordinatePositions } =
+  createPositionUtils(24, "Roboto Mono, Courier", "{{}}", 20, 12, 12);
 
 const containerRef = useRef();
 const width = useContainerWidthOnWindowResize(containerRef);
 const height = 70;
 const labelPieces = ["Test"];
-const labelPiecesPosition = computeLabelPiecesXCoordinatePositions(labelPieces)
+const labelPiecesPosition = computeLabelPiecesXCoordinatePositions(labelPieces);
 
-;<div
-  ref={containerRef}
->
-  <Stage
-    width={width}
-    height={height}
-  >
+<div ref={containerRef}>
+  <Stage width={width} height={height}>
     <Layer>
       <Node
         id={"n1"}
@@ -35,11 +28,11 @@ const labelPiecesPosition = computeLabelPiecesXCoordinatePositions(labelPieces)
         placeholderWidth={20}
         stageWidth={width}
         stageHeight={height}
-        nodeWidth={computeNodeWidth(labelPieces)}
+        nodeWidth={computeNodeWidth(false, labelPieces)}
         nodeHeight={48}
         isSelected={true}
       />
     </Layer>
   </Stage>
-</div>
+</div>;
 ```

@@ -232,6 +232,7 @@ function ExpressionTreeEditor({
   } = actions;
 
   const {
+    createNodeFromPieces,
     closestChildId,
     closestParentPiece,
     computeEdgeChildPos,
@@ -247,8 +248,6 @@ function ExpressionTreeEditor({
     computeEdgeChildCoordinates,
     computeEdgeParentCoordinates,
     reorderNodes,
-    createNodeFromPieces,
-    createMathNodeFromPieces,
   } = utils;
 
   useEffect(() => {
@@ -273,18 +272,19 @@ function ExpressionTreeEditor({
   }, [robotoFontAvailable]);
 
   const handleUpdateLabelPiecesChange = useCallback(() => {
+    const node = nodes[selectedNode];
     const pieces = parseLabelPieces(updateLabelInputValue);
-    if (!arraysAreEqual(pieces, nodes[selectedNode].pieces)) {
+    if (!arraysAreEqual(pieces, node.pieces)) {
       const piecesPosition = computeLabelPiecesXCoordinatePositions(pieces);
-      const nodeWidth = computeNodeWidth(pieces);
+      const nodeWidth = computeNodeWidth(node.isMathNode, pieces);
       const parentEdges = pieces.reduce((accumulator) => {
         accumulator.push([]);
         return accumulator;
       }, []);
 
-      const connectedEdgesIds = nodes[selectedNode].childEdges;
+      const connectedEdgesIds = node.childEdges;
       const tempNode = {
-        ...nodes[selectedNode],
+        ...node,
         pieces,
         piecesPosition,
         width: nodeWidth,
@@ -323,17 +323,12 @@ function ExpressionTreeEditor({
 
   const handleCreateNode = useCallback(() => {
     const pointerPos = stageRef.current.getPointerPosition();
-    if (isCreatingNode) {
-      const newNode = createNodeFromPieces(createNodeInputValue);
-      newNode.x = (pointerPos.x - stagePos.x) / stageScale.x;
-      newNode.y = (pointerPos.y - stagePos.y) / stageScale.y;
-      createNode(newNode);
-    } else if (isCreatingMathNode) {
-      const newNode = createMathNodeFromPieces(currentMathSelection);
-      newNode.x = (pointerPos.x - stagePos.x) / stageScale.x;
-      newNode.y = (pointerPos.y - stagePos.y) / stageScale.y;
-      createNode(newNode);
-    }
+    const newNode = isCreatingMathNode
+      ? createNodeFromPieces(true, currentMathSelection)
+      : createNodeFromPieces(false, createNodeInputValue);
+    newNode.x = (pointerPos.x - stagePos.x) / stageScale.x;
+    newNode.y = (pointerPos.y - stagePos.y) / stageScale.y;
+    createNode(newNode);
   });
 
   // --- Zoom actions
@@ -472,6 +467,7 @@ function ExpressionTreeEditor({
         orderedNodes,
         tempEdges,
         selectedRootNode,
+        isDrawerOpen,
       );
       // console.log('node layout: diagram width: ', diagramWidth, 'diagram height: ', diagramHeight);
 
@@ -745,7 +741,9 @@ function ExpressionTreeEditor({
     if (createNodeInputValue === "") {
       setCreateNodeDescription(undefined);
     } else {
-      setCreateNodeDescription(createNodeFromPieces(createNodeInputValue));
+      setCreateNodeDescription(
+        createNodeFromPieces(false, createNodeInputValue),
+      );
     }
   }, [createNodeInputValue]);
 

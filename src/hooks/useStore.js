@@ -1,13 +1,13 @@
-import { useReducer, useMemo, useEffect } from 'react';
+import { useReducer, useMemo, useEffect } from "react";
 
-import actions from '../store/actions';
-import reducer from '../store/reducers';
+import actions from "../store/actions";
+import reducer from "../store/reducers";
 import {
   createSanitizedUtilsProps,
   createInitialState,
-} from '../store/initialState';
+} from "../store/initialState";
 
-import createPositionUtils from '../utils/position';
+import createPositionUtils from "../utils/position";
 
 function useStore({
   propNodes,
@@ -82,7 +82,7 @@ function useStore({
   const templateNodesDescription = useMemo(() => {
     if (propTemplateNodes !== undefined && propTemplateNodes !== null) {
       return propTemplateNodes.map((pieces) =>
-        utils.createNodeFromPieces(pieces),
+        utils.createNodeFromPieces(false, pieces),
       );
     }
     return null;

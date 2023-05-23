@@ -63,23 +63,54 @@ const createPositionUtils = (
   };
 
   // Compute the node width
-  const computeNodeWidth = (pieces) => {
-    const piecesWidth = computePiecesWidth(pieces);
-    const totalGapsWidth = 2 * nodePaddingX + gapWidth * (pieces.length - 1);
-    const totalWidth = piecesWidth.reduce(
-      (acc, width) => acc + width,
-      totalGapsWidth,
-    );
-    return totalWidth;
+  const computeNodeWidth = (isMathNode, pieces) => {
+    if (isMathNode) {
+      const minX = Math.min(
+        ...pieces.map((piece) =>
+          piece.type === "line" ? piece.linePoints.x1 : piece.x,
+        ),
+      );
+      const maxX = Math.max(
+        ...pieces.map((piece) =>
+          piece.type === "line"
+            ? piece.linePoints.x2
+            : piece.type == "hole"
+            ? piece.x + piece.width
+            : piece.x + unitFontSizeWidth * piece.fontSize * piece.value.length,
+        ),
+      );
+      return 2 * nodePaddingX + maxX - minX;
+    } else {
+      const piecesWidth = computePiecesWidth(pieces);
+      const totalGapsWidth = 2 * nodePaddingX + gapWidth * (pieces.length - 1);
+      const totalWidth = piecesWidth.reduce(
+        (acc, width) => acc + width,
+        totalGapsWidth,
+      );
+      return totalWidth;
+    }
   };
 
-  const computeNodeHeight = (isEquation) => {
-    if (isEquation) {
-      // TODO change this value in the future to allow different heights
+  const computeNodeHeight = (isMathNode, pieces) => {
+    if (isMathNode) {
+      const minY = Math.min(
+        ...pieces.map((piece) =>
+          piece.type === "line" ? piece.linePoints.y1 : piece.y,
+        ),
+      );
+      const maxY = Math.max(
+        ...pieces.map((piece) =>
+          piece.type === "line"
+            ? piece.linePoints.y2
+            : piece.type == "hole"
+            ? piece.y + piece.height
+            : piece.y + piece.fontSize,
+        ),
+      );
+      return 2 * nodePaddingY + maxY - minY;
+    } else {
       return 2 * nodePaddingY + fontSize;
     }
-
-    return 2 * nodePaddingY + fontSize;
   };
 
   // Parse the nodes's pieces from a textfield string into the pieces array
@@ -96,6 +127,28 @@ const createPositionUtils = (
       return acc;
     }, []);
     return labelPieces;
+  };
+
+  const parseMathPieces = (mathPieces) => {
+    const parsedMathPieces = mathPieces.map((mathPiece) =>
+      mathPiece.type !== "line"
+        ? {
+            ...mathPiece,
+            x: mathPiece.x + nodePaddingX,
+            y: mathPiece.y + nodePaddingY,
+          }
+        : {
+            ...mathPiece,
+            linePoints: {
+              ...mathPiece.linePoints,
+              x1: mathPiece.linePoints.x1 + nodePaddingX,
+              y1: mathPiece.linePoints.y1 + nodePaddingY,
+              x2: mathPiece.linePoints.x2 + nodePaddingX,
+              y2: mathPiece.linePoints.y2 + nodePaddingY,
+            },
+          },
+    );
+    return parsedMathPieces;
   };
 
   // Compute the closest child notd given an (x, y) point coordinate
@@ -383,7 +436,7 @@ const createPositionUtils = (
     const objectNodes = {};
     nodes.forEach((node) => {
       const id = `_${node.id}`;
-      const { pieces, x, y, type, value } = node;
+      const { pieces, mathPieces, isMathNode, x, y, type, value } = node;
 
       objectNodes[id] = {
         id,
@@ -392,6 +445,8 @@ const createPositionUtils = (
         type,
         value,
         pieces,
+        mathPieces,
+        isMathNode,
       };
     });
     return objectNodes;
@@ -424,31 +479,20 @@ const createPositionUtils = (
     const sanitizedNodes = Object.keys(nodes).reduce((accumulator, id) => {
       const newNode = createEmptyNode(id);
 
-      if (nodes[id].isMathNode) {
-        const nodeSizes = computeMathNodeSizes(nodes[id].mathPieces);
-        accumulator[id] = {
-          ...newNode,
-          ...nodes[id],
-          height: nodeSizes.height,
-          width: nodeSizes.width,
-          childEdges: [],
-          parentEdges: [],
-        };
-      } else {
-        accumulator[id] = {
-          ...newNode,
-          ...nodes[id],
-          height: computeNodeHeight(nodes[id].isEquation),
-          width: computeNodeWidth(nodes[id].pieces),
-          piecesPosition: computeLabelPiecesXCoordinatePositions(
-            nodes[id].pieces,
-          ),
-          childEdges: [],
-          parentEdges: [],
-        };
-      }
+      const isMathNode = nodes[id].isMathNode;
+      const pieces = isMathNode ? nodes[id].mathPieces : nodes[id].pieces;
 
-      nodes[id].pieces.forEach(() => accumulator[id].parentEdges.push([]));
+      accumulator[id] = {
+        ...newNode,
+        ...nodes[id],
+        height: computeNodeHeight(isMathNode, pieces),
+        width: computeNodeWidth(isMathNode, pieces),
+        piecesPosition:
+          !isMathNode && computeLabelPiecesXCoordinatePositions(pieces),
+        childEdges: [],
+        parentEdges: [],
+      };
+      pieces.forEach(() => accumulator[id].parentEdges.push([]));
       return accumulator;
     }, {});
 
@@ -471,7 +515,6 @@ const createPositionUtils = (
         sanitizedNodes[parentNodeId].parentEdges[parentPieceId].push(id);
       }
     });
-
     return { sanitizedNodes, sanitizedEdges };
   };
 
@@ -491,74 +534,16 @@ const createPositionUtils = (
     return updatedEdges;
   };
 
-  const createNodeFromPieces = (pieces, id) => {
+  const createNodeFromPieces = (isMathNode, pieces, id) => {
     const newNode = createEmptyNode(id);
 
-    const labelPieces = parseLabelPieces(pieces);
-    const labelPiecesPosition =
-      computeLabelPiecesXCoordinatePositions(labelPieces);
-    const nodeWidth = computeNodeWidth(labelPieces);
-    const nodeHeight = computeNodeHeight(false);
-    const parentEdges = labelPieces.reduce((accumulator) => {
-      accumulator.push([]);
-      return accumulator;
-    }, []);
+    pieces = isMathNode ? parseMathPieces(pieces) : parseLabelPieces(pieces);
+    const piecesPosition = !isMathNode
+      ? computeLabelPiecesXCoordinatePositions(pieces)
+      : [];
 
-    return {
-      ...newNode,
-      height: nodeHeight,
-      width: nodeWidth,
-      pieces: labelPieces,
-      piecesPosition: labelPiecesPosition,
-      parentEdges,
-    };
-  };
-
-  const computeMathNodeSizes = (pieces) => {
-    const boundingBox = {
-      minX: Math.min(...pieces.map((piece) => piece.x)),
-      maxX: Math.max(
-        ...pieces.map((piece) =>
-          piece.type == "hole"
-            ? piece.x + piece.width
-            : piece.x + unitFontSizeWidth * piece.fontSize * piece.value.length,
-        ),
-      ),
-      minY: Math.min(...pieces.map((piece) => piece.y)),
-      maxY: Math.max(
-        ...pieces.map((piece) =>
-          piece.type == "hole"
-            ? piece.y + piece.height
-            : piece.y + piece.fontSize,
-        ),
-      ),
-    };
-
-    return {
-      width: 2 * nodePaddingX + boundingBox.maxX - boundingBox.minX,
-      height: 2 * nodePaddingY + boundingBox.maxY - boundingBox.minY,
-    };
-  };
-
-  const createMathNodeFromPieces = (pieces, id) => {
-    const newNode = createEmptyNode(id);
-
-    // handle subscript index
-    if (pieces[0].subscript) {
-      const variable = pieces[0];
-      pieces.push({
-        type: "text",
-        x:
-          variable.x +
-          unitFontSizeWidth * variable.fontSize * variable.value.length +
-          3,
-        y: variable.y + variable.fontSize * 0.6,
-        fontSize: variable.fontSize * 0.6,
-        value: variable.subscript,
-      });
-    }
-
-    const nodeSizes = computeMathNodeSizes(pieces);
+    const nodeWidth = computeNodeWidth(isMathNode, pieces);
+    const nodeHeight = computeNodeHeight(isMathNode, pieces);
 
     const parentEdges = pieces.reduce((accumulator) => {
       accumulator.push([]);
@@ -567,14 +552,15 @@ const createPositionUtils = (
 
     return {
       ...newNode,
-      height: nodeSizes.height,
-      width: nodeSizes.width,
+      height: nodeHeight,
+      width: nodeWidth,
+      pieces: isMathNode ? [] : pieces,
+      mathPieces: isMathNode ? pieces : [],
+      isMathNode,
+      piecesPosition,
       parentEdges,
-      isMathNode: true,
-      mathPieces: pieces,
     };
   };
-
   return {
     createNodeFromPieces,
     closestChildId,
@@ -592,7 +578,6 @@ const createPositionUtils = (
     computeEdgeChildCoordinates,
     computeEdgeParentCoordinates,
     reorderNodes,
-    createMathNodeFromPieces,
   };
 };
 

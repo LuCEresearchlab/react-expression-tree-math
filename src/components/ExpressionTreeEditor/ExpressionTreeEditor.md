@@ -154,8 +154,6 @@ Example with initial object state and final nodes:
         { type: "text", x: 54, y: 12, fontSize: 24, value: ")" },
       ],
       isMathNode: true,
-      x: 420,
-      y: 184.74389707031253,
       type: "",
       value: "",
     },

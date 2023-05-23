@@ -39,10 +39,6 @@ function NodeLabel({
   const rectRef = useRef([]);
   const circleRef = useRef([]);
 
-  // Width of a character at fontSize: 1 (based on default font used)
-  // TODO adjust if fontFamily is changed from default
-  const unitFontSizeWidth = 0.60009765625;
-
   const positions = useMemo(
     () =>
       labelPieces.map((pieceText, i) => {
@@ -75,6 +71,7 @@ function NodeLabel({
   const computePlaceholderPieceKey = (index) =>
     `PlaceholderPiece-${nodeId}-${index}`;
   const computeTextPieceKey = (index) => `TextPiece-${nodeId}-${index}`;
+  const computeLinePieceKey = (index) => `LinePiece-${nodeId}-${index}`;
 
   const handleMouseOver = (e) => {
     if (isFullDisabled) {
@@ -101,35 +98,6 @@ function NodeLabel({
 
     return defaultColor;
   };
-
-  const periodicPosition = useMemo(() => {
-    if (isMathNode) {
-      const mathPiece = mathPieces[0];
-      if (mathPiece.periodicIndex && mathPiece.periodicIndex !== 0) {
-        const margin = 12;
-        const noPeriodicTextWidth =
-          mathPiece.value.substring(
-            0,
-            mathPiece.value.length - mathPiece.periodicIndex,
-          ).length *
-          unitFontSizeWidth *
-          mathPiece.fontSize;
-        const periodicTextWidth =
-          mathPiece.value.substring(
-            mathPiece.value.length - mathPiece.periodicIndex,
-          ).length *
-          unitFontSizeWidth *
-          mathPiece.fontSize;
-        return [
-          margin + noPeriodicTextWidth,
-          mathPiece.y - 2,
-          margin + noPeriodicTextWidth + periodicTextWidth,
-          mathPiece.y - 2,
-        ];
-      }
-    }
-    return [];
-  }, [mathPieces]);
 
   return (
     <>
@@ -194,8 +162,20 @@ function NodeLabel({
                   }
                 />
               </Group>
+            ) : mathPiece.type === "line" ? (
+              <Line
+                key={computeLinePieceKey(i)}
+                points={[
+                  mathPiece.linePoints.x1,
+                  mathPiece.linePoints.y1,
+                  mathPiece.linePoints.x2,
+                  mathPiece.linePoints.y2,
+                ]}
+                strokeWidth={mathPiece.lineStrokeWidth}
+                stroke='white'
+              />
             ) : (
-              <Group key={computePlaceholderPieceKey(i)}>
+              <Group key={computeTextPieceKey(i)}>
                 <Text
                   x={mathPiece.x}
                   y={mathPiece.y}
@@ -207,13 +187,6 @@ function NodeLabel({
                   onDragMove={() => {}}
                   onDragEnd={() => {}}
                 />
-                {periodicPosition !== [] && (
-                  <Line
-                    points={periodicPosition}
-                    strokeWidth={mathPiece.fontSize / 15}
-                    stroke={"white"}
-                  />
-                )}
               </Group>
             ),
           )}
