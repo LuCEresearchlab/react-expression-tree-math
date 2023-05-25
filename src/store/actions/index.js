@@ -605,6 +605,25 @@ const actions = [
       type: "toggleComments",
     }),
   },
+  {
+    name: 'updateGlobalState',
+    action: ({
+      nodes,
+      edges,
+      selectedRootNode,
+      stagePos,
+      stageScale,
+    }) => ({
+      type: 'updateGlobalState',
+      payload: {
+        nodes,
+        edges,
+        selectedRootNode,
+        stagePos,
+        stageScale,
+      },
+    }),
+  },
 ];
 
 export default actions;

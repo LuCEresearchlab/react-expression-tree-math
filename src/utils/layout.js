@@ -270,9 +270,9 @@ export function placeSingleton(nodeId, nodes, edges, x, y) {
   return [nodeWidth, nodeHeight];
 }
 
-export function layout(nodes, edges, selectedRootNodeId, isDrawerOpen) {
+export function layout(nodes, edges, selectedRootNodeId, hasLeftMargin, canvasWidth) {
   // top/left position of the drawing
-  const x = isDrawerOpen ? 340 : leftMargin;
+  const x = hasLeftMargin ? leftMargin : topMargin;
   const y = topMargin;
   // width/height of forest part of the drawing
   let forestWidth = 0;
@@ -291,15 +291,22 @@ export function layout(nodes, edges, selectedRootNodeId, isDrawerOpen) {
   // width/height of singletons part of the drawing
   let singletonsWidth = 0;
   let singletonsHeight = 0;
-  getSingletonNodeIds(nodes, edges).forEach((nodeId) => {
+  let singletonsLevel = 0;
+  getSingletonNodeIds(nodes, edges).forEach(nodeId => {
     const [width, height] = placeSingleton(
       nodeId,
       nodes,
       edges,
       x + singletonsWidth,
-      y + forestHeight + forestSingletonsGap,
+      y + forestHeight + forestSingletonsGap + singletonsLevel * (singletonsHeight + nodeVerticalGap),
     );
-    singletonsWidth += width + nodeHorizontalGap;
+    const singletonsNewLevel = (x + singletonsWidth + width) > (canvasWidth - topMargin);
+    if (singletonsNewLevel) {
+      singletonsWidth = 0;
+      singletonsLevel += 1;
+    } else {
+      singletonsWidth += width + nodeHorizontalGap;
+    }
     singletonsHeight = Math.max(singletonsHeight, height);
   });
   // return width/height of the drawing

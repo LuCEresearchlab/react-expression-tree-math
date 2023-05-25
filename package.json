@@ -1,6 +1,6 @@
 {
   "name": "react-expression-tree",
-  "version": "1.0.30",
+  "version": "1.0.35",
   "description": "Create expression trees",
   "author": {
     "name": "Tiziano Marsetti",
@@ -14,6 +14,10 @@
     {
       "name": "Tiziano Marsetti",
       "email": "tiziano.marsetti@usi.ch"
+    },
+    {
+      "name": "Joey Bevilacqua",
+      "email": "joey.bevilacqua@usi.ch"
     },
     {
       "name": "Luca Chiodini",
@@ -36,7 +40,7 @@
     "@fontsource/roboto-mono": "^4.2.0",
     "fontfaceobserver": "^2.1.0",
     "fscreen": "^1.1.0",
-    "meta-png": "^1.0.0",
+    "meta-png": "^1.0.6",
     "prop-types": "^15.7.2",
     "react-konva": "^17.0.2-5"
   },
