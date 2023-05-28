@@ -48,6 +48,7 @@ function Node({
   handleConnectorDragEnd,
   fontSize,
   fontFamily,
+  unitFontSizeWidth,
   nodePaddingX,
   nodePaddingY,
   nodeStrokeColor,
@@ -355,6 +356,7 @@ function Node({
         valueText={valueText}
         fontFamily={fontFamily}
         fontSize={typeValueStyle.fontSize}
+        unitFontSizeWidth={unitFontSizeWidth}
         strokeWidth={typeValueStyle.strokeWidth}
         radius={typeValueStyle.radius}
         padding={typeValueStyle.padding}
@@ -421,6 +423,7 @@ Node.propTypes = {
   handleConnectorDragEnd: PropTypes.func,
   fontSize: PropTypes.number,
   fontFamily: PropTypes.string,
+  unitFontSizeWidth: PropTypes.number,
   nodePaddingX: PropTypes.number,
   nodePaddingY: PropTypes.number,
   nodeStrokeColor: PropTypes.string,
@@ -528,6 +531,7 @@ Node.defaultProps = {
   handleConnectorDragEnd: () => {},
   fontSize: 24,
   fontFamily: "Roboto Mono, Courier",
+  unitFontSizeWidth: 0.60009765625,
   nodePaddingX: 12,
   nodePaddingY: 12,
   nodeStrokeColor: "#000000",

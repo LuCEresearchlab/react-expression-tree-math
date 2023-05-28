@@ -242,6 +242,7 @@ function ExpressionTreeEditor({
   } = actions;
 
   const {
+    unitFontSizeWidth,
     createNodeFromPieces,
     closestChildId,
     closestParentPiece,
@@ -711,6 +712,8 @@ function ExpressionTreeEditor({
       computeStageWidth,
       isDrawerOpen,
       showDrawer,
+      propHighlightedNodes,
+      propHighlightedEdges,
     );
     stageReset({
       nodes: sanitizedNodes,
@@ -1633,6 +1636,7 @@ function ExpressionTreeEditor({
                   handleConnectorDragEnd={handleConnectorDragEnd}
                   fontSize={fontSize}
                   fontFamily={fontFamily}
+                  unitFontSizeWidth={unitFontSizeWidth}
                   nodePaddingX={nodePaddingX}
                   nodePaddingY={nodePaddingY}
                   nodeStrokeColor={nodeStyle.nodeStrokeColor}

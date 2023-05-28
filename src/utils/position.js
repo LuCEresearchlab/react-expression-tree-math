@@ -486,6 +486,8 @@ const createPositionUtils = (
     computeStageWidth,
     isDrawerOpen,
     showDrawer,
+    highlightedNodes,
+    highlightedEdges,
   ) => {
     if (Array.isArray(nodes)) {
       nodes = convertArrayNodesToObject(nodes);
@@ -508,6 +510,8 @@ const createPositionUtils = (
       const isMathNode = nodes[id].isMathNode;
       const pieces = isMathNode ? nodes[id].mathPieces : nodes[id].pieces;
 
+      const isHighlightedNode = highlightedNodes.includes(id);
+
       accumulator[id] = {
         ...newNode,
         ...nodes[id],
@@ -517,6 +521,7 @@ const createPositionUtils = (
           !isMathNode && computeLabelPiecesXCoordinatePositions(pieces),
         childEdges: [],
         parentEdges: [],
+        isHighlighted: isHighlightedNode,
       };
       pieces.forEach(() => accumulator[id].parentEdges.push([]));
       return accumulator;
@@ -591,6 +596,10 @@ const createPositionUtils = (
       stageScale = { x: scale, y: scale };
     }
 
+    Object.keys(sanitizedEdges).forEach((edgeId) => {
+      sanitizedEdges[edgeId].isHighlighted = highlightedEdges.includes(edgeId);
+    });
+
     return {
       sanitizedNodes,
       sanitizedEdges,
@@ -643,6 +652,7 @@ const createPositionUtils = (
     };
   };
   return {
+    unitFontSizeWidth,
     createNodeFromPieces,
     closestChildId,
     closestParentPiece,

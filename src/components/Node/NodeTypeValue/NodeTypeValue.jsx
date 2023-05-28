@@ -12,6 +12,7 @@ function NodeTypeValue({
   valueText,
   fontFamily,
   fontSize,
+  unitFontSizeWidth,
   strokeWidth,
   radius,
   padding,
@@ -26,9 +27,6 @@ function NodeTypeValue({
   pointerWidth,
   pointerHeight,
 }) {
-  // Width of a character at fontSize: 1 (based on default font used)
-  // TODO adjust if fontFamily is changed from default
-  const unitFontSizeWidth = 0.60009765625;
   const charWidth = fontSize * unitFontSizeWidth;
 
   const typeWidth = useMemo(
@@ -169,6 +167,7 @@ NodeTypeValue.propTypes = {
   valueText: PropTypes.string,
   fontFamily: PropTypes.string,
   fontSize: PropTypes.number,
+  unitFontSizeWidth: PropTypes.number,
   strokeWidth: PropTypes.number,
   radius: PropTypes.number,
   padding: PropTypes.number,
@@ -191,6 +190,7 @@ NodeTypeValue.defaultProps = {
   valueText: "",
   fontFamily: "Roboto Mono, Courier",
   fontSize: 12,
+  unitFontSizeWidth: 0.60009765625,
   fillTypeColor: "#3f51b5",
   fillValueColor: "#000000",
   fillTypeHighlightColor: "#7f51b5",

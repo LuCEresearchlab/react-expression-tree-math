@@ -101,6 +101,8 @@ function useStore({
         computeStageWidth,
         true,
         true,
+        propHighlightedNodes,
+        propHighlightedEdges,
       ),
     [
       propNodes,

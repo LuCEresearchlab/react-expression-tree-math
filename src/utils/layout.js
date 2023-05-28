@@ -110,7 +110,7 @@ const { computeNodeWidth, computeNodeHeight } = createPositionUtils(
 
 // constants used in layout computations below
 const topMargin = 80;
-const leftMargin = 80;
+const leftMargin = 340;
 const nodeHorizontalGap = 20;
 const nodeVerticalGap = 60;
 const treeGap = 60;
@@ -120,11 +120,6 @@ const forestSingletonsGap = 100;
 // This way we can produce a layout on the server,
 // without access to the font and the canvas needed to measure text widths.
 // new Konva.Text({text: 'X', fontFamily: 'Roboto Mono, Courier', fontSize: 1}).getTextWidth()
-
-// Width of a character at fontSize: 1 (based on default font used)
-// TODO adjust if fontFamily is changed from default
-const unitFontSizeWidth = 0.60009765625;
-const charWidth = fontSize * unitFontSizeWidth;
 
 /**
  * Return an array of node IDs for all children of the given parent node ID,
@@ -270,7 +265,13 @@ export function placeSingleton(nodeId, nodes, edges, x, y) {
   return [nodeWidth, nodeHeight];
 }
 
-export function layout(nodes, edges, selectedRootNodeId, hasLeftMargin, canvasWidth) {
+export function layout(
+  nodes,
+  edges,
+  selectedRootNodeId,
+  hasLeftMargin,
+  canvasWidth,
+) {
   // top/left position of the drawing
   const x = hasLeftMargin ? leftMargin : topMargin;
   const y = topMargin;
@@ -292,15 +293,19 @@ export function layout(nodes, edges, selectedRootNodeId, hasLeftMargin, canvasWi
   let singletonsWidth = 0;
   let singletonsHeight = 0;
   let singletonsLevel = 0;
-  getSingletonNodeIds(nodes, edges).forEach(nodeId => {
+  getSingletonNodeIds(nodes, edges).forEach((nodeId) => {
     const [width, height] = placeSingleton(
       nodeId,
       nodes,
       edges,
       x + singletonsWidth,
-      y + forestHeight + forestSingletonsGap + singletonsLevel * (singletonsHeight + nodeVerticalGap),
+      y +
+        forestHeight +
+        (forestHeight === 0 ? 0 : forestSingletonsGap) +
+        singletonsLevel * (singletonsHeight + nodeVerticalGap),
     );
-    const singletonsNewLevel = (x + singletonsWidth + width) > (canvasWidth - topMargin);
+    const singletonsNewLevel =
+      x + singletonsWidth + width > canvasWidth - topMargin;
     if (singletonsNewLevel) {
       singletonsWidth = 0;
       singletonsLevel += 1;

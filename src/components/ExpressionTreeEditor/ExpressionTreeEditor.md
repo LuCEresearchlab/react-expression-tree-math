@@ -540,7 +540,6 @@ const reference = useRef(null);
     highlightedEdges={["e0", "e1", "e2"]}
   />
 </div>;
-</div>
 ```
 
 Utility function `updateGlobalState` and `getGlobalState`
