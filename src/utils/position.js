@@ -18,6 +18,21 @@ const createPositionUtils = (
   const placeholderMiddle = placeholderWidth / 2;
   const gapWidth = fontSize / 5;
 
+  // We want to layout on the server,
+  // or at least inside JavaScript functions that don't depend on the DOM.
+  // Can we use Konva to measure Text elements without having a DOM?
+  // Can we do so even on the server side?
+
+  // It seems that Konva can be run in NodeJS
+  // (maybe that's `konva-node`?)
+  // https://github.com/konvajs/konva/tree/ff4aae2b02635f9b63ffebd76e45f7b8c333ea5a#4-nodejs-env
+  // In any case, running Konva in NodeJS requires the `canvas` package.
+
+  // Hack: determine the width of a character in a piece at fontSize: 1,
+  // based on the default font we use.
+  // This way we can produce a layout on the server,
+  // without access to the font and the canvas needed to measure text widths.
+  // new Konva.Text({text: 'X', fontFamily: 'Roboto Mono, Courier', fontSize: 1}).getTextWidth()
   // TODO adjust if fontFamily is changed from default
   const unitFontSizeWidth = 0.60009765625;
   const charWidth = fontSize * unitFontSizeWidth;

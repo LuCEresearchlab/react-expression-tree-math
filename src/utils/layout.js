@@ -73,53 +73,14 @@
  * @author Matthias.Hauswirth@usi.ch
  */
 
-// We want to layout on the server,
-// or at least inside JavaScript functions that don't depend on the DOM.
-// Can we use Konva to measure Text elements without having a DOM?
-// Can we do so even on the server side?
-//
-// import Konva from 'konva';
-// const konvaText = new Konva.Text({text, fontFamily, fontSize});
-// return konvaText.getTextWidth();
-//
-// It seems that Konva can be run in NodeJS
-// (maybe that's `konva-node`?)
-// https://github.com/konvajs/konva/tree/ff4aae2b02635f9b63ffebd76e45f7b8c333ea5a#4-nodejs-env
-// In any case, running Konva in NodeJS requires the `canvas` package.
-
-import createPositionUtils from "../utils/position";
-
-// --- Layout constants
-// constants provided to position.js/createPositionUtils()
-// with default values from ExpressionTreeEditor.jsx ExpressionTreeEditor.defaultProps
-const fontSize = 24;
-const fontFamily = "Roboto Mono, Courier";
-const connectorPlaceholder = "{{}}"; // TODO: configurable hole regex
-const placeholderWidth = 20;
-const nodePaddingX = 12;
-const nodePaddingY = 12;
-
-const { computeNodeWidth, computeNodeHeight } = createPositionUtils(
-  fontSize,
-  fontFamily,
-  connectorPlaceholder,
-  placeholderWidth,
-  nodePaddingX,
-  nodePaddingY,
-);
-
 // constants used in layout computations below
 const topMargin = 80;
 const leftMargin = 340;
+const rightMargin = 40;
 const nodeHorizontalGap = 20;
 const nodeVerticalGap = 60;
 const treeGap = 60;
 const forestSingletonsGap = 100;
-// Hack: determine the width of a character in a piece at fontSize: 1,
-// based on the default font we use.
-// This way we can produce a layout on the server,
-// without access to the font and the canvas needed to measure text widths.
-// new Konva.Text({text: 'X', fontFamily: 'Roboto Mono, Courier', fontSize: 1}).getTextWidth()
 
 /**
  * Return an array of node IDs for all children of the given parent node ID,
@@ -191,22 +152,14 @@ export function computeDescendantsWidth(rootId, nodes, edges) {
 
 export function computeTreeWidth(rootId, nodes, edges) {
   const rootNode = nodes[rootId];
-  const isMathNode = rootNode.isMathNode;
-  const myWidth = computeNodeWidth(
-    isMathNode,
-    isMathNode ? rootNode.mathPieces : rootNode.pieces,
-  );
+  const myWidth = rootNode.width;
   const descendantsWidth = computeDescendantsWidth(rootId, nodes, edges);
   return Math.max(myWidth, descendantsWidth);
 }
 
 export function computeTreeHeight(rootId, nodes, edges) {
   const rootNode = nodes[rootId];
-  const isMathNode = rootNode.isMathNode;
-  const myHeight = computeNodeHeight(
-    isMathNode,
-    isMathNode ? rootNode.mathPieces : rootNode.pieces,
-  );
+  const myHeight = rootNode.height;
   const descendantsHeight = getSortedChildIds(rootId, nodes, edges).reduce(
     (height, childId) =>
       Math.max(height, computeTreeHeight(childId, nodes, edges)),
@@ -220,15 +173,8 @@ export function computeTreeHeight(rootId, nodes, edges) {
 // --- Layout functions (they mutate the nodes!)
 export function layoutTree(rootId, nodes, edges, x, y) {
   const rootNode = nodes[rootId];
-  const isMathNode = rootNode.isMathNode;
-  const rootWidth = computeNodeWidth(
-    isMathNode,
-    isMathNode ? rootNode.mathPieces : rootNode.pieces,
-  );
-  const rootHeight = computeNodeHeight(
-    isMathNode,
-    isMathNode ? rootNode.mathPieces : rootNode.pieces,
-  );
+  const rootWidth = rootNode.width;
+  const rootHeight = rootNode.height;
   const descendantsWidth = computeDescendantsWidth(rootId, nodes, edges);
   const rootIndent =
     rootWidth > descendantsWidth ? 0 : (descendantsWidth - rootWidth) / 2;
@@ -249,20 +195,9 @@ export function layoutTree(rootId, nodes, edges, x, y) {
   return [treeWidth, treeHeight];
 }
 
-export function placeSingleton(nodeId, nodes, edges, x, y) {
-  const node = nodes[nodeId];
-  const isMathNode = node.isMathNode;
+export function placeSingleton(node, x, y) {
   node.x = x;
   node.y = y;
-  const nodeWidth = computeNodeWidth(
-    isMathNode,
-    isMathNode ? node.mathPieces : node.pieces,
-  );
-  const nodeHeight = computeNodeHeight(
-    isMathNode,
-    isMathNode ? node.mathPieces : node.pieces,
-  );
-  return [nodeWidth, nodeHeight];
 }
 
 export function layout(
@@ -278,45 +213,81 @@ export function layout(
   // width/height of forest part of the drawing
   let forestWidth = 0;
   let forestHeight = 0;
+  let forestLevel = 0;
+  let forestLevelsWidth = [0];
+  let forestLevelsMaxHeight = [0];
   getNonSingletonRootIds(nodes, edges).forEach((rootId) => {
-    const [width, height] = layoutTree(
+    const [treeWidth, treeHeight] = layoutTree(
       rootId,
       nodes,
       edges,
       x + forestWidth,
-      y,
+      y +
+        forestLevelsMaxHeight.slice(0, forestLevel).reduce((a, b) => a + b, 0) +
+        forestLevel * treeGap,
     );
-    forestWidth += width + treeGap;
-    forestHeight = Math.max(forestHeight, height);
+    forestWidth += treeWidth + treeGap;
+    forestLevelsWidth[forestLevel] += treeWidth + treeGap;
+    forestLevelsMaxHeight[forestLevel] = Math.max(
+      forestLevelsMaxHeight[forestLevel],
+      treeHeight,
+    );
+    const forestNewLevel = x + forestWidth + rightMargin > canvasWidth;
+    if (forestNewLevel) {
+      forestWidth = 0;
+      forestLevel += 1;
+      forestLevelsMaxHeight.push(0);
+      forestLevelsWidth.push(0);
+    }
   });
+  // forestHeight = Math.max(forestHeight, treeHeight);
+  forestHeight =
+    forestLevelsMaxHeight.reduce((a, b) => a + b, 0) + forestLevel * treeGap;
   // width/height of singletons part of the drawing
   let singletonsWidth = 0;
   let singletonsHeight = 0;
   let singletonsLevel = 0;
+  let singletonsLevelsMaxHeight = [0];
+  let singletonsLevelsWidth = [0];
   getSingletonNodeIds(nodes, edges).forEach((nodeId) => {
-    const [width, height] = placeSingleton(
-      nodeId,
-      nodes,
-      edges,
+    const node = nodes[nodeId];
+    const nodeWidth = node.width;
+    const nodeHeight = node.height;
+    const singletonsNewLevel =
+      x + singletonsWidth + nodeWidth + rightMargin > canvasWidth;
+    if (singletonsNewLevel) {
+      singletonsWidth = 0;
+      singletonsLevel += 1;
+      singletonsLevelsMaxHeight.push(0);
+      singletonsLevelsWidth.push(0);
+    }
+    placeSingleton(
+      node,
       x + singletonsWidth,
       y +
         forestHeight +
         (forestHeight === 0 ? 0 : forestSingletonsGap) +
-        singletonsLevel * (singletonsHeight + nodeVerticalGap),
+        singletonsLevelsMaxHeight
+          .slice(0, singletonsLevel)
+          .reduce((a, b) => a + b, 0) +
+        singletonsLevel * nodeVerticalGap,
     );
-    const singletonsNewLevel =
-      x + singletonsWidth + width > canvasWidth - topMargin;
-    if (singletonsNewLevel) {
-      singletonsWidth = 0;
-      singletonsLevel += 1;
-    } else {
-      singletonsWidth += width + nodeHorizontalGap;
-    }
-    singletonsHeight = Math.max(singletonsHeight, height);
+    singletonsWidth += nodeWidth + nodeHorizontalGap;
+    singletonsLevelsWidth[singletonsLevel] += nodeWidth + nodeHorizontalGap;
+    singletonsLevelsMaxHeight[singletonsLevel] = Math.max(
+      singletonsLevelsMaxHeight[singletonsLevel],
+      nodeHeight,
+    );
   });
+  singletonsHeight =
+    singletonsLevelsMaxHeight.reduce((a, b) => a + b, 0) +
+    singletonsLevel * nodeVerticalGap;
   // return width/height of the drawing
   return [
-    Math.max(forestWidth, singletonsWidth),
+    Math.max(
+      Math.max(...forestLevelsWidth),
+      Math.max(...singletonsLevelsWidth),
+    ),
     forestHeight + forestSingletonsGap + singletonsHeight,
   ];
 }
