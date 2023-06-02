@@ -548,6 +548,18 @@ const createPositionUtils = (
 
     let sanitizedEdges = computeEdgesCoordinates(edges, sanitizedNodes);
 
+    sanitizedEdges = Object.keys(sanitizedEdges).reduce(
+      (accumulator, edgeId) => {
+        accumulator[edgeId] = {
+          ...sanitizedEdges[edgeId],
+          isVisible: true,
+          isTransparent: false,
+        };
+        return accumulator;
+      },
+      {},
+    );
+
     Object.keys(sanitizedEdges).forEach((id) => {
       const { childNodeId, parentNodeId, parentPieceId } = edges[id];
 
@@ -666,6 +678,7 @@ const createPositionUtils = (
       parentEdges,
     };
   };
+
   return {
     unitFontSizeWidth,
     createNodeFromPieces,

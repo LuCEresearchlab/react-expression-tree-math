@@ -149,6 +149,21 @@ const actions = [
     }),
   },
   {
+    name: "setSubtreeVisibility",
+    action: ({
+      subtreeStartingNodeId,
+      subtreeStartingPieceId,
+      currentVisibility,
+    }) => ({
+      type: "setSubtreeVisibility",
+      payload: {
+        subtreeStartingNodeId,
+        subtreeStartingPieceId,
+        currentVisibility,
+      },
+    }),
+  },
+  {
     name: "setEdges",
     action: (edges) => ({
       type: "setEdges",
@@ -606,15 +621,9 @@ const actions = [
     }),
   },
   {
-    name: 'updateGlobalState',
-    action: ({
-      nodes,
-      edges,
-      selectedRootNode,
-      stagePos,
-      stageScale,
-    }) => ({
-      type: 'updateGlobalState',
+    name: "updateGlobalState",
+    action: ({ nodes, edges, selectedRootNode, stagePos, stageScale }) => ({
+      type: "updateGlobalState",
       payload: {
         nodes,
         edges,

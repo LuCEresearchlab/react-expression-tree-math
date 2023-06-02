@@ -15,6 +15,7 @@ function Node({
   positionY,
   typeText,
   valueText,
+  edges,
   childEdges,
   parentEdges,
   connectorPlaceholder,
@@ -37,6 +38,8 @@ function Node({
   isHighlighted,
   isTypeLabelHighlighted,
   isValueLabelHighlighted,
+  isVisible,
+  isTransparent,
   isFullDisabled,
   handleNodeClick,
   handleNodeDblClick,
@@ -46,6 +49,7 @@ function Node({
   handleConnectorDragStart,
   handleConnectorDragMove,
   handleConnectorDragEnd,
+  handleConnectorDoubleClick,
   fontSize,
   fontFamily,
   unitFontSizeWidth,
@@ -73,6 +77,18 @@ function Node({
   const hasParentEdges = useMemo(
     () => parentEdges.map((pieceEdges) => pieceEdges.length > 0),
     [parentEdges],
+  );
+
+  const subtreesVisibility = useMemo(
+    () =>
+      parentEdges.map((pieceEdges) =>
+        pieceEdges.every((pieceEdgeId) => edges[pieceEdgeId].isTransparent)
+          ? "transparent"
+          : !pieceEdges.every((pieceEdgeId) => edges[pieceEdgeId].isVisible)
+          ? "hidden"
+          : "visible",
+      ),
+    [isVisible, isTransparent, childEdges, parentEdges, edges],
   );
 
   const checkDragBound = useCallback((pos) => {
@@ -223,6 +239,8 @@ function Node({
     return defaultStrokeWidth;
   };
 
+  const opacity = useMemo(() => (isTransparent ? 0.35 : 1), [isTransparent]);
+
   return (
     /**
      * A node is a group composed by:
@@ -248,6 +266,8 @@ function Node({
       dragBoundFunc={checkDragBound}
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
+      visible={isVisible}
+      opacity={opacity}
     >
       <Rect
         name='Node'
@@ -302,12 +322,14 @@ function Node({
         nodeHeight={nodeHeight}
         currentErrorLocation={currentErrorLocation}
         hasParentEdges={hasParentEdges}
+        subtreesVisibility={subtreesVisibility}
         isFullDisabled={isFullDisabled}
         handlePlaceholderConnectorDragStart={
           handlePlaceholderConnectorDragStart
         }
         handleConnectorDragMove={handleConnectorDragMove}
         handleConnectorDragEnd={handleConnectorDragEnd}
+        handleConnectorDoubleClick={handleConnectorDoubleClick}
         setCursor={setCursor}
         fontSize={fontSize}
         fontFamily={fontFamily}
@@ -410,6 +432,8 @@ Node.propTypes = {
   isSelected: PropTypes.bool,
   isSelectedRoot: PropTypes.bool,
   isHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
+  isVisible: PropTypes.bool,
+  isTransparent: PropTypes.bool,
   isTypeLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   isValueLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   isFullDisabled: PropTypes.bool,
@@ -421,6 +445,7 @@ Node.propTypes = {
   handleConnectorDragStart: PropTypes.func,
   handleConnectorDragMove: PropTypes.func,
   handleConnectorDragEnd: PropTypes.func,
+  handleConnectorDoubleClick: PropTypes.func,
   fontSize: PropTypes.number,
   fontFamily: PropTypes.string,
   unitFontSizeWidth: PropTypes.number,
@@ -518,6 +543,8 @@ Node.defaultProps = {
   isHighlighted: false,
   isTypeLabelHighlighted: false,
   isValueLabelHighlighted: false,
+  isVisible: true,
+  isTransparent: false,
   isFullDisabled: false,
   removeNode: () => {},
   setCursor: () => {},
@@ -529,6 +556,7 @@ Node.defaultProps = {
   handleConnectorDragStart: () => {},
   handleConnectorDragMove: () => {},
   handleConnectorDragEnd: () => {},
+  handleConnectorDoubleClick: () => {},
   fontSize: 24,
   fontFamily: "Roboto Mono, Courier",
   unitFontSizeWidth: 0.60009765625,

@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
-import { Line, Circle, Group } from 'react-konva';
+import React, { useCallback, useMemo } from "react";
+import PropTypes from "prop-types";
+import { Line, Circle, Group } from "react-konva";
 
 function Edge({
   id,
@@ -15,6 +15,8 @@ function Edge({
   isFullDisabled,
   isSelected,
   isHighlighted,
+  isVisible,
+  isTransparent,
   currentErrorLocation,
   handleEdgeClick,
   handleConnectorDragStart,
@@ -53,12 +55,7 @@ function Edge({
       return;
     }
 
-    handleConnectorDragStart(
-      false,
-      childNodeId,
-      e.target.x(),
-      e.target.y(),
-    );
+    handleConnectorDragStart(false, childNodeId, e.target.x(), e.target.y());
   });
 
   const handlePlaceholderConnectorDragStart = useCallback((e) => {
@@ -83,7 +80,7 @@ function Edge({
     if (isFullDisabled) {
       return;
     }
-    setCursor('pointer');
+    setCursor("pointer");
   });
 
   const handleMouseOverCircle = useCallback((e) => {
@@ -91,7 +88,7 @@ function Edge({
     if (isFullDisabled) {
       return;
     }
-    setCursor('grab');
+    setCursor("grab");
   });
 
   const onEdgeClick = useCallback((e) => handleEdgeClick(e, id));
@@ -100,13 +97,21 @@ function Edge({
    * Compute color given a style object
    * @param {Object} stl
    */
-  const computeColor = (defaultColor, selectedColor, draggingColor, errorColor, highlightColor) => {
+  const computeColor = (
+    defaultColor,
+    selectedColor,
+    draggingColor,
+    errorColor,
+    highlightColor,
+  ) => {
     if (isDragged) {
       return draggingColor;
     }
-    if (currentErrorLocation
-      && currentErrorLocation.edge
-      && currentErrorLocation.edgeId === id) {
+    if (
+      currentErrorLocation &&
+      currentErrorLocation.edge &&
+      currentErrorLocation.edgeId === id
+    ) {
       return errorColor;
     }
     if (isSelected) {
@@ -124,13 +129,17 @@ function Edge({
     return defaultColor;
   };
 
+  const opacity = useMemo(() => (isTransparent ? 0.35 : 1), [isTransparent]);
+
   return (
     // Edge is a Group composed of a Line and two Circles
     <Group
       id={id}
-      name="Edge"
+      name='Edge'
       onClick={onEdgeClick}
       onTap={onEdgeClick}
+      visible={isVisible}
+      opacity={opacity}
     >
       <Line
         key={`edge-${id}`}
@@ -200,10 +209,9 @@ Edge.propTypes = {
   isDragged: PropTypes.bool,
   isFullDisabled: PropTypes.bool,
   isSelected: PropTypes.bool,
-  isHighlighted: PropTypes.oneOfType(
-    PropTypes.bool,
-    PropTypes.string,
-  ),
+  isHighlighted: PropTypes.oneOfType(PropTypes.bool, PropTypes.string),
+  isVisible: PropTypes.bool,
+  isTransparent: PropTypes.bool,
   currentErrorLocation: PropTypes.shape({
     edge: PropTypes.string,
     edgeId: PropTypes.string,
@@ -214,7 +222,6 @@ Edge.propTypes = {
   handleConnectorDragEnd: PropTypes.func,
   setCursor: PropTypes.func,
   placeholderWidth: PropTypes.number.isRequired,
-
   lineStrokeWidth: PropTypes.number,
   lineStrokeColor: PropTypes.string,
   lineErrorStrokeColor: PropTypes.string,
@@ -244,6 +251,8 @@ Edge.defaultProps = {
   isFullDisabled: false,
   isSelected: false,
   isHighlighted: false,
+  isVisible: true,
+  isTransparent: false,
   currentErrorLocation: null,
   handleEdgeClick: () => {},
   handleConnectorDragStart: () => {},
@@ -251,27 +260,27 @@ Edge.defaultProps = {
   handleConnectorDragEnd: () => {},
   setCursor: () => {},
   lineStrokeWidth: 6,
-  lineStrokeColor: '#000000',
-  lineErrorStrokeColor: '#ff2f2f',
-  lineSelectedStrokeColor: '#f2a200',
-  lineDraggingStrokeColor: '#f2d280',
-  lineHighlightColor: '#cc78c5',
+  lineStrokeColor: "#000000",
+  lineErrorStrokeColor: "#ff2f2f",
+  lineSelectedStrokeColor: "#f2a200",
+  lineDraggingStrokeColor: "#f2d280",
+  lineHighlightColor: "#cc78c5",
   childConnectorRadiusSize: 6,
-  childConnectorStrokeColor: '#000000',
+  childConnectorStrokeColor: "#000000",
   childConnectorStrokeWidth: 1,
-  childConnectorFillColor: '#555555',
-  childConnectorSelectedFillColor: '#f2a200',
-  childConnectorDraggingFillColor: '#f2d280',
-  childConnectorErrorFillColor: '#ff2f2f',
-  childConnectorHighlightFillColor: '#cc78c5',
+  childConnectorFillColor: "#555555",
+  childConnectorSelectedFillColor: "#f2a200",
+  childConnectorDraggingFillColor: "#f2d280",
+  childConnectorErrorFillColor: "#ff2f2f",
+  childConnectorHighlightFillColor: "#cc78c5",
   parentConnectorRadiusSize: 6,
-  parentConnectorStrokeColor: '#000000',
+  parentConnectorStrokeColor: "#000000",
   parentConnectorStrokeWidth: 1,
-  parentConnectorFillColor: '#555555',
-  parentConnectorSelectedFillColor: '#f2a200',
-  parentConnectorDraggingFillColor: '#f2d280',
-  parentConnectorErrorFillColor: '#ff2f2f',
-  parentConnectorHighlightFillColor: '#cc78c5',
+  parentConnectorFillColor: "#555555",
+  parentConnectorSelectedFillColor: "#f2a200",
+  parentConnectorDraggingFillColor: "#f2d280",
+  parentConnectorErrorFillColor: "#ff2f2f",
+  parentConnectorHighlightFillColor: "#cc78c5",
 };
 
 export default Edge;

@@ -13,10 +13,12 @@ function NodeLabel({
   nodeHeight,
   currentErrorLocation,
   hasParentEdges,
+  subtreesVisibility,
   isFullDisabled,
   handlePlaceholderConnectorDragStart,
   handleConnectorDragMove,
   handleConnectorDragEnd,
+  handleConnectorDoubleClick,
   setCursor,
   fontFamily,
   fontSize,
@@ -67,6 +69,16 @@ function NodeLabel({
       nodePaddingY,
     ],
   );
+
+  const connectorFillColors = useMemo(() => {
+    return subtreesVisibility.map((subtreeVisibility) =>
+      subtreeVisibility === "hidden"
+        ? "red"
+        : subtreeVisibility === "transparent"
+        ? "yellow"
+        : connectorFillColor,
+    );
+  }, [subtreesVisibility]);
 
   const computePlaceholderPieceKey = (index) =>
     `PlaceholderPiece-${nodeId}-${index}`;
@@ -147,7 +159,7 @@ function NodeLabel({
                       ? mathPiece.height / 2.5
                       : mathPiece.width / 2.5
                   }
-                  fill={connectorFillColor}
+                  fill={connectorFillColors[i]}
                   stroke={connectorStrokeColor}
                   strokeWidth={connectorStrokeWidth}
                   onMouseOver={handleMouseOver}
@@ -159,6 +171,14 @@ function NodeLabel({
                   onDragEnd={handleConnectorDragEnd}
                   dragBoundFunc={() =>
                     circleRef.current[i].getAbsolutePosition()
+                  }
+                  onDblClick={(e) =>
+                    handleConnectorDoubleClick(
+                      e,
+                      nodeId,
+                      i,
+                      subtreesVisibility[i],
+                    )
                   }
                 />
               </Group>
@@ -233,7 +253,7 @@ function NodeLabel({
                   y={positions[i].circleY}
                   draggable={!isFullDisabled}
                   radius={connectorRadiusSize}
-                  fill={connectorFillColor}
+                  fill={connectorFillColors[i]}
                   stroke={connectorStrokeColor}
                   strokeWidth={connectorStrokeWidth}
                   onMouseOver={handleMouseOver}
@@ -245,6 +265,14 @@ function NodeLabel({
                   onDragEnd={handleConnectorDragEnd}
                   dragBoundFunc={() =>
                     circleRef.current[i].getAbsolutePosition()
+                  }
+                  onDblClick={(e) =>
+                    handleConnectorDoubleClick(
+                      e,
+                      nodeId,
+                      i,
+                      subtreesVisibility[i],
+                    )
                   }
                 />
               </Group>
@@ -281,10 +309,12 @@ NodeLabel.propTypes = {
     pieceId: PropTypes.number,
   }),
   hasParentEdges: PropTypes.arrayOf(PropTypes.bool),
+  subtreesVisibility: PropTypes.arrayOf(PropTypes.string),
   isFullDisabled: PropTypes.bool,
   handlePlaceholderConnectorDragStart: PropTypes.func,
   handleConnectorDragMove: PropTypes.func,
   handleConnectorDragEnd: PropTypes.func,
+  handleConnectorDoubleClick: PropTypes.func,
   setCursor: PropTypes.func,
   fontSize: PropTypes.number,
   fontFamily: PropTypes.string,
@@ -318,10 +348,12 @@ NodeLabel.propTypes = {
 NodeLabel.defaultProps = {
   currentErrorLocation: null,
   hasParentEdges: [],
+  subtreesVisibility: [],
   isFullDisabled: false,
   handlePlaceholderConnectorDragStart: () => {},
   handleConnectorDragMove: () => {},
   handleConnectorDragEnd: () => {},
+  handleConnectorDoubleClick: () => {},
   setCursor: () => {},
   fontSize: 24,
   fontFamily: "Roboto Mono, Courier",

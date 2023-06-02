@@ -1,9 +1,9 @@
-import React, { useRef, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import React, { useRef, useCallback } from "react";
+import PropTypes from "prop-types";
 
-import { getMetadata } from 'meta-png';
+import { getMetadata } from "meta-png";
 
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from "@material-ui/core/styles";
 
 import {
   AccountTreeRounded,
@@ -25,27 +25,27 @@ import {
   ExposureRounded,
   SpeakerNotesRounded,
   SpeakerNotesOffRounded,
-} from '@material-ui/icons';
+} from "@material-ui/icons";
 
-import { Toolbar, IconButton, Tooltip } from '@material-ui/core';
+import { Toolbar, IconButton, Tooltip } from "@material-ui/core";
 
 // Top bar and side drawer styles
 const useStyles = makeStyles(() => ({
   toolbar: {
-    backgroundColor: '#ffffff',
-    borderBottom: '1px solid #aaa',
-    overflowX: 'auto',
-    '@media print': {
-      display: 'none',
+    backgroundColor: "#ffffff",
+    borderBottom: "1px solid #aaa",
+    overflowX: "auto",
+    "@media print": {
+      display: "none",
     },
   },
   toolbarButton: {
-    backgroundColor: '#fff',
-    '&:hover': {
-      backgroundColor: '#f5f5f5',
+    backgroundColor: "#fff",
+    "&:hover": {
+      backgroundColor: "#f5f5f5",
     },
-    '&:disabled': {
-      backgroundColor: '#fff',
+    "&:disabled": {
+      backgroundColor: "#fff",
     },
   },
 }));
@@ -93,16 +93,17 @@ function ToolbarActions({
   const classes = useStyles();
   const uploadButtonRef = useRef();
 
+  // TODO handle math characters
   const handleFileChange = useCallback((e) => {
     const file = e.target.files[0];
-    e.target.value = '';
+    e.target.value = "";
     const fr = new FileReader();
     fr.onload = (ev) => {
       try {
         const uint8Array = new Uint8Array(ev.target.result);
         let jsonStr = getMetadata(uint8Array, downloadKey);
         if (jsonStr === undefined) {
-          const enc = new TextDecoder('utf-8');
+          const enc = new TextDecoder("utf-8");
           jsonStr = enc.decode(uint8Array);
         }
         const state = JSON.parse(jsonStr);
@@ -121,16 +122,16 @@ function ToolbarActions({
   };
 
   return (
-    <Toolbar className={classes.toolbar} variant="dense">
+    <Toolbar className={classes.toolbar} variant='dense'>
       {/* Top bar buttons */}
       {showDrawerButton && (
         <Tooltip
-          title={isDrawerOpen ? 'Close drawer' : 'Open drawer'}
-          placement="bottom"
+          title={isDrawerOpen ? "Close drawer" : "Open drawer"}
+          placement='bottom'
         >
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleDrawerButtonAction}
           >
             {isDrawerOpen ? <ChevronLeftRounded /> : <MenuRounded />}
@@ -139,12 +140,12 @@ function ToolbarActions({
       )}
       {showMathInputButton && (
         <Tooltip
-          title={!isMathInputOpen ? 'Open math input' : 'Close math input'}
-          placement="bottom"
+          title={!isMathInputOpen ? "Open math input" : "Close math input"}
+          placement='bottom'
         >
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleMathInputButtonAction}
           >
             <ExposureRounded />
@@ -152,10 +153,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showEditorInfoButton && (
-        <Tooltip title="Editor info" placement="bottom">
+        <Tooltip title='Editor info' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleEditorInfoButtonAction}
           >
             <InfoOutlined />
@@ -163,10 +164,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showStateResetButton && (
-        <Tooltip title="Reset to initial state" placement="bottom">
+        <Tooltip title='Reset to initial state' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleStateResetButtonAction}
           >
             <Replay />
@@ -174,11 +175,11 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showUndoButton && (
-        <Tooltip title="Undo action" placement="bottom">
+        <Tooltip title='Undo action' placement='bottom'>
           <span>
             <IconButton
               className={classes.toolbarButton}
-              color="primary"
+              color='primary'
               disabled={!hasStateToUndo}
               onClick={handleUndoButtonAction}
             >
@@ -188,11 +189,11 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showRedoButton && (
-        <Tooltip title="Redo action" placement="bottom">
+        <Tooltip title='Redo action' placement='bottom'>
           <span>
             <IconButton
               className={classes.toolbarButton}
-              color="primary"
+              color='primary'
               disabled={!hasStateToRedo}
               onClick={handleRedoButtonAction}
             >
@@ -202,10 +203,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomOutButton && (
-        <Tooltip title="Zoom out" placement="bottom">
+        <Tooltip title='Zoom out' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleZoomOutButtonAction}
           >
             <ZoomOutRounded />
@@ -213,10 +214,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomInButton && (
-        <Tooltip title="Zoom in" placement="bottom">
+        <Tooltip title='Zoom in' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleZoomInButtonAction}
           >
             <ZoomInRounded />
@@ -224,10 +225,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomToFitButton && (
-        <Tooltip title="Zoom to fit nodes" placement="bottom">
+        <Tooltip title='Zoom to fit nodes' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleZoomToFitButtonAction}
           >
             <AspectRatioRounded />
@@ -235,10 +236,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomToActualSizeButton && (
-        <Tooltip title="Zoom to actual size" placement="bottom">
+        <Tooltip title='Zoom to actual size' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleZoomToActualSizeButtonAction}
           >
             <CropLandscapeRounded />
@@ -246,10 +247,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showReorderNodesButton && (
-        <Tooltip title="Layout nodes" placement="bottom">
+        <Tooltip title='Layout nodes' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleReorderNodesButtonAction}
           >
             <AccountTreeRounded />
@@ -257,10 +258,10 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showUploadStateButton && (
-        <Tooltip title="Import" placement="bottom">
+        <Tooltip title='Import' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleStateUpload}
           >
             <PublishRounded />
@@ -268,18 +269,18 @@ function ToolbarActions({
         </Tooltip>
       )}
       <input
-        id="stateUploadButton"
+        id='stateUploadButton'
         ref={uploadButtonRef}
-        style={{ display: 'none' }}
-        type="file"
-        accept="application/json,image/png"
+        style={{ display: "none" }}
+        type='file'
+        accept='application/json,image/png'
         onChange={handleFileChange}
       />
       {showTakeScreenshotButton && (
-        <Tooltip title="Export as image" placement="bottom">
+        <Tooltip title='Export as image' placement='bottom'>
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleTakeScreenshotButtonAction}
           >
             <PhotoCameraRounded />
@@ -288,12 +289,12 @@ function ToolbarActions({
       )}
       {showFullScreenButton && (
         <Tooltip
-          title={!isFullScreen ? 'Enter full screen' : 'Exit full screen'}
-          placement="bottom"
+          title={!isFullScreen ? "Enter full screen" : "Exit full screen"}
+          placement='bottom'
         >
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleFullScreenButtonAction}
           >
             {!isFullScreen ? <FullscreenRounded /> : <FullscreenExitRounded />}
@@ -302,12 +303,12 @@ function ToolbarActions({
       )}
       {showCommentsButton && (
         <Tooltip
-          title={!isCommentsOpen ? 'Open comments tab' : 'Close comments tab'}
-          placement="bottom"
+          title={!isCommentsOpen ? "Open comments tab" : "Close comments tab"}
+          placement='bottom'
         >
           <IconButton
             className={classes.toolbarButton}
-            color="primary"
+            color='primary'
             onClick={handleCommentsButtonAction}
           >
             {!isCommentsOpen ? (
@@ -364,7 +365,7 @@ ToolbarActions.propTypes = {
 };
 
 ToolbarActions.defaultProps = {
-  downloadKey: 'expressiontutor',
+  downloadKey: "expressiontutor",
   selectedRootNode: undefined,
   isFullScreen: false,
   isDrawerOpen: false,

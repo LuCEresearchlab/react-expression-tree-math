@@ -1,10 +1,10 @@
 export const defaultProps = {
   // Global
   fontSize: 24,
-  fontFamily: 'Roboto Mono, Courier',
+  fontFamily: "Roboto Mono, Courier",
   nodePaddingX: 12,
   nodePaddingY: 12,
-  connectorPlaceholder: '#',
+  connectorPlaceholder: "#",
   placeholderWidth: 16,
   isDraggingNode: false,
   // Stage
@@ -22,7 +22,7 @@ export const defaultProps = {
   highlightedEdges: [],
   // Drawer
   isDrawerOpen: true,
-  addEdgeErrorMessage: '',
+  addEdgeErrorMessage: "",
   isAddEdgeErrorSnackbarOpen: false,
   isCreatingNode: false,
   isSelectedNodeEditable: {
@@ -31,13 +31,13 @@ export const defaultProps = {
     value: true,
     delete: true,
   },
-  createNodeInputValue: '',
+  createNodeInputValue: "",
   createNodeDescription: undefined,
   templateNodes: undefined,
   templateNodesDescription: undefined,
-  updateLabelInputValue: '',
-  updateTypeInputValue: '',
-  updateValueInputValue: '',
+  updateLabelInputValue: "",
+  updateTypeInputValue: "",
+  updateValueInputValue: "",
   currentError: undefined,
   // Undo - Redo
   undoState: [],

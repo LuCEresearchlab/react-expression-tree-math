@@ -192,7 +192,6 @@ function ExpressionTreeEditor({
     updateParentEdge,
     clearDragEdge,
     setNodeEditability,
-
     // Global
     setIsDraggingNode,
     // Drawer
@@ -224,6 +223,7 @@ function ExpressionTreeEditor({
     updateNodeValue,
     setStartingOrderedNodes,
     setOrderedNodes,
+    setSubtreeVisibility,
     // Undo - Redo
     undo,
     redo,
@@ -552,6 +552,7 @@ function ExpressionTreeEditor({
   // Moreover, embed the state in a custom PNG metadata chunk, serializing the current editor state
   // (note: only nodes, edges, placeholder, selected root node, stage position and stage scale
   // are serialized)
+  // TODO handle math characters
   const handleTakeScreenshotButtonAction = useCallback(() => {
     handlePrepareUIForImageDownload();
     const currentState = {
@@ -1197,6 +1198,17 @@ function ExpressionTreeEditor({
     }
   });
 
+  const handleConnectorDoubleClick = useCallback(
+    (e, nodeId, pieceId, currentVisibility) => {
+      e.cancelBubble = true;
+      setSubtreeVisibility({
+        subtreeStartingNodeId: nodeId,
+        subtreeStartingPieceId: pieceId,
+        currentVisibility,
+      });
+    },
+  );
+
   const handleNodeDragStart = useCallback((e, nodeId) => {
     if (isFullDisabled) {
       return;
@@ -1527,6 +1539,8 @@ function ExpressionTreeEditor({
                   isDraggingSelectionRect={isDraggingSelectionRect}
                   isSelected={id === selectedEdge}
                   isHighlighted={edges[id].isHighlighted}
+                  isVisible={edges[id].isVisible}
+                  isTransparent={edges[id].isTransparent}
                   clearEdgeSelection={clearSelectedEdge}
                   // Event Listeners
                   handleEdgeClick={handleEdgeClick}
@@ -1621,6 +1635,8 @@ function ExpressionTreeEditor({
                   isSelected={id === selectedNode}
                   isSelectedRoot={id === selectedRootNode}
                   isHighlighted={nodes[id].isHighlighted}
+                  isVisible={nodes[id].isVisible}
+                  isTransparent={nodes[id].isTransparent}
                   isTypeLabelHighlighted={nodes[id].isTypeLabelHighlighted}
                   isValueLabelHighlighted={nodes[id].isValueLabelHighlighted}
                   isFullDisabled={isFullDisabled}
@@ -1634,6 +1650,7 @@ function ExpressionTreeEditor({
                   handleConnectorDragStart={handleConnectorDragStart}
                   handleConnectorDragMove={handleConnectorDragMove}
                   handleConnectorDragEnd={handleConnectorDragEnd}
+                  handleConnectorDoubleClick={handleConnectorDoubleClick}
                   fontSize={fontSize}
                   fontFamily={fontFamily}
                   unitFontSizeWidth={unitFontSizeWidth}

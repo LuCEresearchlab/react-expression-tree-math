@@ -519,6 +519,65 @@ const reducers = {
     };
   },
 
+  // This reducer is used to update the visibility of subtrees (visible/transparent/hidden)
+  setSubtreeVisibility: (state, payload) => {
+    const { subtreeStartingNodeId, subtreeStartingPieceId, currentVisibility } =
+      payload;
+    const { nodes, edges } = state;
+
+    let subtreeNodeIds = [];
+    let subtreeEdgeIds = [];
+
+    const getSubtreeNodesAndEdgesIds = (nodeId, edgeId) => {
+      subtreeNodeIds = [...new Set([...subtreeNodeIds, nodeId])];
+      subtreeEdgeIds = [...new Set([...subtreeEdgeIds, edgeId])];
+      const subtreeParentEdgeIds = nodes[nodeId].parentEdges.reduce(
+        (accumulator, parentEdgeIds) => accumulator.concat(parentEdgeIds),
+        [],
+      );
+      subtreeParentEdgeIds.forEach((edgeId) => {
+        getSubtreeNodesAndEdgesIds(edges[edgeId].childNodeId, edgeId);
+      });
+    };
+
+    const edgesToSubtreeRoots =
+      nodes[subtreeStartingNodeId].parentEdges[subtreeStartingPieceId];
+    edgesToSubtreeRoots.forEach((edgeId) => {
+      getSubtreeNodesAndEdgesIds(edges[edgeId].childNodeId, edgeId);
+    });
+
+    let newNodes = { ...nodes };
+    let newEdges = { ...edges };
+
+    subtreeNodeIds.forEach((nodeId) => {
+      if (currentVisibility === "transparent") {
+        newNodes[nodeId].isTransparent = false;
+        newNodes[nodeId].isVisible = false;
+      } else if (currentVisibility === "hidden") {
+        newNodes[nodeId].isVisible = true;
+      } else {
+        newNodes[nodeId].isTransparent = true;
+      }
+    });
+
+    subtreeEdgeIds.forEach((edgeId) => {
+      if (currentVisibility === "transparent") {
+        newEdges[edgeId].isTransparent = false;
+        newEdges[edgeId].isVisible = false;
+      } else if (currentVisibility === "hidden") {
+        newEdges[edgeId].isVisible = true;
+      } else {
+        newEdges[edgeId].isTransparent = true;
+      }
+    });
+
+    return {
+      ...state,
+      nodes: newNodes,
+      edges: newEdges,
+    };
+  },
+
   // This reducer is used for setting up the initial stage, should not enable Undo and Redo
   setEdges: (state, payload) => {
     const { edges } = payload;
