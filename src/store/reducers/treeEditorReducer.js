@@ -529,6 +529,9 @@ const reducers = {
     let subtreeEdgeIds = [];
 
     const getSubtreeNodesAndEdgesIds = (nodeId, edgeId) => {
+      if (subtreeNodeIds.includes(nodeId) || nodeId === subtreeStartingNodeId) {
+        return;
+      }
       subtreeNodeIds = [...new Set([...subtreeNodeIds, nodeId])];
       subtreeEdgeIds = [...new Set([...subtreeEdgeIds, edgeId])];
       const subtreeParentEdgeIds = nodes[nodeId].parentEdges.reduce(

@@ -552,7 +552,6 @@ function ExpressionTreeEditor({
   // Moreover, embed the state in a custom PNG metadata chunk, serializing the current editor state
   // (note: only nodes, edges, placeholder, selected root node, stage position and stage scale
   // are serialized)
-  // TODO handle math characters
   const handleTakeScreenshotButtonAction = useCallback(() => {
     handlePrepareUIForImageDownload();
     const currentState = {
@@ -566,6 +565,17 @@ function ExpressionTreeEditor({
 
     if (typeof document !== "undefined") {
       const jsonRepr = JSON.stringify(currentState, null, 0);
+
+      // Mark location of special math characters and escape them
+      let validJsonRepr = "";
+      jsonRepr.split("").forEach((char, i) => {
+        if (char.charCodeAt(0) > 127) {
+          validJsonRepr += "$" + escape(char) + "$";
+        } else {
+          validJsonRepr += char;
+        }
+      });
+
       const downloadElement = document.createElement("a");
       const boundingBox = layerRef.current.getClientRect();
       const padding = 10; // Add a padding of 10 pixel all around the bounding box
@@ -581,7 +591,7 @@ function ExpressionTreeEditor({
       downloadElement.href = addMetadataFromBase64DataURI(
         imageBase64,
         ET_KEY,
-        jsonRepr,
+        validJsonRepr,
       );
       downloadElement.download = "expression_editor_image.png";
       document.body.appendChild(downloadElement);

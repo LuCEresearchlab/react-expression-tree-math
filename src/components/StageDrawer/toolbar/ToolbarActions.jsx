@@ -93,7 +93,6 @@ function ToolbarActions({
   const classes = useStyles();
   const uploadButtonRef = useRef();
 
-  // TODO handle math characters
   const handleFileChange = useCallback((e) => {
     const file = e.target.files[0];
     e.target.value = "";
@@ -106,11 +105,34 @@ function ToolbarActions({
           const enc = new TextDecoder("utf-8");
           jsonStr = enc.decode(uint8Array);
         }
-        const state = JSON.parse(jsonStr);
+
+        // Find location of special math characters and unescape them
+        let validJsonStr = "";
+        let betweenSpecial = false;
+        let specialString = "";
+        jsonStr.split("").forEach((char) => {
+          if (char === "$") {
+            if (betweenSpecial) {
+              validJsonStr += unescape(specialString);
+              specialString = "";
+              betweenSpecial = false;
+            } else {
+              betweenSpecial = true;
+            }
+          } else {
+            if (betweenSpecial) {
+              specialString += char;
+            } else {
+              validJsonStr += char;
+            }
+          }
+        });
+
+        const state = JSON.parse(validJsonStr);
         handleUploadStateButtonAction(state);
       } catch (evt) {
         // TODO Change alert into SnackBar
-        // alert('Invalid JSON/PNG file.');
+        // alert("Invalid JSON/PNG file.");
       }
     };
     fr.readAsArrayBuffer(file);

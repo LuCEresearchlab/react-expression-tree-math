@@ -73,9 +73,9 @@ function NodeLabel({
   const connectorFillColors = useMemo(() => {
     return subtreesVisibility.map((subtreeVisibility) =>
       subtreeVisibility === "hidden"
-        ? "red"
+        ? "white"
         : subtreeVisibility === "transparent"
-        ? "yellow"
+        ? "grey"
         : connectorFillColor,
     );
   }, [subtreesVisibility]);
