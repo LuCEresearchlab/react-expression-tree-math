@@ -224,6 +224,7 @@ function ExpressionTreeEditor({
     setStartingOrderedNodes,
     setOrderedNodes,
     setSubtreeVisibility,
+    setAllVisible,
     // Undo - Redo
     undo,
     redo,
@@ -518,6 +519,21 @@ function ExpressionTreeEditor({
       computeStageWidth,
     ],
   );
+
+  const isAllVisible = useMemo(
+    () =>
+      Object.keys(nodes).every(
+        (nodeId) => nodes[nodeId].isVisible && !nodes[nodeId].isTransparent,
+      ) &&
+      Object.keys(edges).every(
+        (edgeId) => edges[edgeId].isVisible && !edges[edgeId].isTransparent,
+      ),
+    [nodes, edges],
+  );
+
+  const handleAllVisibleButtonAction = useCallback(() => {
+    setAllVisible();
+  });
 
   const handleUploadStateButtonAction = useCallback(
     ({
@@ -1426,6 +1442,7 @@ function ExpressionTreeEditor({
           templateNodeTypesAndValues={templateNodeTypesAndValues}
           hasStateToUndo={hasStateToUndo}
           hasStateToRedo={hasStateToRedo}
+          isAllVisible={isAllVisible}
           currentError={currentError}
           addEdgeErrorMessage={addEdgeErrorMessage}
           toggleDrawer={toggleDrawer}
@@ -1446,6 +1463,7 @@ function ExpressionTreeEditor({
             handleZoomToActualSizeButtonAction
           }
           handleReorderNodesButtonAction={handleReorderNodesButtonAction}
+          handleAllVisibleButtonAction={handleAllVisibleButtonAction}
           handleUploadStateButtonAction={handleUploadStateButtonAction}
           handleTakeScreenshotButtonAction={handleTakeScreenshotButtonAction}
           handleFullScreenButtonAction={handleFullScreenButtonAction}

@@ -25,6 +25,7 @@ import {
   ExposureRounded,
   SpeakerNotesRounded,
   SpeakerNotesOffRounded,
+  VisibilityRounded,
 } from "@material-ui/icons";
 
 import { Toolbar, IconButton, Tooltip } from "@material-ui/core";
@@ -65,6 +66,7 @@ function ToolbarActions({
   showZoomToFitButton,
   showZoomToActualSizeButton,
   showReorderNodesButton,
+  showAllVisibleButton,
   showUploadStateButton,
   showTakeScreenshotButton,
   showFullScreenButton,
@@ -78,11 +80,13 @@ function ToolbarActions({
   handleZoomToFitButtonAction,
   handleZoomToActualSizeButtonAction,
   handleReorderNodesButtonAction,
+  handleAllVisibleButtonAction,
   handleUploadStateButtonAction,
   handleTakeScreenshotButtonAction,
   handleFullScreenButtonAction,
   hasStateToUndo,
   hasStateToRedo,
+  isAllVisible,
   isMathInputOpen,
   showMathInputButton,
   handleMathInputButtonAction,
@@ -279,6 +283,20 @@ function ToolbarActions({
           </IconButton>
         </Tooltip>
       )}
+      {showAllVisibleButton && (
+        <Tooltip title='All visible' placement='bottom'>
+          <span>
+            <IconButton
+              className={classes.toolbarButton}
+              color='primary'
+              disabled={isAllVisible}
+              onClick={handleAllVisibleButtonAction}
+            >
+              <VisibilityRounded />
+            </IconButton>
+          </span>
+        </Tooltip>
+      )}
       {showUploadStateButton && (
         <Tooltip title='Import' placement='bottom'>
           <IconButton
@@ -360,6 +378,7 @@ ToolbarActions.propTypes = {
   showZoomToFitButton: PropTypes.bool,
   showZoomToActualSizeButton: PropTypes.bool,
   showReorderNodesButton: PropTypes.bool,
+  showAllVisibleButton: PropTypes.bool,
   showUploadStateButton: PropTypes.bool,
   showTakeScreenshotButton: PropTypes.bool,
   showFullScreenButton: PropTypes.bool,
@@ -373,11 +392,13 @@ ToolbarActions.propTypes = {
   handleZoomToFitButtonAction: PropTypes.func,
   handleZoomToActualSizeButtonAction: PropTypes.func,
   handleReorderNodesButtonAction: PropTypes.func,
+  handleAllVisibleButtonAction: PropTypes.func,
   handleUploadStateButtonAction: PropTypes.func,
   handleTakeScreenshotButtonAction: PropTypes.func,
   handleFullScreenButtonAction: PropTypes.func,
   hasStateToUndo: PropTypes.bool,
   hasStateToRedo: PropTypes.bool,
+  isAllVisible: PropTypes.bool,
   isMathInputOpen: PropTypes.bool,
   showMathInputButton: PropTypes.bool,
   handleMathInputButtonAction: PropTypes.func,
@@ -401,6 +422,7 @@ ToolbarActions.defaultProps = {
   showZoomToFitButton: true,
   showZoomToActualSizeButton: true,
   showReorderNodesButton: true,
+  showAllVisibleButton: true,
   showUploadStateButton: true,
   showTakeScreenshotButton: true,
   showFullScreenButton: true,
@@ -414,11 +436,13 @@ ToolbarActions.defaultProps = {
   handleZoomToFitButtonAction: () => {},
   handleZoomToActualSizeButtonAction: () => {},
   handleReorderNodesButtonAction: () => {},
+  handleAllVisibleButtonAction: () => {},
   handleUploadStateButtonAction: () => {},
   handleTakeScreenshotButtonAction: () => {},
   handleFullScreenButtonAction: () => {},
   hasStateToUndo: false,
   hasStateToRedo: false,
+  isAllVisible: true,
   isMathInputOpen: false,
   showMathInputButton: true,
   handleMathInputButtonAction: () => {},

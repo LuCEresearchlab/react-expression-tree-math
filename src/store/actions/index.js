@@ -164,6 +164,12 @@ const actions = [
     }),
   },
   {
+    name: "setAllVisible",
+    action: () => ({
+      type: "setAllVisible",
+    }),
+  },
+  {
     name: "setEdges",
     action: (edges) => ({
       type: "setEdges",

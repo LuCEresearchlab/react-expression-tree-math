@@ -581,6 +581,34 @@ const reducers = {
     };
   },
 
+  setAllVisible: (state) => {
+    const { nodes, edges } = state;
+
+    const newNodes = Object.keys(nodes).reduce((accumulator, nodeId) => {
+      accumulator[nodeId] = {
+        ...nodes[nodeId],
+        isTransparent: false,
+        isVisible: true,
+      };
+      return accumulator;
+    }, {});
+
+    const newEdges = Object.keys(edges).reduce((accumulator, edgeId) => {
+      accumulator[edgeId] = {
+        ...edges[edgeId],
+        isTransparent: false,
+        isVisible: true,
+      };
+      return accumulator;
+    }, {});
+
+    return {
+      ...state,
+      nodes: newNodes,
+      edges: newEdges,
+    };
+  },
+
   // This reducer is used for setting up the initial stage, should not enable Undo and Redo
   setEdges: (state, payload) => {
     const { edges } = payload;

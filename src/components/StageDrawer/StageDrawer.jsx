@@ -38,6 +38,7 @@ function StageDrawer({
   templateNodeTypesAndValues,
   hasStateToUndo,
   hasStateToRedo,
+  isAllVisible,
   currentError,
   toggleDrawer,
   addEdgeErrorMessage,
@@ -56,6 +57,7 @@ function StageDrawer({
   handleZoomToFitButtonAction,
   handleZoomToActualSizeButtonAction,
   handleReorderNodesButtonAction,
+  handleAllVisibleButtonAction,
   handleUploadStateButtonAction,
   handleTakeScreenshotButtonAction,
   handleFullScreenButtonAction,
@@ -94,6 +96,7 @@ function StageDrawer({
     showZoomToFitButton,
     showZoomToActualSizeButton,
     showReorderNodesButton,
+    showAllVisibleButton,
     showUploadStateButton,
     showTakeScreenshotButton,
     showFullScreenButton,
@@ -128,6 +131,7 @@ function StageDrawer({
               showZoomToFitButton={showZoomToFitButton}
               showZoomToActualSizeButton={showZoomToActualSizeButton}
               showReorderNodesButton={showReorderNodesButton}
+              showAllVisibleButton={showAllVisibleButton}
               showUploadStateButton={showUploadStateButton}
               showTakeScreenshotButton={showTakeScreenshotButton}
               showFullScreenButton={showFullScreenButton}
@@ -143,6 +147,7 @@ function StageDrawer({
                 handleZoomToActualSizeButtonAction
               }
               handleReorderNodesButtonAction={handleReorderNodesButtonAction}
+              handleAllVisibleButtonAction={handleAllVisibleButtonAction}
               handleUploadStateButtonAction={handleUploadStateButtonAction}
               handleTakeScreenshotButtonAction={
                 handleTakeScreenshotButtonAction
@@ -150,6 +155,7 @@ function StageDrawer({
               handleFullScreenButtonAction={handleFullScreenButtonAction}
               hasStateToUndo={hasStateToUndo}
               hasStateToRedo={hasStateToRedo}
+              isAllVisible={isAllVisible}
               isMathInputOpen={isMathInputOpen}
               showMathInputButton={showMathInputButton}
               handleMathInputButtonAction={toggleMathInput}
@@ -283,6 +289,7 @@ StageDrawer.propTypes = {
     showZoomToFitButton: PropTypes.bool,
     showZoomToActualSizeButton: PropTypes.bool,
     showReorderNodesButton: PropTypes.bool,
+    showAllVisibleButton: PropTypes.bool,
     showUploadStateButton: PropTypes.bool,
     showTakeScreenshotButton: PropTypes.bool,
     showFullScreenButton: PropTypes.bool,
@@ -302,6 +309,7 @@ StageDrawer.propTypes = {
   templateNodeTypesAndValues: PropTypes.shape({}),
   hasStateToUndo: PropTypes.bool,
   hasStateToRedo: PropTypes.bool,
+  isAllVisible: PropTypes.bool,
   currentError: PropTypes.number,
   addEdgeErrorMessage: PropTypes.string,
   toggleIsAddEdgeErrorSnackbarOpen: PropTypes.func,
@@ -320,6 +328,7 @@ StageDrawer.propTypes = {
   handleZoomToFitButtonAction: PropTypes.func,
   handleZoomToActualSizeButtonAction: PropTypes.func,
   handleReorderNodesButtonAction: PropTypes.func,
+  handleAllVisibleButtonAction: PropTypes.func,
   handleUploadStateButtonAction: PropTypes.func,
   handleTakeScreenshotButtonAction: PropTypes.func,
   handleFullScreenButtonAction: PropTypes.func,
@@ -440,6 +449,7 @@ StageDrawer.defaultProps = {
     showZoomToFitButton: true,
     showZoomToActualSizeButton: true,
     showReorderNodesButton: true,
+    showAllVisibleButton: true,
     showUploadStateButton: true,
     showTakeScreenshotButton: true,
     showFullScreenButton: true,
@@ -460,6 +470,7 @@ StageDrawer.defaultProps = {
   templateNodeTypesAndValues: undefined,
   hasStateToUndo: false,
   hasStateToRedo: false,
+  isAllVisible: true,
   currentError: undefined,
   addEdgeErrorMessage: "",
   toggleIsAddEdgeErrorSnackbarOpen: () => {},
@@ -478,6 +489,7 @@ StageDrawer.defaultProps = {
   handleZoomToFitButtonAction: () => {},
   handleZoomToActualSizeButtonAction: () => {},
   handleReorderNodesButtonAction: () => {},
+  handleAllVisibleButtonAction: () => {},
   handleUploadStateButtonAction: () => {},
   handleTakeScreenshotButtonAction: () => {},
   handleFullScreenButtonAction: () => {},
