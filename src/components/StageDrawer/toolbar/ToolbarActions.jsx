@@ -52,6 +52,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 function ToolbarActions({
+  containerRef,
   downloadKey,
   selectedRootNode,
   isFullScreen,
@@ -110,29 +111,9 @@ function ToolbarActions({
           jsonStr = enc.decode(uint8Array);
         }
 
-        // Find location of special math characters and unescape them
-        let validJsonStr = "";
-        let betweenSpecial = false;
-        let specialString = "";
-        jsonStr.split("").forEach((char) => {
-          if (char === "$") {
-            if (betweenSpecial) {
-              validJsonStr += unescape(specialString);
-              specialString = "";
-              betweenSpecial = false;
-            } else {
-              betweenSpecial = true;
-            }
-          } else {
-            if (betweenSpecial) {
-              specialString += char;
-            } else {
-              validJsonStr += char;
-            }
-          }
-        });
+        // Need to decode previously encoded state possibly containing special math characters
+        const state = JSON.parse(decodeURIComponent(jsonStr));
 
-        const state = JSON.parse(validJsonStr);
         handleUploadStateButtonAction(state);
       } catch (evt) {
         // TODO Change alert into SnackBar
@@ -154,6 +135,9 @@ function ToolbarActions({
         <Tooltip
           title={isDrawerOpen ? "Close drawer" : "Open drawer"}
           placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
         >
           <IconButton
             className={classes.toolbarButton}
@@ -164,10 +148,36 @@ function ToolbarActions({
           </IconButton>
         </Tooltip>
       )}
+      {showCommentsButton && (
+        <Tooltip
+          title={
+            !isCommentsOpen ? "Open comments drawer" : "Close comments drawer"
+          }
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
+          <IconButton
+            className={classes.toolbarButton}
+            color='primary'
+            onClick={handleCommentsButtonAction}
+          >
+            {!isCommentsOpen ? (
+              <SpeakerNotesRounded />
+            ) : (
+              <SpeakerNotesOffRounded />
+            )}
+          </IconButton>
+        </Tooltip>
+      )}
       {showMathInputButton && (
         <Tooltip
           title={!isMathInputOpen ? "Open math input" : "Close math input"}
           placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
         >
           <IconButton
             className={classes.toolbarButton}
@@ -179,7 +189,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showEditorInfoButton && (
-        <Tooltip title='Editor info' placement='bottom'>
+        <Tooltip
+          title='Editor info'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -190,7 +206,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showStateResetButton && (
-        <Tooltip title='Reset to initial state' placement='bottom'>
+        <Tooltip
+          title='Reset to initial state'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -201,7 +223,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showUndoButton && (
-        <Tooltip title='Undo action' placement='bottom'>
+        <Tooltip
+          title='Undo action'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <span>
             <IconButton
               className={classes.toolbarButton}
@@ -215,7 +243,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showRedoButton && (
-        <Tooltip title='Redo action' placement='bottom'>
+        <Tooltip
+          title='Redo action'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <span>
             <IconButton
               className={classes.toolbarButton}
@@ -229,7 +263,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomOutButton && (
-        <Tooltip title='Zoom out' placement='bottom'>
+        <Tooltip
+          title='Zoom out'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -240,7 +280,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomInButton && (
-        <Tooltip title='Zoom in' placement='bottom'>
+        <Tooltip
+          title='Zoom in'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -251,7 +297,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomToFitButton && (
-        <Tooltip title='Zoom to fit nodes' placement='bottom'>
+        <Tooltip
+          title='Zoom to fit nodes'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -262,7 +314,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showZoomToActualSizeButton && (
-        <Tooltip title='Zoom to actual size' placement='bottom'>
+        <Tooltip
+          title='Zoom to actual size'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -273,7 +331,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showReorderNodesButton && (
-        <Tooltip title='Layout nodes' placement='bottom'>
+        <Tooltip
+          title='Layout nodes'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -284,7 +348,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showAllVisibleButton && (
-        <Tooltip title='All visible' placement='bottom'>
+        <Tooltip
+          title='All visible'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <span>
             <IconButton
               className={classes.toolbarButton}
@@ -298,7 +368,13 @@ function ToolbarActions({
         </Tooltip>
       )}
       {showUploadStateButton && (
-        <Tooltip title='Import' placement='bottom'>
+        <Tooltip
+          title='Import'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -317,7 +393,13 @@ function ToolbarActions({
         onChange={handleFileChange}
       />
       {showTakeScreenshotButton && (
-        <Tooltip title='Export as image' placement='bottom'>
+        <Tooltip
+          title='Export as image'
+          placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
+        >
           <IconButton
             className={classes.toolbarButton}
             color='primary'
@@ -331,6 +413,9 @@ function ToolbarActions({
         <Tooltip
           title={!isFullScreen ? "Enter full screen" : "Exit full screen"}
           placement='bottom'
+          PopperProps={{
+            container: containerRef.current,
+          }}
         >
           <IconButton
             className={classes.toolbarButton}
@@ -341,29 +426,12 @@ function ToolbarActions({
           </IconButton>
         </Tooltip>
       )}
-      {showCommentsButton && (
-        <Tooltip
-          title={!isCommentsOpen ? "Open comments tab" : "Close comments tab"}
-          placement='bottom'
-        >
-          <IconButton
-            className={classes.toolbarButton}
-            color='primary'
-            onClick={handleCommentsButtonAction}
-          >
-            {!isCommentsOpen ? (
-              <SpeakerNotesRounded />
-            ) : (
-              <SpeakerNotesOffRounded />
-            )}
-          </IconButton>
-        </Tooltip>
-      )}
     </Toolbar>
   );
 }
 
 ToolbarActions.propTypes = {
+  containerRef: PropTypes.element.isRequired,
   downloadKey: PropTypes.string,
   selectedRootNode: PropTypes.number,
   isFullScreen: PropTypes.bool,
@@ -408,6 +476,7 @@ ToolbarActions.propTypes = {
 };
 
 ToolbarActions.defaultProps = {
+  containerRef: null,
   downloadKey: "expressiontutor",
   selectedRootNode: undefined,
   isFullScreen: false,

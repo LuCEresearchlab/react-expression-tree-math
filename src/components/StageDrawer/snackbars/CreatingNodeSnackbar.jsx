@@ -10,24 +10,30 @@ function CreatingNodeSnackbar({
   toggleIsCreatingNode,
   isCreatingMathNode,
   setIsCreatingMathNode,
+  addingAnnotationOn,
+  handleToggleAddAnnotation,
 }) {
   return (
     <Snackbar
       style={{ position: "absolute" }}
       anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      open={isCreatingNode || isCreatingMathNode}
+      open={isCreatingNode || isCreatingMathNode || addingAnnotationOn}
       onClose={(e, reason) => {
         if (reason !== "clickaway") {
           if (isCreatingNode) {
             toggleIsCreatingNode();
-          } else {
+          } else if (isCreatingMathNode) {
             setIsCreatingMathNode(false);
+          } else if (addingAnnotationOn) {
+            handleToggleAddAnnotation();
           }
         }
       }}
     >
       <Alert severity='info' variant='standard'>
-        Freely position the {isCreatingMathNode && "math"} node on the stage
+        Freely position the {isCreatingMathNode && "math"}{" "}
+        {isCreatingMathNode || isCreatingNode ? "node" : "annotation"} on the
+        stage
       </Alert>
     </Snackbar>
   );
@@ -38,6 +44,8 @@ CreatingNodeSnackbar.propTypes = {
   toggleIsCreatingNode: PropTypes.func,
   isCreatingMathNode: PropTypes.bool,
   setIsCreatingMathNode: PropTypes.func,
+  addingAnnotationOn: PropTypes.bool,
+  handleToggleAddAnnotation: PropTypes.func,
 };
 
 CreatingNodeSnackbar.defaultProps = {
@@ -45,6 +53,8 @@ CreatingNodeSnackbar.defaultProps = {
   toggleIsCreatingNode: () => {},
   isCreatingMathNode: false,
   setIsCreatingMathNode: () => {},
+  addingAnnotationOn: false,
+  handleToggleAddAnnotation: () => {},
 };
 
 export default CreatingNodeSnackbar;

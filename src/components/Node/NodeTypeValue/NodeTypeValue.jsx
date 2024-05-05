@@ -9,6 +9,7 @@ function NodeTypeValue({
   isTypeLabelHighlighted,
   isValueLabelHighlighted,
   typeText,
+  typeSuperscriptText,
   valueText,
   fontFamily,
   fontSize,
@@ -28,29 +29,35 @@ function NodeTypeValue({
   pointerHeight,
 }) {
   const charWidth = fontSize * unitFontSizeWidth;
+  const superscriptCharWidth = fontSize * 0.6 * unitFontSizeWidth;
 
   const typeWidth = useMemo(
     () => typeText.length * charWidth,
-    [typeText, fontFamily, fontSize],
+    [typeText, charWidth],
+  );
+
+  const typeSuperscriptWidth = useMemo(
+    () => typeSuperscriptText.length * superscriptCharWidth,
+    [typeSuperscriptText, superscriptCharWidth],
   );
 
   const valueWidth = useMemo(
     () => valueText.length * charWidth,
-    [valueText, fontFamily, fontSize],
+    [valueText, charWidth],
   );
 
   const labelWidth = useMemo(() => {
     if (typeText && valueText) {
-      return valueWidth + typeWidth + 4 * padding;
+      return valueWidth + typeWidth + typeSuperscriptWidth + 4 * padding;
     }
     if (typeText) {
-      return typeWidth + 2 * padding;
+      return typeWidth + typeSuperscriptWidth + 2 * padding;
     }
     if (valueText) {
       return valueWidth + 2 * padding;
     }
     return 0;
-  }, [valueWidth, typeWidth, padding]);
+  }, [valueWidth, typeWidth, typeSuperscriptWidth, padding]);
 
   const typeX = useMemo(() => {
     const middle = (nodeWidth - labelWidth) / 2;
@@ -60,6 +67,15 @@ function NodeTypeValue({
     return middle;
   }, [nodeWidth, valueWidth, labelWidth, padding]);
   const typeY = useMemo(() => -(padding + fontSize) * 2, [fontSize]);
+
+  const typeSuperscriptX = useMemo(() => {
+    const middle = (nodeWidth - labelWidth) / 2;
+    if (typeText && valueText) {
+      return valueWidth + typeWidth + 3 * padding + middle;
+    }
+    return typeWidth + padding + middle;
+  }, [nodeWidth, valueWidth, labelWidth, padding]);
+  const typeSuperscriptY = useMemo(() => -(padding + fontSize) * 2, [fontSize]);
 
   const valueX = useMemo(() => {
     const middle = (nodeWidth - labelWidth) / 2;
@@ -71,11 +87,18 @@ function NodeTypeValue({
   const pointerY = useMemo(() => -fontSize, [fontSize]);
 
   const typeCornerRadius = useMemo(() => {
-    if (typeText && valueText) {
+    if (typeText && valueText && typeSuperscriptText) {
+      return [0, 0, 0, 0];
+    } else if (typeText && valueText) {
       return [0, radius, radius, 0];
+    } else {
+      return [radius, radius, radius, radius];
     }
-    return [radius, radius, radius, radius];
-  }, [typeText, valueText]);
+  }, [typeText, valueText, typeSuperscriptText]);
+
+  const typeSuperscriptCornerRadius = useMemo(() => {
+    return [0, radius, radius, 0];
+  }, [typeSuperscriptText]);
 
   const valueCornerRadius = useMemo(() => {
     if (typeText && valueText) {
@@ -114,25 +137,49 @@ function NodeTypeValue({
         </Label>
       ) : null}
       {typeText !== "" ? (
-        <Label x={typeX} y={typeY}>
-          <Tag
-            fill={computeColor(
-              fillTypeColor,
-              fillTypeHighlightColor,
-              isTypeLabelHighlighted,
-            )}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-            cornerRadius={typeCornerRadius}
-          />
-          <Text
-            fill={textTypeColor}
-            fontFamily={fontFamily}
-            fontSize={fontSize}
-            text={typeText}
-            padding={padding}
-          />
-        </Label>
+        <>
+          <Label x={typeX} y={typeY}>
+            <Tag
+              fill={computeColor(
+                fillTypeColor,
+                fillTypeHighlightColor,
+                isTypeLabelHighlighted,
+              )}
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
+              cornerRadius={typeCornerRadius}
+            />
+            <Text
+              fill={textTypeColor}
+              fontFamily={fontFamily}
+              fontSize={fontSize}
+              text={typeText}
+              padding={padding}
+            />
+          </Label>
+          <Label x={typeSuperscriptX} y={typeSuperscriptY}>
+            <Tag
+              fill={computeColor(
+                fillTypeColor,
+                fillTypeHighlightColor,
+                isTypeLabelHighlighted,
+              )}
+              stroke={strokeColor}
+              strokeWidth={strokeWidth}
+              cornerRadius={typeSuperscriptCornerRadius}
+            />
+            <Text
+              fill={textValueColor}
+              fontFamily={fontFamily}
+              fontSize={fontSize * 0.6}
+              text={typeSuperscriptText}
+              verticalAlign='top'
+              padding={typeSuperscriptText ? 3 : 0}
+              // Only way to have the superscript label of the same height as the type and value labels is to manually set the superscript text height
+              height={fontSize + 2 * padding}
+            />
+          </Label>
+        </>
       ) : null}
       {valueText !== "" ? (
         <Label x={valueX} y={valueY}>
@@ -164,6 +211,7 @@ NodeTypeValue.propTypes = {
   isTypeLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   isValueLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   typeText: PropTypes.string,
+  typeSuperscriptText: PropTypes.string,
   valueText: PropTypes.string,
   fontFamily: PropTypes.string,
   fontSize: PropTypes.number,
@@ -187,6 +235,7 @@ NodeTypeValue.defaultProps = {
   isTypeLabelHighlighted: false,
   isValueLabelHighlighted: false,
   typeText: "",
+  typeSuperscriptText: "",
   valueText: "",
   fontFamily: "Roboto Mono, Courier",
   fontSize: 12,

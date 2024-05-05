@@ -1,6 +1,8 @@
 /* eslint-disable arrow-body-style */
 import { createEmptyEdge } from "../../utils/state";
 
+import _ from "underscore";
+
 const reducers = {
   // This reducer is used for setting up the initial stage, should not enable Undo and Redo
   setNodes: (state, payload) => {
@@ -26,10 +28,13 @@ const reducers = {
       value,
       editable,
       isSelected,
+      visibility,
       childEdges,
       parentEdges,
       isMathNode,
       mathPieces,
+      commentable,
+      commentThreads,
     } = payload;
 
     const { undoState, nodes } = state;
@@ -55,10 +60,13 @@ const reducers = {
           value,
           editable,
           isSelected,
+          visibility,
           childEdges,
           parentEdges,
           isMathNode,
           mathPieces,
+          commentable,
+          commentThreads,
         },
       },
       isCreatingNode: false,
@@ -244,6 +252,7 @@ const reducers = {
       edges,
       selectedNode,
       selectedEdge,
+      selectedAnnotation,
       updateLabelInputValue,
       updateTypeInputValue,
       updateValueInputValue,
@@ -262,6 +271,7 @@ const reducers = {
       edges,
       selectedNode,
       selectedEdge,
+      selectedAnnotation,
       isSelectedNodeEditable,
       updateLabelInputValue,
       updateTypeInputValue,
@@ -273,7 +283,11 @@ const reducers = {
       isDraggingNode: true,
       selectedNode: nodeId,
       selectedEdge: undefined,
+      selectedAnnotation: undefined,
+      selectedAnnotationEditable: undefined,
       isSelectedNodeEditable,
+      selectedNodeCommentable: node.commentable,
+      isSelectedNodeMath: node.isMathNode,
       updateLabelInputValue: node.pieces.join(""),
       updateTypeInputValue: node.type,
       updateValueInputValue: node.value,
@@ -350,6 +364,8 @@ const reducers = {
       isSelectedNodeEditable,
     };
 
+    const newTypeSuperscript = type === "" ? "" : node.typeSuperscript;
+
     return {
       ...state,
       nodes: {
@@ -357,9 +373,47 @@ const reducers = {
         [selectedNode]: {
           ...node,
           type,
+          typeSuperscript: newTypeSuperscript,
         },
       },
       updateTypeInputValue: type,
+      updateTypeSuperscript: newTypeSuperscript,
+      undoState: [newUndoState, ...undoState],
+      redoState: [],
+    };
+  },
+
+  // Undo and Redo enabled
+  updateNodeTypeSuperscript: (state, payload) => {
+    const { typeSuperscript } = payload;
+
+    const {
+      undoState,
+      nodes,
+      selectedNode,
+      updateTypeSuperscript,
+      isSelectedNodeEditable,
+    } = state;
+    const node = nodes[selectedNode];
+
+    const newUndoState = {
+      action: "updateNodeTypeSuperscript",
+      nodes,
+      selectedNode,
+      updateTypeSuperscript,
+      isSelectedNodeEditable,
+    };
+
+    return {
+      ...state,
+      nodes: {
+        ...nodes,
+        [selectedNode]: {
+          ...node,
+          typeSuperscript,
+        },
+      },
+      updateTypeSuperscript: typeSuperscript,
       undoState: [newUndoState, ...undoState],
       redoState: [],
     };
@@ -418,11 +472,17 @@ const reducers = {
       ...state,
       selectedNode,
       selectedEdge: undefined,
+      selectedEdgeCommentable: undefined,
       isSelectedNodeEditable,
       updateLabelInputValue: node.pieces.join(""),
       updateTypeInputValue: node.type,
       updateValueInputValue: node.value,
+      updateTypeSuperscript: node.typeSuperscript,
       isSelectedNodeMath: node.isMathNode,
+      selectedNodeCommentable: node.commentable,
+      isSelectedNodeFullyVisible: node.visibility === 0,
+      selectedAnnotation: undefined,
+      selectedAnnotationEditable: undefined,
     };
   },
 
@@ -434,7 +494,10 @@ const reducers = {
     updateLabelInputValue: "",
     updateTypeInputValue: "",
     updateValueInputValue: "",
+    updateTypeSuperscript: "",
     isSelectedNodeMath: undefined,
+    selectedNodeCommentable: undefined,
+    isSelectedNodeFullyVisible: undefined,
   }),
 
   // Undo and Redo enabled
@@ -519,7 +582,7 @@ const reducers = {
     };
   },
 
-  // This reducer is used to update the visibility of subtrees (visible/transparent/hidden)
+  // This reducer is used to update the visibility of subtrees (0: visible/1: transparent/2: hidden)
   setSubtreeVisibility: (state, payload) => {
     const { subtreeStartingNodeId, subtreeStartingPieceId, currentVisibility } =
       payload;
@@ -529,11 +592,15 @@ const reducers = {
     let subtreeEdgeIds = [];
 
     const getSubtreeNodesAndEdgesIds = (nodeId, edgeId) => {
+      subtreeEdgeIds = [...new Set([...subtreeEdgeIds, edgeId])];
+      // Include also other incoming edges to a given node as part of the subtree
+      subtreeEdgeIds = [
+        ...new Set([...subtreeEdgeIds, ...nodes[nodeId].childEdges]),
+      ];
       if (subtreeNodeIds.includes(nodeId) || nodeId === subtreeStartingNodeId) {
         return;
       }
       subtreeNodeIds = [...new Set([...subtreeNodeIds, nodeId])];
-      subtreeEdgeIds = [...new Set([...subtreeEdgeIds, edgeId])];
       const subtreeParentEdgeIds = nodes[nodeId].parentEdges.reduce(
         (accumulator, parentEdgeIds) => accumulator.concat(parentEdgeIds),
         [],
@@ -553,25 +620,17 @@ const reducers = {
     let newEdges = { ...edges };
 
     subtreeNodeIds.forEach((nodeId) => {
-      if (currentVisibility === "transparent") {
-        newNodes[nodeId].isTransparent = false;
-        newNodes[nodeId].isVisible = false;
-      } else if (currentVisibility === "hidden") {
-        newNodes[nodeId].isVisible = true;
-      } else {
-        newNodes[nodeId].isTransparent = true;
-      }
+      newNodes[nodeId] = {
+        ...newNodes[nodeId],
+        visibility: (currentVisibility + 1) % 3,
+      };
     });
 
     subtreeEdgeIds.forEach((edgeId) => {
-      if (currentVisibility === "transparent") {
-        newEdges[edgeId].isTransparent = false;
-        newEdges[edgeId].isVisible = false;
-      } else if (currentVisibility === "hidden") {
-        newEdges[edgeId].isVisible = true;
-      } else {
-        newEdges[edgeId].isTransparent = true;
-      }
+      newEdges[edgeId] = {
+        ...newEdges[edgeId],
+        visibility: (currentVisibility + 1) % 3,
+      };
     });
 
     return {
@@ -587,8 +646,7 @@ const reducers = {
     const newNodes = Object.keys(nodes).reduce((accumulator, nodeId) => {
       accumulator[nodeId] = {
         ...nodes[nodeId],
-        isTransparent: false,
-        isVisible: true,
+        visibility: 0,
       };
       return accumulator;
     }, {});
@@ -596,8 +654,7 @@ const reducers = {
     const newEdges = Object.keys(edges).reduce((accumulator, edgeId) => {
       accumulator[edgeId] = {
         ...edges[edgeId],
-        isTransparent: false,
-        isVisible: true,
+        visibility: 0,
       };
       return accumulator;
     }, {});
@@ -715,7 +772,6 @@ const reducers = {
       action: "removeEdge",
       nodes,
       edges,
-      selectedEdge: edgeId,
     };
 
     return {
@@ -751,7 +807,6 @@ const reducers = {
       action: "updateChildEdge",
       nodes,
       edges,
-      selectedEdge: edgeId,
     };
 
     return {
@@ -836,7 +891,6 @@ const reducers = {
       action: "updateParentEdge",
       nodes,
       edges,
-      selectedEdge: edgeId,
     };
 
     return {
@@ -858,15 +912,23 @@ const reducers = {
   // No Undo and Redo
   setSelectedEdge: (state, payload) => {
     const { selectedEdge } = payload;
+    const { edges } = state;
+    const edge = edges[selectedEdge];
 
     return {
       ...state,
       selectedEdge,
+      selectedEdgeCommentable: edge.commentable,
       selectedNode: undefined,
       isSelectedNodeEditable: undefined,
+      selectedNodeCommentable: undefined,
+      isSelectedNodeMath: undefined,
+      isSelectedNodeFullyVisible: undefined,
       updateLabelInputValue: "",
       updateTypeInputValue: "",
       updateValueInputValue: "",
+      selectedAnnotation: undefined,
+      selectedAnnotationEditable: undefined,
     };
   },
 
@@ -874,6 +936,7 @@ const reducers = {
   clearSelectedEdge: (state) => ({
     ...state,
     selectedEdge: undefined,
+    selectedEdgeCommentable: undefined,
   }),
 
   // No Undo and Redo
@@ -974,6 +1037,7 @@ const reducers = {
       stagePos,
       stageScale,
       connectorPlaceholder,
+      annotations,
     } = payload;
 
     const {
@@ -986,6 +1050,7 @@ const reducers = {
       stagePos: oldStagePos,
       stageScale: oldStageScale,
       connectorPlaceholder: oldConnectorPlaceholder,
+      annotations: oldAnnotations,
     } = state;
 
     const newUndoState = {
@@ -998,6 +1063,7 @@ const reducers = {
       stagePos: oldStagePos,
       stageScale: oldStageScale,
       connectorPlaceholder: oldConnectorPlaceholder,
+      annotations: oldAnnotations,
     };
 
     return {
@@ -1013,17 +1079,19 @@ const reducers = {
       dragEdge: null,
       undoState: [newUndoState, ...undoState],
       redoState: [],
+      annotations: annotations || {},
     };
   },
 
   // No Undo and Redo
   setStartingOrderedNodes: (state, payload) => {
-    const { nodes, edges, stagePos, stageScale } = payload;
+    const { nodes, edges, annotations, stagePos, stageScale } = payload;
 
     return {
       ...state,
       nodes,
       edges,
+      annotations,
       stagePos,
       stageScale,
     };
@@ -1031,20 +1099,30 @@ const reducers = {
 
   // Undo and Redo enabled
   setOrderedNodes: (state, payload) => {
-    const { nodes, edges, stagePos, stageScale } = payload;
+    const { nodes, edges, annotations, stagePos, stageScale } = payload;
 
     const {
       undoState,
       nodes: oldNodes,
       edges: oldEdges,
+      annotations: oldAnnotations,
       stagePos: oldStagePos,
       stageScale: oldStageScale,
     } = state;
+
+    // Prevent creation of redo state if layout doesn't change the editor state
+    const stateEqual =
+      _.isEqual(nodes, oldNodes) &&
+      _.isEqual(edges, oldEdges) &&
+      _.isEqual(annotations, oldAnnotations) &&
+      _.isEqual(stagePos, oldStagePos) &&
+      _.isEqual(stageScale, oldStageScale);
 
     const newUndoState = {
       action: "setOrderedNodes",
       nodes: oldNodes,
       edges: oldEdges,
+      annotations: oldAnnotations,
       stagePos: oldStagePos,
       stageScale: oldStageScale,
     };
@@ -1053,9 +1131,10 @@ const reducers = {
       ...state,
       nodes,
       edges,
+      annotations,
       stagePos,
       stageScale,
-      undoState: [newUndoState, ...undoState],
+      undoState: stateEqual ? undoState : [newUndoState, ...undoState],
       redoState: [],
     };
   },

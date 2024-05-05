@@ -30,7 +30,10 @@ const labelPiecesPosition = computeLabelPiecesXCoordinatePositions(labelPieces);
         stageHeight={height}
         nodeWidth={computeNodeWidth(false, labelPieces)}
         nodeHeight={48}
+        editableDelete={true}
+        isFullDisabled={false}
         isSelected={true}
+        showDeleteButton={true}
       />
     </Layer>
   </Stage>

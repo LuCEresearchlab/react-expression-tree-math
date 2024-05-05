@@ -8,10 +8,15 @@ const reducers = {
     };
   },
 
+  exitFullScreen: (state) => {
+    return {
+      ...state,
+      isFullScreen: false,
+    };
+  },
+
   setStagePos: (state, payload) => {
-    const {
-      stagePos,
-    } = payload;
+    const { stagePos } = payload;
 
     return {
       ...state,
@@ -20,9 +25,7 @@ const reducers = {
   },
 
   setStageScale: (state, payload) => {
-    const {
-      stageScale,
-    } = payload;
+    const { stageScale } = payload;
 
     return {
       ...state,
@@ -31,10 +34,7 @@ const reducers = {
   },
 
   setStagePositionAndScale: (state, payload) => {
-    const {
-      stagePos,
-      stageScale,
-    } = payload;
+    const { stagePos, stageScale } = payload;
 
     return {
       ...state,
@@ -45,9 +45,7 @@ const reducers = {
 
   // TODO: Unused. Remove, or design with all logic in here and richer payload.
   zoomStage: (state, payload) => {
-    const {
-      zoomMultiplier,
-    } = payload;
+    const { zoomMultiplier } = payload;
 
     const { stageScale } = state;
     const { x } = stageScale;
@@ -64,10 +62,7 @@ const reducers = {
 
   // TODO: Unused. Remove, or design with all logic in here and richer payload.
   zoomStageWheel: (state, payload) => {
-    const {
-      stageScale,
-      stagePos,
-    } = payload;
+    const { stageScale, stagePos } = payload;
 
     return {
       ...state,

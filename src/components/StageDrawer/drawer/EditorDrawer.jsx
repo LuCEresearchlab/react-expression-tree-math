@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import PropTypes from 'prop-types';
-import { makeStyles } from '@material-ui/core/styles';
+import React, { useMemo, useState } from "react";
+import PropTypes from "prop-types";
+import { makeStyles } from "@material-ui/core/styles";
 
 import {
   Drawer,
@@ -20,17 +20,17 @@ import {
   Switch,
   FormControlLabel,
   FormGroup,
-} from '@material-ui/core';
+} from "@material-ui/core";
 
 import {
   AddRounded,
-  ExpandMore,
+  ExpandMoreRounded,
+  CheckRounded,
   InfoOutlined,
-  Check,
-} from '@material-ui/icons';
+} from "@material-ui/icons";
 
-import { Layer, Stage } from 'react-konva';
-import Node from '../../Node/Node';
+import { Layer, Stage } from "react-konva";
+import Node from "../../Node/Node";
 
 // Width of the side drawer
 const drawerWidth = 300;
@@ -39,100 +39,96 @@ const drawerWidth = 300;
 const useStyles = makeStyles((theme) => ({
   drawer: {
     width: drawerWidth,
-    position: 'absolute',
-    overflowY: 'auto',
-    '@media print': {
-      display: 'none',
+    position: "absolute",
+    overflowY: "auto",
+    "@media print": {
+      display: "none",
     },
-    // '& .MuiDrawer-paperAnchorLeft': {
-    //   border: '0px',
-    //   backgroundColor: 'rgba(0,0,0,0)',
-    // },
   },
   drawerAnchorLeft: {
-    border: '0px',
-    backgroundColor: 'rgba(0,0,0,0)',
+    border: "0px",
+    backgroundColor: "rgba(0,0,0,0)",
   },
   drawerContainer: {
-    overflowX: 'hidden',
-    overflowY: 'auto',
-    backgroundColor: '#fafafa',
-    borderRadius: '0px 0px 15px 0px',
-    borderRight: '1px solid #dedede',
-    borderBottom: '1px solid #dedede',
+    overflowX: "hidden",
+    overflowY: "auto",
+    backgroundColor: "#fafafa",
+    borderRadius: "0px 0px 15px 0px",
+    borderRight: "1px solid #dedede",
+    borderBottom: "1px solid #dedede",
   },
   drawerInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    margin: '10px 0 0 10px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    margin: "10px 0 0 10px",
   },
   drawerField: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '0 0 10px 10px',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 0 10px 10px",
   },
   infoPopover: {
-    marginLeft: '5px',
+    marginLeft: "5px",
   },
   infoPopoverText: {
-    border: '2px solid',
-    borderRadius: '4px',
+    border: "2px solid",
+    borderRadius: "4px",
     borderColor: theme.palette.primary.main,
-    padding: '3px 6px 3px 6px',
-    maxWidth: '500px',
+    padding: "3px 6px 3px 6px",
+    maxWidth: "500px",
   },
   accordionContainer: {
-    display: 'block',
+    display: "block",
     padding: 0,
-    margin: '0 10px 10px 10px',
+    margin: "0 10px 10px 10px",
   },
   templateElement: {
-    color: 'white',
-    backgroundColor: '#208020',
-    border: 'solid 1px black',
-    borderRadius: '5px',
-    padding: '3px 10px 7px 10px',
-    fontFamily: 'Roboto Mono, Courier',
-    fontSize: '22px',
-    '&:hover': {
-      cursor: 'pointer',
+    color: "white",
+    backgroundColor: "#208020",
+    border: "solid 1px black",
+    borderRadius: "5px",
+    padding: "3px 10px 7px 10px",
+    fontFamily: "Roboto Mono, Courier",
+    fontSize: "22px",
+    "&:hover": {
+      cursor: "pointer",
     },
-    marginBottom: '-10px',
+    marginBottom: "-10px",
   },
   selectedTemplateElement: {
-    color: 'white',
-    backgroundColor: '#3f50b5',
-    border: 'solid 2px black',
-    borderRadius: '5px',
-    padding: '3px 10px 7px 10px',
-    fontFamily: 'Roboto Mono, Courier',
-    fontSize: '22px',
-    '&:hover': {
-      cursor: 'pointer',
+    color: "white",
+    backgroundColor: "#3f50b5",
+    border: "solid 2px black",
+    borderRadius: "5px",
+    padding: "3px 10px 7px 10px",
+    fontFamily: "Roboto Mono, Courier",
+    fontSize: "22px",
+    "&:hover": {
+      cursor: "pointer",
     },
-    marginBottom: '-10px',
-    boxShadow: '3px 3px 3px black',
+    marginBottom: "-10px",
+    boxShadow: "3px 3px 3px black",
   },
   templateContainer: {
-    maxHeight: '200px',
-    overflowY: 'scroll',
+    maxHeight: "200px",
+    overflowY: "scroll",
   },
   textField: {
-    paddingRight: '10px',
+    paddingRight: "10px",
   },
   input: {
-    backgroundColor: 'white',
-    fontFamily: 'monospace',
+    backgroundColor: "white",
+    fontFamily: "monospace",
   },
   typeField: {
-    margin: '10px 10px 10px 10px',
-    overflowX: 'auto',
+    margin: "10px 10px 10px 10px",
+    overflowX: "auto",
   },
   suggestionChip: {
     margin: theme.spacing(0.5),
-    fontFamily: 'monospace',
+    fontFamily: "monospace",
   },
   endAdornment: {
     paddingRight: 0,
@@ -141,12 +137,14 @@ const useStyles = makeStyles((theme) => ({
 
 function EditorDrawer({
   containerRef,
+  editorHeight,
   connectorPlaceholder,
   showDrawerSections,
   toggleIsCreatingNode,
   templateNodes,
   handleUpdateLabelPiecesChange,
   handleUpdateNodeTypeChange,
+  handleUpdateTypeSuperscriptChange,
   handleUpdateNodeValueChange,
   handleSelectedNodeEditableLabelChange,
   handleSelectedNodeEditableDeleteChange,
@@ -158,10 +156,13 @@ function EditorDrawer({
   isDrawerOpen,
   isCreatingNode,
   isSelectedNodeEditable,
+  isSelectedNodeMath,
+  isSelectedNodeFullyVisible,
   createNodeDescription,
   createNodeInputValue,
   updateLabelInputValue,
   updateTypeInputValue,
+  updateTypeSuperscript,
   updateValueInputValue,
   setCreateNodeInputValue,
   setUpdateLabelInputValue,
@@ -174,12 +175,19 @@ function EditorDrawer({
   editNodeInputPlaceholder,
   typeInputPlaceholder,
   valueInputPlaceholder,
-  isSelectedNodeMath,
 }) {
   const classes = useStyles();
 
   const [addAnchorEl, setAddAnchorEl] = useState(null);
   const isAddInfoOpen = !!addAnchorEl;
+
+  const isUpdateLabelDisabled = useMemo(() => {
+    return updateLabelInputValue.trim().length === 0;
+  }, [updateLabelInputValue]);
+
+  const isCreateNodeDisabled = useMemo(() => {
+    return createNodeInputValue.trim().length === 0;
+  }, [createNodeInputValue]);
 
   const handleTemplateClick = (value) => {
     setCreateNodeInputValue(value);
@@ -189,16 +197,16 @@ function EditorDrawer({
     <Drawer
       className={classes.drawer}
       classes={{ paper: classes.drawerAnchorLeft }}
-      PaperProps={{ style: { position: 'relative' } }}
-      BackdropProps={{ style: { position: 'relative' } }}
+      PaperProps={{ style: { position: "relative", maxHeight: editorHeight } }}
+      BackdropProps={{ style: { position: "relative" } }}
       ModalProps={{
         container: containerRef.current,
         style: {
-          position: 'absolute',
+          position: "absolute",
         },
       }}
-      variant="persistent"
-      anchor="left"
+      variant='persistent'
+      anchor='left'
       open={isDrawerOpen}
     >
       <div className={classes.drawerContainer}>
@@ -207,8 +215,8 @@ function EditorDrawer({
             <div className={classes.drawerInfo}>
               <div>
                 <IconButton
-                  size="small"
-                  color="primary"
+                  size='small'
+                  color='primary'
                   onClick={(e) => setAddAnchorEl(e.target)}
                 >
                   <InfoOutlined />
@@ -216,26 +224,26 @@ function EditorDrawer({
                 <Popover
                   className={classes.infoPopover}
                   anchorEl={addAnchorEl}
-                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  anchorOrigin={{ vertical: "top", horizontal: "right" }}
                   open={isAddInfoOpen}
                   onClose={() => setAddAnchorEl(null)}
                 >
                   <Typography
                     className={classes.infoPopoverText}
-                    variant="body2"
+                    variant='body2'
                   >
                     {`Describe the node content in the textfield below. Holes are represented by the special ${connectorPlaceholder} character.`}
                   </Typography>
                 </Popover>
               </div>
-              <Typography variant="h6">Create a new node:</Typography>
+              <Typography variant='h6'>Create a new node:</Typography>
             </div>
             <div className={classes.drawerField}>
               <TextField
                 className={classes.textField}
-                variant="outlined"
+                variant='outlined'
                 fullWidth
-                size="medium"
+                size='medium'
                 // label="Insert the node's pieces"
                 InputLabelProps={{
                   shrink: true,
@@ -246,16 +254,19 @@ function EditorDrawer({
                     adornedEnd: classes.endAdornment,
                   },
                   endAdornment: (
-                    <InputAdornment position="end">
+                    <InputAdornment position='end'>
                       <Tooltip
-                        title={isCreatingNode ? 'Clear adding' : 'Add node'}
-                        placement="right"
+                        title={isCreatingNode ? "Clear adding" : "Add node"}
+                        placement='right'
+                        PopperProps={{
+                          container: containerRef.current,
+                        }}
                       >
                         <span>
                           <IconButton
-                            size="medium"
-                            color={isCreatingNode ? 'secondary' : 'primary'}
-                            //  disabled={isAddEmpty}
+                            size='medium'
+                            disabled={isCreateNodeDisabled}
+                            color={isCreatingNode ? "secondary" : "primary"}
                             onClick={toggleIsCreatingNode}
                           >
                             <AddRounded />
@@ -269,12 +280,12 @@ function EditorDrawer({
                   createNodeInputPlaceholder ||
                   `example: ${connectorPlaceholder} + ${connectorPlaceholder}`
                 }
-                margin="dense"
+                margin='dense'
                 value={createNodeInputValue}
-                autoComplete="off"
+                autoComplete='off'
                 onChange={(e) => setCreateNodeInputValue(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter" && !isCreateNodeDisabled) {
                     toggleIsCreatingNode();
                   }
                 }}
@@ -285,7 +296,7 @@ function EditorDrawer({
                 <Stage width={300} height={60}>
                   <Layer>
                     <Node
-                      id="example-node"
+                      id='example-node'
                       positionX={5}
                       positionY={10}
                       labelPieces={createNodeDescription.pieces}
@@ -336,8 +347,8 @@ function EditorDrawer({
                 classes={{ root: classes.accordionContainer }}
               >
                 <Accordion>
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography variant="body1">Suggested nodes:</Typography>
+                  <AccordionSummary expandIcon={<ExpandMoreRounded />}>
+                    <Typography variant='body1'>Suggested nodes:</Typography>
                   </AccordionSummary>
                   <Divider />
                   <div className={classes.templateContainer}>
@@ -346,7 +357,7 @@ function EditorDrawer({
                         <Typography
                           id={`Template-${i}`}
                           className={classes.templateElement}
-                          variant="h6"
+                          variant='h6'
                           onClick={() => handleTemplateClick(templateValue)}
                         >
                           {templateValue}
@@ -359,8 +370,7 @@ function EditorDrawer({
             </div>
           </div>
         )}
-        {!isSelectedNodeMath &&
-          isSelectedNodeEditable &&
+        {isSelectedNodeEditable &&
           (isSelectedNodeEditable.label ||
             isSelectedNodeEditable.type ||
             isSelectedNodeEditable.value) &&
@@ -368,10 +378,11 @@ function EditorDrawer({
             showDrawerSections.editTypeField ||
             showDrawerSections.editValueField) && (
             <div className={classes.drawerInfo}>
-              <Typography variant="h6">Edit an existing node:</Typography>
+              <Typography variant='h6'>Edit an existing node:</Typography>
             </div>
           )}
         {showDrawerSections.editLabelField &&
+          isSelectedNodeFullyVisible &&
           !isSelectedNodeMath &&
           isSelectedNodeEditable &&
           isSelectedNodeEditable.label && (
@@ -379,10 +390,10 @@ function EditorDrawer({
               <div className={classes.drawerField}>
                 <TextField
                   className={classes.textField}
-                  variant="outlined"
+                  variant='outlined'
                   fullWidth
-                  size="medium"
-                  label="Structure of this node"
+                  size='medium'
+                  label='Structure of this node'
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -392,14 +403,21 @@ function EditorDrawer({
                       adornedEnd: classes.endAdornment,
                     },
                     endAdornment: (
-                      <Tooltip title="Confirm change" placement="right">
+                      <Tooltip
+                        title='Confirm change'
+                        placement='right'
+                        PopperProps={{
+                          container: containerRef.current,
+                        }}
+                      >
                         <span>
                           <IconButton
-                            size="medium"
-                            color="primary"
+                            size='medium'
+                            color='primary'
+                            disabled={isUpdateLabelDisabled}
                             onClick={handleUpdateLabelPiecesChange}
                           >
-                            <Check />
+                            <CheckRounded />
                           </IconButton>
                         </span>
                       </Tooltip>
@@ -410,11 +428,11 @@ function EditorDrawer({
                     `example: ${connectorPlaceholder} + ${connectorPlaceholder}`
                   }
                   value={updateLabelInputValue}
-                  margin="dense"
-                  autoComplete="off"
+                  margin='dense'
+                  autoComplete='off'
                   onChange={(e) => setUpdateLabelInputValue(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter" && !isUpdateLabelDisabled) {
                       handleUpdateLabelPiecesChange(e.target.value);
                     }
                   }}
@@ -432,22 +450,43 @@ function EditorDrawer({
                   <>
                     <TextField
                       className={classes.textField}
-                      variant="outlined"
+                      variant='outlined'
                       fullWidth
-                      size="medium"
+                      size='medium'
                       placeholder={typeInputPlaceholder}
-                      margin="dense"
-                      label="Type of this node"
+                      margin='dense'
+                      label='Type of this node'
                       InputLabelProps={{
                         shrink: true,
                       }}
                       InputProps={{
                         className: classes.input,
                       }}
-                      autoComplete="off"
+                      autoComplete='off'
                       value={updateTypeInputValue}
                       onChange={(e) =>
                         handleUpdateNodeTypeChange(e.target.value)
+                      }
+                    />
+                    <TextField
+                      className={classes.textField}
+                      variant='outlined'
+                      fullWidth
+                      size='medium'
+                      placeholder={"+, -, 0, *"}
+                      margin='dense'
+                      label='Superscript content'
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      InputProps={{
+                        className: classes.input,
+                      }}
+                      autoComplete='off'
+                      disabled={updateTypeInputValue === ""}
+                      value={updateTypeSuperscript}
+                      onChange={(e) =>
+                        handleUpdateTypeSuperscriptChange(e.target.value)
                       }
                     />
                   </>
@@ -481,19 +520,19 @@ function EditorDrawer({
                   <>
                     <TextField
                       className={classes.textField}
-                      variant="outlined"
+                      variant='outlined'
                       fullWidth
-                      size="medium"
+                      size='medium'
                       placeholder={valueInputPlaceholder}
-                      margin="dense"
-                      label="Value of this node"
+                      margin='dense'
+                      label='Value of this node'
                       InputLabelProps={{
                         shrink: true,
                       }}
                       InputProps={{
                         className: classes.input,
                       }}
-                      autoComplete="off"
+                      autoComplete='off'
                       value={updateValueInputValue}
                       onChange={(e) =>
                         handleUpdateNodeValueChange(e.target.value)
@@ -531,7 +570,7 @@ function EditorDrawer({
           isSelectedNodeEditable && (
             <>
               <div className={classes.drawerInfo}>
-                <Typography variant="h6">Edit node editability:</Typography>
+                <Typography variant='h6'>Edit node editability:</Typography>
               </div>
               <div className={classes.drawerField}>
                 <div>
@@ -542,22 +581,22 @@ function EditorDrawer({
                           <Switch
                             checked={isSelectedNodeEditable.delete}
                             onClick={handleSelectedNodeEditableDeleteChange}
-                            name="editableDelete"
-                            color="primary"
+                            name='editableDelete'
+                            color='primary'
                           />
                         }
-                        label="Delete"
+                        label='Delete'
                       />
                       <FormControlLabel
                         control={
                           <Switch
                             checked={isSelectedNodeEditable.type}
                             onClick={handleSelectedNodeEditableTypeChange}
-                            name="editableType"
-                            color="primary"
+                            name='editableType'
+                            color='primary'
                           />
                         }
-                        label="Type Label"
+                        label='Type Label'
                       />
                     </FormGroup>
                     <FormGroup>
@@ -566,22 +605,22 @@ function EditorDrawer({
                           <Switch
                             checked={isSelectedNodeEditable.label}
                             onClick={handleSelectedNodeEditableLabelChange}
-                            name="editableLabel"
-                            color="primary"
+                            name='editableLabel'
+                            color='primary'
                           />
                         }
-                        label="Structure"
+                        label='Structure'
                       />
                       <FormControlLabel
                         control={
                           <Switch
                             checked={isSelectedNodeEditable.value}
                             onClick={handleSelectedNodeEditableValueChange}
-                            name="editableValue"
-                            color="primary"
+                            name='editableValue'
+                            color='primary'
                           />
                         }
-                        label="Value Label"
+                        label='Value Label'
                       />
                     </FormGroup>
                   </FormGroup>
@@ -596,6 +635,7 @@ function EditorDrawer({
 
 EditorDrawer.propTypes = {
   containerRef: PropTypes.element.isRequired,
+  editorHeight: PropTypes.number,
   connectorPlaceholder: PropTypes.string,
   templateNodes: PropTypes.arrayOf(PropTypes.string),
   allowFreeTypeUpdate: PropTypes.bool,
@@ -612,12 +652,12 @@ EditorDrawer.propTypes = {
   toggleIsCreatingNode: PropTypes.func,
   handleUpdateLabelPiecesChange: PropTypes.func,
   handleUpdateNodeTypeChange: PropTypes.func,
+  handleUpdateTypeSuperscriptChange: PropTypes.func,
   handleUpdateNodeValueChange: PropTypes.func,
   handleSelectedNodeEditableLabelChange: PropTypes.func,
   handleSelectedNodeEditableDeleteChange: PropTypes.func,
   handleSelectedNodeEditableTypeChange: PropTypes.func,
   handleSelectedNodeEditableValueChange: PropTypes.func,
-
   isDrawerOpen: PropTypes.bool,
   isCreatingNode: PropTypes.bool,
   isSelectedNodeEditable: PropTypes.shape({
@@ -626,7 +666,7 @@ EditorDrawer.propTypes = {
     value: PropTypes.bool,
     delete: PropTypes.bool,
   }),
-
+  isSelectedNodeMath: PropTypes.bool,
   createNodeInputPlaceholder: PropTypes.string,
   editNodeInputPlaceholder: PropTypes.string,
   typeInputPlaceholder: PropTypes.string,
@@ -646,6 +686,7 @@ EditorDrawer.propTypes = {
   createNodeInputValue: PropTypes.string,
   updateLabelInputValue: PropTypes.string,
   updateTypeInputValue: PropTypes.string,
+  updateTypeSuperscript: PropTypes.string,
   updateValueInputValue: PropTypes.string,
   setCreateNodeInputValue: PropTypes.func,
   setUpdateLabelInputValue: PropTypes.func,
@@ -710,11 +751,11 @@ EditorDrawer.propTypes = {
       pointerHeight: PropTypes.number,
     }),
   }),
-  isSelectedNodeMath: PropTypes.bool,
 };
 
 EditorDrawer.defaultProps = {
-  connectorPlaceholder: '{{}}',
+  editorHeight: 300,
+  connectorPlaceholder: "{{}}",
   templateNodes: undefined,
   allowFreeTypeUpdate: true,
   allowFreeValueUpdate: true,
@@ -728,36 +769,37 @@ EditorDrawer.defaultProps = {
     editFinalNodeField: false,
   },
   isSelectedNodeEditable: undefined,
+  isSelectedNodeMath: undefined,
   handleUpdateLabelPiecesChange: () => {},
   handleUpdateNodeTypeChange: () => {},
+  handleUpdateTypeSuperscriptChange: () => {},
   handleUpdateNodeValueChange: () => {},
   handleSelectedNodeEditableLabelChange: () => {},
   handleSelectedNodeEditableDeleteChange: () => {},
   handleSelectedNodeEditableTypeChange: () => {},
   handleSelectedNodeEditableValueChange: () => {},
   toggleIsCreatingNode: () => {},
-
   isDrawerOpen: true,
   isCreatingNode: false,
   createNodeDescription: undefined,
-  createNodeInputValue: '',
-  updateLabelInputValue: '',
-  updateTypeInputValue: '',
-  updateValueInputValue: '',
+  createNodeInputValue: "",
+  updateLabelInputValue: "",
+  updateTypeInputValue: "",
+  updateTypeSuperscript: "",
+  updateValueInputValue: "",
   setUpdateLabelInputValue: () => {},
   setCreateNodeInputValue: () => {},
 
   nodeFontSize: 24,
-  nodeFontFamily: 'Roboto Mono, Courier',
+  nodeFontFamily: "Roboto Mono, Courier",
   nodePaddingX: 12,
   nodePaddingY: 12,
   nodeStyle: {},
 
   createNodeInputPlaceholder: null,
   editNodeInputPlaceholder: null,
-  typeInputPlaceholder: 'String, str, ...',
+  typeInputPlaceholder: "String, str, ...",
   valueInputPlaceholder: '42, "Hello World", ...',
-  isSelectedNodeMath: false,
 };
 
 export default EditorDrawer;

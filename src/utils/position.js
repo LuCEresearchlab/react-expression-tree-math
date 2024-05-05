@@ -1,7 +1,11 @@
 /* eslint-disable no-loop-func */
 import Konva from "konva";
 import { layout } from "./layout";
-import { createEmptyEdge, createEmptyNode } from "./state";
+import {
+  createEmptyEdge,
+  createEmptyNode,
+  createEmptyAnnotation,
+} from "./state";
 
 function distance(x1, y1, x2, y2) {
   return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
@@ -127,6 +131,17 @@ const createPositionUtils = (
     } else {
       return 2 * nodePaddingY + fontSize;
     }
+  };
+
+  const computeAnnotationWidth = (annotationText) => {
+    const lines = annotationText.split("\n");
+    const longestLine = Math.max(...lines.map((line) => line.length));
+    return 2 * nodePaddingX + longestLine * charWidth;
+  };
+
+  const computeAnnotationHeight = (annotationText) => {
+    const lines = annotationText.split("\n");
+    return 2 * nodePaddingY + lines.length * fontSize;
   };
 
   // Parse the nodes's pieces from a textfield string into the pieces array
@@ -452,7 +467,18 @@ const createPositionUtils = (
     const objectNodes = {};
     nodes.forEach((node) => {
       const id = `_${node.id}`;
-      const { pieces, mathPieces, isMathNode, x, y, type, value } = node;
+      const {
+        pieces,
+        mathPieces,
+        isMathNode,
+        x,
+        y,
+        type,
+        value,
+        visibility,
+        commentable,
+        commentThreads,
+      } = node;
 
       objectNodes[id] = {
         id,
@@ -463,6 +489,9 @@ const createPositionUtils = (
         pieces,
         mathPieces,
         isMathNode,
+        visibility,
+        commentable,
+        commentThreads,
       };
     });
     return objectNodes;
@@ -474,22 +503,54 @@ const createPositionUtils = (
       const newEdge = createEmptyEdge(edge.id);
       const { id } = newEdge;
 
-      const { parentNodeId, parentPieceId, childNodeId } = edge;
+      const {
+        parentNodeId,
+        parentPieceId,
+        childNodeId,
+        visibility,
+        commentable,
+        commentThreads,
+      } = edge;
 
       objectEdges[id] = {
         ...newEdge,
         parentNodeId: `_${parentNodeId}`,
         parentPieceId,
         childNodeId: `_${childNodeId}`,
+        visibility,
+        commentable,
+        commentThreads,
       };
     });
 
     return objectEdges;
   };
 
+  const convertArrayAnnotationsToObject = (annotations) => {
+    const objectAnnotations = {};
+    annotations.forEach((annotation) => {
+      const newAnnotation = createEmptyAnnotation(annotation.id);
+      const { id } = newAnnotation;
+
+      const { x, y, text, color, editable } = annotation;
+
+      objectAnnotations[id] = {
+        ...newAnnotation,
+        x,
+        y,
+        text,
+        color,
+        editable,
+      };
+    });
+
+    return objectAnnotations;
+  };
+
   const sanitizeNodesAndEdges = (
     nodes,
     edges,
+    annotations,
     selectedRootNode,
     stagePos,
     stageScale,
@@ -500,6 +561,7 @@ const createPositionUtils = (
     stageRef,
     computeStageWidth,
     isDrawerOpen,
+    isCommentsOpen,
     showDrawer,
     highlightedNodes,
     highlightedEdges,
@@ -537,6 +599,15 @@ const createPositionUtils = (
         childEdges: [],
         parentEdges: [],
         isHighlighted: isHighlightedNode,
+        visibility: nodes[id].visibility || 0,
+        commentable: nodes[id].commentable || {
+          addThread: true,
+          deleteThread: true,
+          resolveThread: true,
+          addComment: true,
+          deleteComment: true,
+        },
+        commentThreads: nodes[id].commentThreads || [],
       };
       pieces.forEach(() => accumulator[id].parentEdges.push([]));
       return accumulator;
@@ -552,13 +623,25 @@ const createPositionUtils = (
       (accumulator, edgeId) => {
         accumulator[edgeId] = {
           ...sanitizedEdges[edgeId],
-          isVisible: true,
-          isTransparent: false,
         };
         return accumulator;
       },
       {},
     );
+
+    Object.keys(sanitizedEdges).forEach((edgeId) => {
+      sanitizedEdges[edgeId].isHighlighted = highlightedEdges.includes(edgeId);
+      sanitizedEdges[edgeId].visibility = edges[edgeId].visibility || 0;
+      sanitizedEdges[edgeId].commentable = edges[edgeId].commentable || {
+        addThread: true,
+        deleteThread: true,
+        resolveThread: true,
+        addComment: true,
+        deleteComment: true,
+      };
+      sanitizedEdges[edgeId].commentThreads =
+        edges[edgeId].commentThreads || [];
+    });
 
     Object.keys(sanitizedEdges).forEach((id) => {
       const { childNodeId, parentNodeId, parentPieceId } = edges[id];
@@ -573,6 +656,32 @@ const createPositionUtils = (
         sanitizedNodes[parentNodeId].parentEdges[parentPieceId].push(id);
       }
     });
+
+    if (Array.isArray(annotations)) {
+      annotations = convertArrayAnnotationsToObject(annotations);
+    }
+
+    let sanitizedAnnotations = Object.keys(annotations).reduce(
+      (accumulator, id) => {
+        const newAnnotation = createAnnotationFromText(
+          annotations[id].text,
+          id,
+        );
+
+        accumulator[id] = {
+          ...newAnnotation,
+          x: annotations[id].x,
+          y: annotations[id].y,
+          color: annotations[id].color || {
+            hex: "#35BFFF",
+            rgb: [53, 191, 255],
+          },
+          editable: annotations[id].editable || { value: true, delete: true },
+        };
+        return accumulator;
+      },
+      {},
+    );
 
     if (autolayout) {
       //TODO: Determine whether need to clone nodes before calling layout
@@ -592,8 +701,10 @@ const createPositionUtils = (
       const [diagramWidth, diagramHeight] = layout(
         sanitizedNodes,
         sanitizedEdges,
+        sanitizedAnnotations,
         selectedRootNode,
         isDrawerOpen && showDrawer,
+        isCommentsOpen,
         computeStageWidth(),
       );
       //console.log('node layout: diagram width: ', diagramWidth, 'diagram height: ', diagramHeight);
@@ -604,7 +715,8 @@ const createPositionUtils = (
     }
 
     if (autofit && layerRef.current && stageRef.current) {
-      const paddingLeft = isDrawerOpen && showDrawer ? 330 : 30;
+      const paddingLeft =
+        isDrawerOpen && showDrawer ? 330 : isCommentsOpen ? 430 : 30;
       const paddingRight = 30;
       const paddingTop = 30;
       const paddingBottom = 30;
@@ -623,13 +735,10 @@ const createPositionUtils = (
       stageScale = { x: scale, y: scale };
     }
 
-    Object.keys(sanitizedEdges).forEach((edgeId) => {
-      sanitizedEdges[edgeId].isHighlighted = highlightedEdges.includes(edgeId);
-    });
-
     return {
       sanitizedNodes,
       sanitizedEdges,
+      sanitizedAnnotations,
       sanitizedStagePos: stagePos,
       sanitizedStageScale: stageScale,
     };
@@ -679,6 +788,20 @@ const createPositionUtils = (
     };
   };
 
+  const createAnnotationFromText = (text, id) => {
+    const newAnnotation = createEmptyAnnotation(id);
+
+    const annotationWidth = computeAnnotationWidth(text);
+    const annotationHeight = computeAnnotationHeight(text);
+
+    return {
+      ...newAnnotation,
+      height: annotationHeight,
+      width: annotationWidth,
+      text,
+    };
+  };
+
   return {
     unitFontSizeWidth,
     createNodeFromPieces,
@@ -690,6 +813,8 @@ const createPositionUtils = (
     updateEdgeChildCoordinates,
     computeNodeHeight,
     computeNodeWidth,
+    computeAnnotationHeight,
+    computeAnnotationWidth,
     parseLabelPieces,
     sanitizeNodesAndEdges,
     computeEdgesCoordinates,
@@ -697,6 +822,7 @@ const createPositionUtils = (
     computeEdgeChildCoordinates,
     computeEdgeParentCoordinates,
     reorderNodes,
+    createAnnotationFromText,
   };
 };
 

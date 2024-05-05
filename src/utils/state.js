@@ -47,11 +47,11 @@ export function createEmptyNode(id) {
     pieces: [""],
     piecesPosition: [0],
     type: "",
+    typeSuperScript: "",
     value: "",
     isSelected: false,
     isHighlighted: false,
-    isVisible: true,
-    isTransparent: false,
+    visibility: 0,
     isTypeLabelHighlighted: false,
     isValueLabelHighlighted: false,
     childEdges: [],
@@ -64,6 +64,14 @@ export function createEmptyNode(id) {
     },
     isMathNode: false,
     mathPieces: [],
+    commentable: {
+      addThread: true,
+      deleteThread: true,
+      resolveThread: true,
+      addComment: true,
+      deleteComment: true,
+    },
+    commentThreads: [],
   };
 }
 
@@ -78,7 +86,28 @@ export function createEmptyEdge(id) {
     parentX: 0,
     parentY: 0,
     isHighlighted: false,
-    isVisible: true,
-    isTransparent: false,
+    visibility: 0,
+    commentable: {
+      addThread: true,
+      deleteThread: true,
+      resolveThread: true,
+      addComment: true,
+      deleteComment: true,
+    },
+    commentThreads: [],
+  };
+}
+
+export function createEmptyAnnotation(id) {
+  return {
+    id: id || createUniqueId(),
+    x: 0,
+    y: 0,
+    text: "",
+    color: { hex: "#35BFFF", rgb: [53, 191, 255] },
+    editable: {
+      value: true,
+      delete: true,
+    },
   };
 }

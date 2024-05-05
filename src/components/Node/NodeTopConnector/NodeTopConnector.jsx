@@ -1,10 +1,6 @@
-import React, { useMemo, useRef } from 'react';
-import PropTypes from 'prop-types';
-import {
-  Circle,
-  Group,
-  Star,
-} from 'react-konva';
+import React, { useMemo, useRef } from "react";
+import PropTypes from "prop-types";
+import { Circle, Group, Star } from "react-konva";
 
 function NodeTopConnector({
   nodeId,
@@ -14,6 +10,7 @@ function NodeTopConnector({
   isSelectedRoot,
   isFullDisabled,
   isSelected,
+  visibility,
   handleNodeConnectorDragStart,
   handleConnectorDragMove,
   handleConnectorDragEnd,
@@ -37,22 +34,29 @@ function NodeTopConnector({
   const x = useMemo(() => nodeWidth / 2, [nodeWidth]);
 
   const handleMouseOver = (e) => {
-    if (isFullDisabled) {
+    if (isFullDisabled || visibility !== 0) {
       return;
     }
 
     e.cancelBubble = true;
-    setCursor('grab');
+    setCursor("grab");
   };
 
   /**
    * Compute connector color given a style object
    * @param {Object} stl
    */
-  const computeColor = (defaultColor, errorColor, selectedColor, emptyColor) => {
-    if (currentErrorLocation
-      && currentErrorLocation.nodeConnector
-      && currentErrorLocation.nodeId === nodeId) {
+  const computeColor = (
+    defaultColor,
+    errorColor,
+    selectedColor,
+    emptyColor,
+  ) => {
+    if (
+      currentErrorLocation &&
+      currentErrorLocation.nodeConnector &&
+      currentErrorLocation.nodeId === nodeId
+    ) {
       return errorColor;
     }
     if (isSelected) {
@@ -128,6 +132,7 @@ NodeTopConnector.propTypes = {
   isSelectedRoot: PropTypes.bool,
   isFullDisabled: PropTypes.bool,
   isSelected: PropTypes.bool,
+  visibility: PropTypes.number,
   handleNodeConnectorDragStart: PropTypes.func,
   handleConnectorDragMove: PropTypes.func,
   handleConnectorDragEnd: PropTypes.func,
@@ -152,6 +157,7 @@ NodeTopConnector.defaultProps = {
   isSelectedRoot: false,
   isFullDisabled: false,
   isSelected: false,
+  visibility: 0,
   handleNodeConnectorDragStart: () => {},
   handleConnectorDragMove: () => {},
   handleConnectorDragEnd: () => {},
@@ -159,15 +165,15 @@ NodeTopConnector.defaultProps = {
   starNumPoints: 5,
   starInnerRadius: 5,
   starOuterRadius: 10,
-  starStrokeColor: '#000000',
+  starStrokeColor: "#000000",
   starStrokeWidth: 0,
   connectorRadius: 6,
-  connectorStrokeColor: '#000000',
+  connectorStrokeColor: "#000000",
   connectorStrokeWidth: 0,
-  connectorFillColor: '#000000',
-  connectorErrorColor: '#ff2f2f',
-  connectorSelectedColor: '#000000',
-  connectorEmptyFillColor: '#104020',
+  connectorFillColor: "#000000",
+  connectorErrorColor: "#ff2f2f",
+  connectorSelectedColor: "#000000",
+  connectorEmptyFillColor: "#104020",
 };
 
 export default NodeTopConnector;

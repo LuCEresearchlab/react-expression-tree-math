@@ -1,10 +1,12 @@
 const reducers = {
   toggleMathInput: (state) => {
-    const { isMathInputOpen } = state;
+    const { isMathInputOpen, isD } = state;
 
     return {
       ...state,
       isMathInputOpen: !isMathInputOpen,
+      isDrawerOpen: false,
+      isCommentsOpen: false,
     };
   },
 

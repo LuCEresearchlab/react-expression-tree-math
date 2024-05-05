@@ -7,6 +7,7 @@ export const defaultProps = {
   connectorPlaceholder: "#",
   placeholderWidth: 16,
   isDraggingNode: false,
+  isDraggingAnnotation: false,
   // Stage
   isFullScreen: false,
   stagePos: { x: 0, y: 0 },
@@ -31,12 +32,14 @@ export const defaultProps = {
     value: true,
     delete: true,
   },
+  isSelectedNodeFullyVisible: undefined,
   createNodeInputValue: "",
   createNodeDescription: undefined,
   templateNodes: undefined,
   templateNodesDescription: undefined,
   updateLabelInputValue: "",
   updateTypeInputValue: "",
+  updateTypeSuperscript: "",
   updateValueInputValue: "",
   currentError: undefined,
   // Undo - Redo
@@ -46,9 +49,21 @@ export const defaultProps = {
   isMathInputOpen: false,
   currentMathSelection: [],
   isCreatingMathNode: false,
-  isSelectedNodeMathNode: false,
+  isSelectedNodeMathNode: undefined,
   // Comments
   isCommentsOpen: false,
+  selectedNodeCommentable: undefined,
+  selectedEdgeCommentable: undefined,
+  addingThreadTitle: "",
+  addingThreadType: "",
+  addingAnnotationText: "",
+  addingAnnotationOn: false,
+  addingAnnotationColor: { hex: "#35BFFF", rgb: [53, 191, 255] },
+  editingAnnotationColor: { hex: "#35BFFF", rgb: [53, 191, 255] },
+  annotations: {},
+  selectedAnnotation: undefined,
+  selectedAnnotationEditable: undefined,
+  updateAnnotationValueText: "",
 };
 
 export const createSanitizedUtilsProps = (
@@ -87,6 +102,7 @@ export const createInitialState = (
   templateNodesDescription,
   highlightedNodes,
   highlightedEdges,
+  annotations,
 ) => ({
   // Global
   fontSize: fontSize || defaultProps.fontSize,
@@ -97,6 +113,7 @@ export const createInitialState = (
     connectorPlaceholder || defaultProps.connectorPlaceholder,
   placeholderWidth: placeholderWidth || defaultProps.placeholderWidth,
   isDraggingNode: defaultProps.isDraggingNode,
+  isDraggingAnnotation: defaultProps.isDraggingAnnotation,
   // Stage
   isFullScreen: defaultProps.isFullScreen,
   stagePos: stagePos || defaultProps.stagePos,
@@ -121,6 +138,7 @@ export const createInitialState = (
     value: defaultProps.isSelectedNodeEditable.value,
     delete: defaultProps.isSelectedNodeEditable.delete,
   },
+  isSelectedNodeFullyVisible: defaultProps.isSelectedNodeFullyVisible,
   createNodeInputValue: defaultProps.createNodeInputValue,
   createNodeDescription: defaultProps.createNodeDescrpiton,
   templateNodes: templateNodes || defaultProps.templateNodes,
@@ -128,6 +146,7 @@ export const createInitialState = (
     templateNodesDescription || defaultProps.templateNodesDescription,
   updateLabelInputValue: defaultProps.updateLabelInputValue,
   updateTypeInputValue: defaultProps.updateTypeInputValue,
+  updateTypeSuperscript: defaultProps.updateTypeSuperscript,
   updateValueInputValue: defaultProps.updateValueInputValue,
   // Undo - Redo
   undoState: defaultProps.undoState,
@@ -139,4 +158,16 @@ export const createInitialState = (
   isSelectedNodeMathNode: defaultProps.isSelectedNodeMathNode,
   // Comments
   isCommentsOpen: defaultProps.isCommentsOpen,
+  selectedNodeCommentable: defaultProps.selectedNodeCommentable,
+  selectedEdgeCommentable: defaultProps.selectedEdgeCommentable,
+  addingThreadTitle: defaultProps.addingThreadTitle,
+  addingThreadType: defaultProps.addingThreadType,
+  addingAnnotationText: defaultProps.addingAnnotationText,
+  addingAnnotationOn: defaultProps.addingAnnotationOn,
+  addingAnnotationColor: defaultProps.addingAnnotationColor,
+  editingAnnotationColor: defaultProps.editingAnnotationColor,
+  annotations: annotations || defaultProps.annotations,
+  selectedAnnotation: defaultProps.selectedAnnotation,
+  selectedAnnotationEditable: defaultProps.selectedAnnotationEditable,
+  updateAnnotationValueText: defaultProps.updateAnnotationValueText,
 });

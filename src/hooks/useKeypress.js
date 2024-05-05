@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from "react";
 
 const initState = {
   isBackpasceOrDeleteKeyPressed: false,
@@ -21,7 +21,8 @@ function reducer(state, action) {
   };
 
   const { type, payload } = action;
-  if (!(type in reducers)) throw new Error(`Unknown action: ${type}, ${payload}`);
+  if (!(type in reducers))
+    throw new Error(`Unknown action: ${type}, ${payload}`);
   return reducers[type](state, payload);
 }
 
@@ -34,19 +35,22 @@ function useKeypress(targetRef, isFullDisabled) {
       const handleKeydown = (e) => {
         const { key } = e;
         switch (key) {
-          case 'Backspace':
-          case 'Delete':
+          case "Backspace":
+          case "Delete":
             if (!store.isBackpasceOrDeleteKeyPressed) {
-              dispatch({ type: 'setIsBackpasceOrDeleteKeyPressed', payload: true });
+              dispatch({
+                type: "setIsBackpasceOrDeleteKeyPressed",
+                payload: true,
+              });
             }
             break;
-          case 'Escape':
+          case "Escape":
             if (!store.isEscapedKeyPressed) {
-              dispatch({ type: 'setIsEscapedKeyPressed', payload: true });
+              dispatch({ type: "setIsEscapedKeyPressed", payload: true });
             }
             break;
-          case 'Meta':
-          case 'Shift':
+          case "Meta":
+          case "Shift":
             break;
           default:
             break;
@@ -56,15 +60,18 @@ function useKeypress(targetRef, isFullDisabled) {
       const handleKeyup = (e) => {
         const { key } = e;
         switch (key) {
-          case 'Backspace':
-          case 'Delete':
-            dispatch({ type: 'setIsBackpasceOrDeleteKeyPressed', payload: false });
+          case "Backspace":
+          case "Delete":
+            dispatch({
+              type: "setIsBackpasceOrDeleteKeyPressed",
+              payload: false,
+            });
             break;
-          case 'Escape':
-            dispatch({ type: 'setIsEscapedKeyPressed', payload: false });
+          case "Escape":
+            dispatch({ type: "setIsEscapedKeyPressed", payload: false });
             break;
-          case 'Meta':
-          case 'Shift':
+          case "Meta":
+          case "Shift":
             break;
           default:
             break;
@@ -72,20 +79,20 @@ function useKeypress(targetRef, isFullDisabled) {
       };
 
       const handleOnBlur = () => {
-        dispatch({ type: 'resetAll' });
+        dispatch({ type: "resetAll" });
       };
 
       if (targetRef && targetRef.current) {
-        targetRef.current.addEventListener('keydown', handleKeydown);
-        targetRef.current.addEventListener('keyup', handleKeyup);
-        targetRef.current.addEventListener('blur', handleOnBlur);
+        targetRef.current.addEventListener("keydown", handleKeydown);
+        targetRef.current.addEventListener("keyup", handleKeyup);
+        targetRef.current.addEventListener("blur", handleOnBlur);
       }
 
       return () => {
         if (targetRef && targetRef.current) {
-          targetRef.current.removeEventListener('keydown', handleKeydown);
-          targetRef.current.removeEventListener('keyup', handleKeyup);
-          targetRef.current.removeEventListener('blur', handleOnBlur);
+          targetRef.current.removeEventListener("keydown", handleKeydown);
+          targetRef.current.removeEventListener("keyup", handleKeyup);
+          targetRef.current.removeEventListener("blur", handleOnBlur);
         }
       };
     }

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import PropTypes from "prop-types";
 
 import { Circle, Group, Rect, Text, Line } from "react-konva";
@@ -15,6 +15,7 @@ function NodeLabel({
   hasParentEdges,
   subtreesVisibility,
   isFullDisabled,
+  visibility,
   handlePlaceholderConnectorDragStart,
   handleConnectorDragMove,
   handleConnectorDragEnd,
@@ -72,9 +73,9 @@ function NodeLabel({
 
   const connectorFillColors = useMemo(() => {
     return subtreesVisibility.map((subtreeVisibility) =>
-      subtreeVisibility === "hidden"
+      subtreeVisibility === 2
         ? "white"
-        : subtreeVisibility === "transparent"
+        : subtreeVisibility === 1
         ? "grey"
         : connectorFillColor,
     );
@@ -85,14 +86,17 @@ function NodeLabel({
   const computeTextPieceKey = (index) => `TextPiece-${nodeId}-${index}`;
   const computeLinePieceKey = (index) => `LinePiece-${nodeId}-${index}`;
 
-  const handleMouseOver = (e) => {
-    if (isFullDisabled) {
-      return;
-    }
+  const handleMouseOver = useCallback(
+    (e, i) => {
+      if (isFullDisabled || visibility !== 0 || subtreesVisibility[i] !== 0) {
+        return;
+      }
 
-    e.cancelBubble = true;
-    setCursor("grab");
-  };
+      e.cancelBubble = true;
+      setCursor("grab");
+    },
+    [isFullDisabled, visibility, subtreesVisibility],
+  );
 
   /**
    * Compute connector color given a style object
@@ -137,7 +141,7 @@ function NodeLabel({
                   strokeWidth={placeholderStrokeWidth}
                   cornerRadius={placeholderRadius}
                   draggable={!isFullDisabled}
-                  onMouseOver={handleMouseOver}
+                  onMouseOver={(e) => handleMouseOver(e, i)}
                   onDragStart={(e) =>
                     handlePlaceholderConnectorDragStart(e, nodeId)
                   }
@@ -162,7 +166,7 @@ function NodeLabel({
                   fill={connectorFillColors[i]}
                   stroke={connectorStrokeColor}
                   strokeWidth={connectorStrokeWidth}
-                  onMouseOver={handleMouseOver}
+                  onMouseOver={(e) => handleMouseOver(e, i)}
                   visible={hasParentEdges[i]}
                   onDragStart={(e) =>
                     handlePlaceholderConnectorDragStart(e, nodeId)
@@ -173,6 +177,14 @@ function NodeLabel({
                     circleRef.current[i].getAbsolutePosition()
                   }
                   onDblClick={(e) =>
+                    handleConnectorDoubleClick(
+                      e,
+                      nodeId,
+                      i,
+                      subtreesVisibility[i],
+                    )
+                  }
+                  onDblTap={(e) =>
                     handleConnectorDoubleClick(
                       e,
                       nodeId,
@@ -235,7 +247,7 @@ function NodeLabel({
                   strokeWidth={placeholderStrokeWidth}
                   cornerRadius={placeholderRadius}
                   draggable={!isFullDisabled}
-                  onMouseOver={handleMouseOver}
+                  onMouseOver={(e) => handleMouseOver(e, i)}
                   onDragStart={(e) =>
                     handlePlaceholderConnectorDragStart(e, nodeId)
                   }
@@ -256,7 +268,7 @@ function NodeLabel({
                   fill={connectorFillColors[i]}
                   stroke={connectorStrokeColor}
                   strokeWidth={connectorStrokeWidth}
-                  onMouseOver={handleMouseOver}
+                  onMouseOver={(e) => handleMouseOver(e, i)}
                   visible={hasParentEdges[i]}
                   onDragStart={(e) =>
                     handlePlaceholderConnectorDragStart(e, nodeId)
@@ -267,6 +279,14 @@ function NodeLabel({
                     circleRef.current[i].getAbsolutePosition()
                   }
                   onDblClick={(e) =>
+                    handleConnectorDoubleClick(
+                      e,
+                      nodeId,
+                      i,
+                      subtreesVisibility[i],
+                    )
+                  }
+                  onDblTap={(e) =>
                     handleConnectorDoubleClick(
                       e,
                       nodeId,
@@ -309,8 +329,9 @@ NodeLabel.propTypes = {
     pieceId: PropTypes.number,
   }),
   hasParentEdges: PropTypes.arrayOf(PropTypes.bool),
-  subtreesVisibility: PropTypes.arrayOf(PropTypes.string),
+  subtreesVisibility: PropTypes.arrayOf(PropTypes.number),
   isFullDisabled: PropTypes.bool,
+  visibility: PropTypes.number,
   handlePlaceholderConnectorDragStart: PropTypes.func,
   handleConnectorDragMove: PropTypes.func,
   handleConnectorDragEnd: PropTypes.func,
@@ -350,6 +371,7 @@ NodeLabel.defaultProps = {
   hasParentEdges: [],
   subtreesVisibility: [],
   isFullDisabled: false,
+  visibility: 0,
   handlePlaceholderConnectorDragStart: () => {},
   handleConnectorDragMove: () => {},
   handleConnectorDragEnd: () => {},

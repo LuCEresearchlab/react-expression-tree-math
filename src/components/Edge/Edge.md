@@ -1,55 +1,39 @@
 ```jsx
-import { useRef } from 'react';
-import Konva from 'konva';
-import { Stage, Layer } from 'react-konva';
-import useContainerWidthOnWindowResize from '../../hooks/useContainerWidthOnWindowResize';
+import { useRef } from "react";
+import Konva from "konva";
+import { Stage, Layer } from "react-konva";
+import useContainerWidthOnWindowResize from "../../hooks/useContainerWidthOnWindowResize";
 
 const containerRef = useRef();
 const width = useContainerWidthOnWindowResize(containerRef);
 const height = 50;
 
-;<div
-  ref={containerRef}
->
-  <Stage
-    width={width}
-    height={height}
-  >
+<div ref={containerRef}>
+  <Stage width={width} height={height}>
     <Layer>
-      <Edge
-        id="e1"
-        childX={25}
-        childY={25}
-        parentX={100}
-        parentY={25}
-      />
+      <Edge id='e1' childX={25} childY={25} parentX={100} parentY={25} />
     </Layer>
   </Stage>
-</div>
+</div>;
 ```
 
 Default highlight color
 
 ```jsx
-import { useRef } from 'react';
-import Konva from 'konva';
-import { Stage, Layer } from 'react-konva';
-import useContainerWidthOnWindowResize from '../../hooks/useContainerWidthOnWindowResize';
+import { useRef } from "react";
+import Konva from "konva";
+import { Stage, Layer } from "react-konva";
+import useContainerWidthOnWindowResize from "../../hooks/useContainerWidthOnWindowResize";
 
 const containerRef = useRef();
 const width = useContainerWidthOnWindowResize(containerRef);
 const height = 50;
 
-;<div
-  ref={containerRef}
->
-  <Stage
-    width={width}
-    height={height}
-  >
+<div ref={containerRef}>
+  <Stage width={width} height={height}>
     <Layer>
       <Edge
-        id="e1"
+        id='e1'
         isHighlighted={true}
         childX={25}
         childY={25}
@@ -58,31 +42,26 @@ const height = 50;
       />
     </Layer>
   </Stage>
-</div>
+</div>;
 ```
 
 Custom highlight color
 
 ```jsx
-import { useRef } from 'react';
-import Konva from 'konva';
-import { Stage, Layer } from 'react-konva';
-import useContainerWidthOnWindowResize from '../../hooks/useContainerWidthOnWindowResize';
+import { useRef } from "react";
+import Konva from "konva";
+import { Stage, Layer } from "react-konva";
+import useContainerWidthOnWindowResize from "../../hooks/useContainerWidthOnWindowResize";
 
 const containerRef = useRef();
 const width = useContainerWidthOnWindowResize(containerRef);
 const height = 50;
 
-;<div
-  ref={containerRef}
->
-  <Stage
-    width={width}
-    height={height}
-  >
+<div ref={containerRef}>
+  <Stage width={width} height={height}>
     <Layer>
       <Edge
-        id="e1"
+        id='e1'
         isHighlighted={"#55ffaa"}
         childX={25}
         childY={25}
@@ -91,5 +70,33 @@ const height = 50;
       />
     </Layer>
   </Stage>
-</div>
+</div>;
+```
+
+Visibility set to semi-transparent
+
+```jsx
+import { useRef } from "react";
+import Konva from "konva";
+import { Stage, Layer } from "react-konva";
+import useContainerWidthOnWindowResize from "../../hooks/useContainerWidthOnWindowResize";
+
+const containerRef = useRef();
+const width = useContainerWidthOnWindowResize(containerRef);
+const height = 50;
+
+<div ref={containerRef}>
+  <Stage width={width} height={height}>
+    <Layer>
+      <Edge
+        id='e1'
+        childX={25}
+        childY={25}
+        parentX={100}
+        parentY={25}
+        visibility={1}
+      />
+    </Layer>
+  </Stage>
+</div>;
 ```

@@ -21,11 +21,14 @@ const actions = [
       type,
       value,
       isSelected,
+      visibility,
       childEdges,
       parentEdges,
       editable,
       isMathNode,
       mathPieces,
+      commentable,
+      commentThreads,
     }) => ({
       type: "createNode",
       payload: {
@@ -39,11 +42,14 @@ const actions = [
         type,
         value,
         isSelected,
+        visibility,
         childEdges,
         parentEdges,
         editable,
         isMathNode,
         mathPieces,
+        commentable,
+        commentThreads,
       },
     }),
   },
@@ -97,6 +103,15 @@ const actions = [
       type: "updateNodeType",
       payload: {
         type,
+      },
+    }),
+  },
+  {
+    name: "updateNodeTypeSuperscript",
+    action: (typeSuperscript) => ({
+      type: "updateNodeTypeSuperscript",
+      payload: {
+        typeSuperscript,
       },
     }),
   },
@@ -313,6 +328,7 @@ const actions = [
       stagePos,
       stageScale,
       connectorPlaceholder,
+      annotations,
     }) => ({
       type: "stageReset",
       payload: {
@@ -324,16 +340,18 @@ const actions = [
         stagePos,
         stageScale,
         connectorPlaceholder,
+        annotations,
       },
     }),
   },
   {
     name: "setStartingOrderedNodes",
-    action: ({ nodes, edges, stagePos, stageScale }) => ({
+    action: ({ nodes, edges, annotations, stagePos, stageScale }) => ({
       type: "setStartingOrderedNodes",
       payload: {
         nodes,
         edges,
+        annotations,
         stagePos,
         stageScale,
       },
@@ -341,11 +359,12 @@ const actions = [
   },
   {
     name: "setOrderedNodes",
-    action: ({ nodes, edges, stagePos, stageScale }) => ({
+    action: ({ nodes, edges, annotations, stagePos, stageScale }) => ({
       type: "setOrderedNodes",
       payload: {
         nodes,
         edges,
+        annotations,
         stagePos,
         stageScale,
       },
@@ -501,6 +520,12 @@ const actions = [
     }),
   },
   {
+    name: "exitFullScreen",
+    action: () => ({
+      type: "exitFullScreen",
+    }),
+  },
+  {
     name: "setStagePos",
     action: (stagePos) => ({
       type: "setStagePos",
@@ -627,6 +652,18 @@ const actions = [
     }),
   },
   {
+    name: "setCommentsOpen",
+    action: () => ({
+      type: "setCommentsOpen",
+    }),
+  },
+  {
+    name: "setCommentsClose",
+    action: () => ({
+      type: "setCommentsClose",
+    }),
+  },
+  {
     name: "updateGlobalState",
     action: ({ nodes, edges, selectedRootNode, stagePos, stageScale }) => ({
       type: "updateGlobalState",
@@ -636,6 +673,220 @@ const actions = [
         selectedRootNode,
         stagePos,
         stageScale,
+      },
+    }),
+  },
+  {
+    name: "setAddingThreadTitle",
+    action: (threadTitle) => ({
+      type: "setAddingThreadTitle",
+      payload: {
+        threadTitle,
+      },
+    }),
+  },
+  {
+    name: "setAddingThreadType",
+    action: (threadType) => ({
+      type: "setAddingThreadType",
+      payload: {
+        threadType,
+      },
+    }),
+  },
+  {
+    name: "startCommentThread",
+    action: ({ selection, addingThreadTitle, addingThreadType }) => ({
+      type: "startCommentThread",
+      payload: {
+        selection,
+        addingThreadTitle,
+        addingThreadType,
+      },
+    }),
+  },
+  {
+    name: "toggleExpandedThread",
+    action: ({ selection, threadId }) => ({
+      type: "toggleExpandedThread",
+      payload: {
+        selection,
+        threadId,
+      },
+    }),
+  },
+  {
+    name: "shrinkAllThreads",
+    action: () => ({
+      type: "shrinkAllThreads",
+    }),
+  },
+  {
+    name: "addComment",
+    action: ({ selection, threadId, commentValue }) => ({
+      type: "addComment",
+      payload: {
+        selection,
+        threadId,
+        commentValue,
+      },
+    }),
+  },
+  {
+    name: "deleteThread",
+    action: ({ selection, threadId }) => ({
+      type: "deleteThread",
+      payload: {
+        selection,
+        threadId,
+      },
+    }),
+  },
+  {
+    name: "deleteComment",
+    action: ({ selection, threadId, commentId }) => ({
+      type: "deleteComment",
+      payload: {
+        selection,
+        threadId,
+        commentId,
+      },
+    }),
+  },
+  {
+    name: "toggleResolvedThread",
+    action: ({ selection, threadId }) => ({
+      type: "toggleResolvedThread",
+      payload: {
+        selection,
+        threadId,
+      },
+    }),
+  },
+  {
+    name: "setAnnotationText",
+    action: (addingAnnotationText) => ({
+      type: "setAnnotationText",
+      payload: {
+        addingAnnotationText,
+      },
+    }),
+  },
+  {
+    name: "toggleAddAnnotation",
+    action: () => ({
+      type: "toggleAddAnnotation",
+    }),
+  },
+  {
+    name: "setAnnotationColor",
+    action: (addingAnnotationColor) => ({
+      type: "setAnnotationColor",
+      payload: {
+        addingAnnotationColor,
+      },
+    }),
+  },
+  {
+    name: "setEditingAnnotationColor",
+    action: (editingAnnotationColor) => ({
+      type: "setEditingAnnotationColor",
+      payload: {
+        editingAnnotationColor,
+      },
+    }),
+  },
+  {
+    name: "createAnnotation",
+    action: ({ id, x, y, width, height, text, color, editable }) => ({
+      type: "createAnnotation",
+      payload: {
+        id,
+        x,
+        y,
+        width,
+        height,
+        text,
+        color,
+        editable,
+      },
+    }),
+  },
+  {
+    name: "setIsDraggingAnnotation",
+    action: (annotationId) => ({
+      type: "setIsDraggingAnnotation",
+      payload: {
+        annotationId,
+      },
+    }),
+  },
+  {
+    name: "updateAnnotationCoordinates",
+    action: ({ annotationId, updatedAnnotation }) => ({
+      type: "updateAnnotationCoordinates",
+      payload: {
+        annotationId,
+        updatedAnnotation,
+      },
+    }),
+  },
+  {
+    name: "updateAnnotationCoordinatesAndFinishDragging",
+    action: ({ annotationId, updatedAnnotation }) => ({
+      type: "updateAnnotationCoordinatesAndFinishDragging",
+      payload: {
+        annotationId,
+        updatedAnnotation,
+      },
+    }),
+  },
+  {
+    name: "setSelectedAnnotation",
+    action: (selectedAnnotation) => ({
+      type: "setSelectedAnnotation",
+      payload: {
+        selectedAnnotation,
+      },
+    }),
+  },
+  {
+    name: "clearSelectedAnnotation",
+    action: () => ({
+      type: "clearSelectedAnnotation",
+    }),
+  },
+  {
+    name: "clearAddingAnnotation",
+    action: () => ({
+      type: "clearAddingAnnotation",
+    }),
+  },
+  {
+    name: "removeAnnotation",
+    action: (annotationId) => ({
+      type: "removeAnnotation",
+      payload: {
+        annotationId,
+      },
+    }),
+  },
+  {
+    name: "updateAnnotationValue",
+    action: ({ selectedAnnotation, updatedAnnotation }) => ({
+      type: "updateAnnotationValue",
+      payload: {
+        selectedAnnotation,
+        updatedAnnotation,
+      },
+    }),
+  },
+  {
+    name: "setUpdateAnnotationValue",
+    action: (updateAnnotationValueText) => ({
+      type: "setUpdateAnnotationValue",
+      payload: {
+        updateAnnotationValueText,
       },
     }),
   },

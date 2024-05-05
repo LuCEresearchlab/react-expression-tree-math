@@ -7,6 +7,7 @@ const reducers = {
       ...state,
       isCreatingNode: !isCreatingNode,
       isCreatingMathNode: false,
+      addingAnnotationOn: false,
     };
   },
 
@@ -22,15 +23,20 @@ const reducers = {
     return {
       ...state,
       isDrawerOpen: !isDrawerOpen,
+      isCommentsOpen: false,
+      isMathInputOpen: false,
     };
   },
 
   setCreateNodeInputValue: (state, payload) => {
     const { createNodeInputValue } = payload;
+    const { isCreatingNode } = state;
 
     return {
       ...state,
       createNodeInputValue,
+      isCreatingNode:
+        createNodeInputValue.length === 0 ? false : isCreatingNode,
     };
   },
 

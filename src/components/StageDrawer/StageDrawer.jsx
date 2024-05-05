@@ -5,7 +5,7 @@ import { InputComponent } from "react-math-formula-editor";
 import ToolbarActions from "./toolbar/ToolbarActions";
 
 import EditorDrawer from "./drawer/EditorDrawer";
-import CommentsDrawer from "./drawer/CommentsDrawer";
+import CommentsDrawer from "./drawer/CommentsDrawer/CommentsDrawer";
 
 import DialogEditorInfo from "./dialogs/DialogEditorInfo";
 import DialogConfirmReset from "./dialogs/DialogConfirmReset";
@@ -15,6 +15,7 @@ import AddEdgeErrorSnackbar from "./snackbars/AddEdgeErrorSnackbar";
 
 function StageDrawer({
   containerRef,
+  editorHeight,
   selectedRootNode,
   connectorPlaceholder,
   downloadKey,
@@ -24,9 +25,12 @@ function StageDrawer({
   isDrawerOpen,
   isFullScreen,
   isSelectedNodeEditable,
+  isSelectedNodeMath,
+  isSelectedNodeFullyVisible,
   createNodeInputValue,
   updateLabelInputValue,
   updateTypeInputValue,
+  updateTypeSuperscript,
   updateValueInputValue,
   showToolbar,
   showToolbarButtons,
@@ -49,6 +53,7 @@ function StageDrawer({
   handleResetState,
   handleUpdateLabelPiecesChange,
   handleUpdateNodeTypeChange,
+  handleUpdateTypeSuperscriptChange,
   handleUpdateNodeValueChange,
   handleUndoButtonAction,
   handleRedoButtonAction,
@@ -77,9 +82,39 @@ function StageDrawer({
   isCreatingMathNode,
   setIsCreatingMathNode,
   toggleMathInput,
-  isSelectedNodeMath,
   isCommentsOpen,
   toggleComments,
+  isSelectedNode,
+  isSelectedEdge,
+  threadsEnabledActions,
+  selectedNodeCommentable,
+  selectedEdgeCommentable,
+  selectionCommentThreads,
+  toggleExpandedThread,
+  addingThreadTitle,
+  addingThreadType,
+  annotationOnFunctions,
+  selectedAnnotationEditable,
+  addingAnnotationText,
+  updateAnnotationValueText,
+  addingAnnotationOn,
+  addingAnnotationColor,
+  editingAnnotationColor,
+  handleAnnotationChange,
+  handleAnnotationValueUpdate,
+  handleAnnotationValueUpdateChange,
+  handleEditingAnnotationColorChange,
+  handleAnnotationColorChange,
+  handleToggleAddAnnotation,
+  handleAddingThreadTitleChange,
+  handleAddingThreadTypeChange,
+  handleStartCommentThread,
+  handleToggleExpandedThread,
+  handleShrinkAllThreads,
+  handleAddComment,
+  handleDeleteThread,
+  handleDeleteComment,
+  handleToggleResolvedThread,
 }) {
   const [isDialogConfigResetOpen, setIsDialogConfigResetOpen] = useState(false);
   const [isDialogEditorInfoOpen, setIsDialogEditorInfoOpen] = useState(false);
@@ -117,6 +152,7 @@ function StageDrawer({
         <>
           {showToolbar && (
             <ToolbarActions
+              containerRef={containerRef}
               downloadKey={downloadKey}
               selectedRootNode={selectedRootNode}
               isFullScreen={isFullScreen}
@@ -166,15 +202,21 @@ function StageDrawer({
           )}
           {showDrawer && (
             <EditorDrawer
+              editorHeight={editorHeight}
               containerRef={containerRef}
               connectorPlaceholder={connectorPlaceholder}
               isDrawerOpen={isDrawerOpen}
               isCreatingNode={isCreatingNode}
               isSelectedNodeEditable={isSelectedNodeEditable}
+              isSelectedNodeMath={isSelectedNodeMath}
+              isSelectedNodeFullyVisible={isSelectedNodeFullyVisible}
               templateNodes={templateNodes}
               showDrawerSections={showDrawerSections}
               handleUpdateLabelPiecesChange={handleUpdateLabelPiecesChange}
               handleUpdateNodeTypeChange={handleUpdateNodeTypeChange}
+              handleUpdateTypeSuperscriptChange={
+                handleUpdateTypeSuperscriptChange
+              }
               handleUpdateNodeValueChange={handleUpdateNodeValueChange}
               handleSelectedNodeEditableLabelChange={
                 handleSelectedNodeEditableLabelChange
@@ -192,6 +234,7 @@ function StageDrawer({
               createNodeInputValue={createNodeInputValue}
               updateLabelInputValue={updateLabelInputValue}
               updateTypeInputValue={updateTypeInputValue}
+              updateTypeSuperscript={updateTypeSuperscript}
               updateValueInputValue={updateValueInputValue}
               toggleIsCreatingNode={toggleIsCreatingNode}
               setCreateNodeInputValue={setCreateNodeInputValue}
@@ -212,7 +255,6 @@ function StageDrawer({
               }
               typeInputPlaceholder={drawerPlaceholders.typeInputPlaceholder}
               valueInputPlaceholder={drawerPlaceholders.valueInputPlaceholder}
-              isSelectedNodeMath={isSelectedNodeMath}
             />
           )}
           {isMathInputOpen && (
@@ -224,8 +266,43 @@ function StageDrawer({
           )}
           {isCommentsOpen && (
             <CommentsDrawer
+              editorHeight={editorHeight}
               isCommentsOpen={isCommentsOpen}
               containerRef={containerRef}
+              selectionCommentThreads={selectionCommentThreads}
+              isSelection={isSelectedNode || isSelectedEdge}
+              selectionCommentable={
+                selectedNodeCommentable || selectedEdgeCommentable
+              }
+              threadsEnabledActions={threadsEnabledActions}
+              addingThreadTitle={addingThreadTitle}
+              addingThreadType={addingThreadType}
+              annotationOnFunctions={annotationOnFunctions}
+              addingAnnotationText={addingAnnotationText}
+              updateAnnotationValueText={updateAnnotationValueText}
+              addingAnnotationOn={addingAnnotationOn}
+              selectedAnnotationEditable={selectedAnnotationEditable}
+              addingAnnotationColor={addingAnnotationColor}
+              editingAnnotationColor={editingAnnotationColor}
+              handleAnnotationColorChange={handleAnnotationColorChange}
+              handleToggleAddAnnotation={handleToggleAddAnnotation}
+              handleStartCommentThread={handleStartCommentThread}
+              handleAddingThreadTitleChange={handleAddingThreadTitleChange}
+              handleAddingThreadTypeChange={handleAddingThreadTypeChange}
+              handleEditingAnnotationColorChange={
+                handleEditingAnnotationColorChange
+              }
+              handleToggleExpandedThread={handleToggleExpandedThread}
+              handleShrinkAllThreads={handleShrinkAllThreads}
+              handleAddComment={handleAddComment}
+              handleDeleteThread={handleDeleteThread}
+              handleDeleteComment={handleDeleteComment}
+              handleToggleResolvedThread={handleToggleResolvedThread}
+              handleAnnotationChange={handleAnnotationChange}
+              handleAnnotationValueUpdate={handleAnnotationValueUpdate}
+              handleAnnotationValueUpdateChange={
+                handleAnnotationValueUpdateChange
+              }
             />
           )}
           <DialogConfirmReset
@@ -249,6 +326,8 @@ function StageDrawer({
             toggleIsCreatingNode={toggleIsCreatingNode}
             isCreatingMathNode={isCreatingMathNode}
             setIsCreatingMathNode={setIsCreatingMathNode}
+            addingAnnotationOn={addingAnnotationOn}
+            handleToggleAddAnnotation={handleToggleAddAnnotation}
           />
         </>
       )}
@@ -258,6 +337,7 @@ function StageDrawer({
 
 StageDrawer.propTypes = {
   containerRef: PropTypes.element.isRequired,
+  editorHeight: PropTypes.number,
   selectedRootNode: PropTypes.number,
   connectorPlaceholder: PropTypes.string,
   downloadKey: PropTypes.string,
@@ -266,15 +346,20 @@ StageDrawer.propTypes = {
   isFullDisabled: PropTypes.bool,
   isDrawerOpen: PropTypes.bool,
   isFullScreen: PropTypes.bool,
+  isSelectedNode: PropTypes.bool,
+  isSelectedEdge: PropTypes.bool,
   isSelectedNodeEditable: PropTypes.shape({
     label: PropTypes.bool,
     type: PropTypes.bool,
     value: PropTypes.bool,
     delete: PropTypes.bool,
   }),
+  isSelectedNodeMath: PropTypes.bool,
+  isSelectedNodeFullyVisible: PropTypes.bool,
   createNodeInputValue: PropTypes.string,
   updateLabelInputValue: PropTypes.string,
   updateTypeInputValue: PropTypes.string,
+  updateTypeSuperscript: PropTypes.string,
   updateValueInputValue: PropTypes.string,
   showToolbar: PropTypes.bool,
   showToolbarButtons: PropTypes.shape({
@@ -320,6 +405,7 @@ StageDrawer.propTypes = {
   handleResetState: PropTypes.func,
   handleUpdateLabelPiecesChange: PropTypes.func,
   handleUpdateNodeTypeChange: PropTypes.func,
+  handleUpdateTypeSuperscriptChange: PropTypes.func,
   handleUpdateNodeValueChange: PropTypes.func,
   handleUndoButtonAction: PropTypes.func,
   handleRedoButtonAction: PropTypes.func,
@@ -416,13 +502,73 @@ StageDrawer.propTypes = {
   setCurrentMathSelection: PropTypes.func,
   isCreatingMathNode: PropTypes.bool,
   setIsCreatingMathNode: PropTypes.func,
-  isSelectedNodeMath: PropTypes.bool,
   isCommentsOpen: PropTypes.bool,
   showCommentsButton: PropTypes.bool,
   toggleComments: PropTypes.func,
+  selectedNodeCommentable: PropTypes.shape({
+    addThread: PropTypes.bool,
+    deleteThread: PropTypes.bool,
+    resolveThread: PropTypes.bool,
+    addComment: PropTypes.bool,
+    deleteComment: PropTypes.bool,
+  }),
+  selectedEdgeCommentable: PropTypes.shape({
+    addThread: PropTypes.bool,
+    deleteThread: PropTypes.bool,
+    resolveThread: PropTypes.bool,
+    addComment: PropTypes.bool,
+    deleteComment: PropTypes.bool,
+  }),
+  selectionCommentThreads: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string,
+      comments: PropTypes.arrayOf(PropTypes.string),
+      type: PropTypes.string,
+      expanded: PropTypes.bool,
+      resolved: PropTypes.bool,
+    }),
+  ),
+  addingThreadTitle: PropTypes.string,
+  addingThreadType: PropTypes.string,
+  annotationOnFunctions: PropTypes.shape({
+    addAnnotation: PropTypes.bool,
+    removeAnnotation: PropTypes.bool,
+    editAnnotation: PropTypes.bool,
+  }),
+  addingAnnotationText: PropTypes.string,
+  updateAnnotationValueText: PropTypes.string,
+  addingAnnotationOn: PropTypes.bool,
+  selectedAnnotationEditable: PropTypes.shape({
+    value: PropTypes.bool,
+    delete: PropTypes.bool,
+  }),
+  addingAnnotationColor: PropTypes.shape({
+    hex: PropTypes.string,
+    rgb: propTypes.arrayOf(PropTypes.number),
+  }),
+  editingAnnotationColor: PropTypes.shape({
+    hex: PropTypes.string,
+    rgb: propTypes.arrayOf(PropTypes.number),
+  }),
+  handleAnnotationColorChange: PropTypes.func,
+  handleAnnotationChange: PropTypes.func,
+  handleAnnotationValueUpdate: PropTypes.func,
+  handleAnnotationValueUpdateChange: PropTypes.func,
+  handleEditingAnnotationColorChange: PropTypes.func,
+  handleToggleAddAnnotation: PropTypes.func,
+  handleAddingThreadTitleChange: PropTypes.func,
+  handleAddingThreadTypeChange: PropTypes.func,
+  handleStartCommentThread: PropTypes.func,
+  handleToggleExpandedThread: PropTypes.func,
+  handleShrinkAllThreads: PropTypes.func,
+  handleAddComment: PropTypes.func,
+  handleDeleteThread: PropTypes.func,
+  handleDeleteComment: PropTypes.func,
+  handleToggleResolvedThread: PropTypes.func,
 };
 
 StageDrawer.defaultProps = {
+  editorHeight: 300,
   connectorPlaceholder: "{{}}",
   selectedRootNode: undefined,
   downloadKey: "expressiontutor",
@@ -431,10 +577,22 @@ StageDrawer.defaultProps = {
   isFullDisabled: false,
   isDrawerOpen: true,
   isFullScreen: false,
+  isSelectedNode: false,
+  isSelectedEdge: false,
+  threadsEnabledActions: PropTypes.shape({
+    startThread: PropTypes.bool,
+    removeThread: PropTypes.bool,
+    addComment: PropTypes.bool,
+    removeComment: PropTypes.bool,
+    toggleResolved: PropTypes.bool,
+  }),
   isSelectedNodeEditable: undefined,
+  isSelectedNodeMath: undefined,
+  isSelectedNodeFullyVisible: undefined,
   createNodeInputValue: "",
   updateLabelInputValue: "",
   updateTypeInputValue: "",
+  updateTypeSuperscript: "",
   updateValueInputValue: "",
   showToolbar: true,
   showToolbarButtons: {
@@ -481,6 +639,7 @@ StageDrawer.defaultProps = {
   handleResetState: () => {},
   handleUpdateLabelPiecesChange: () => {},
   handleUpdateNodeTypeChange: () => {},
+  handleUpdateTypeSuperscriptChange: () => {},
   handleUpdateNodeValueChange: () => {},
   handleUndoButtonAction: () => {},
   handleRedoButtonAction: () => {},
@@ -507,10 +666,47 @@ StageDrawer.defaultProps = {
   toggleMathInput: () => {},
   setCurrentMathSelection: () => {},
   isCreatingMathNode: false,
-  isSelectedNodeMath: false,
   setIsCreatingMathNode: () => {},
   isCommentsOpen: false,
   toggleComments: () => {},
+  threadsEnabledActions: {
+    startThread: true,
+    removeThread: true,
+    addComment: true,
+    removeComment: true,
+    toggleResolved: true,
+  },
+  selectedNodeCommentable: undefined,
+  selectedEdgeCommentable: undefined,
+  selectionCommentThreads: [],
+  addingThreadTitle: "",
+  addingThreadType: "",
+  annotationOnFunctions: {
+    addAnnotation: true,
+    removeAnnotation: true,
+    editAnnotation: true,
+  },
+  selectedAnnotationEditable: undefined,
+  addingAnnotationText: "",
+  updateAnnotationValueText: "",
+  addingAnnotationOn: false,
+  addingAnnotationColor: { hex: "#35BFFF", rgb: [53, 191, 255] },
+  editingAnnotationColor: { hex: "#35BFFF", rgb: [53, 191, 255] },
+  handleAnnotationColorChange: () => {},
+  handleAnnotationChange: () => {},
+  handleAnnotationValueUpdate: () => {},
+  handleAnnotationValueUpdateChange: () => {},
+  handleEditingAnnotationColorChange: () => {},
+  handleToggleAddAnnotation: () => {},
+  handleAddingThreadTitleChange: () => {},
+  handleAddingThreadTypeChange: () => {},
+  handleStartCommentThread: () => {},
+  handleToggleExpandedThread: () => {},
+  handleShrinkAllThreads: () => {},
+  handleAddComment: () => {},
+  handleDeleteThread: () => {},
+  handleDeleteComment: () => {},
+  handleToggleResolvedThread: () => {},
 };
 
 export default StageDrawer;

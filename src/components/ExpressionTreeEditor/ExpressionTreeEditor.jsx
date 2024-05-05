@@ -20,6 +20,7 @@ import Node from "../Node/Node";
 import Edge from "../Edge/Edge";
 import DragEdge from "../DragEdge/DragEdge";
 import StageDrawer from "../StageDrawer/StageDrawer";
+import Annotation from "../Annotation/Annotation";
 
 import { arraysAreEqual, exportState } from "../../utils/state";
 
@@ -44,6 +45,9 @@ import "@fontsource/roboto-mono/300.css";
 
 // Key used to store and retrieve metadata in PNG files.
 const ET_KEY = "expressiontutor";
+
+// Height set when entering fullscreen mode
+let fullScreenHeight = null;
 
 function ExpressionTreeEditor({
   reference,
@@ -99,9 +103,16 @@ function ExpressionTreeEditor({
   toolbarPrimaryColor,
   toolbarSecondaryColor,
   drawerPlaceholders,
+  annotationOnFunctions,
+  annotations: propAnnotations,
+  threadsEnabledActions,
 }) {
   const containerRef = useRef();
   const containerWidth = useContainerWidthOnWindowResize(containerRef);
+  const containerHeight = useMemo(
+    () => fullScreenHeight || height,
+    [fullScreenHeight, height],
+  );
   const computeStageWidth = () => width || containerWidth;
 
   const stageRef = useRef();
@@ -134,6 +145,7 @@ function ExpressionTreeEditor({
     propTemplateNodes,
     propHighlightedNodes,
     propHighlightedEdges,
+    propAnnotations,
   });
 
   const {
@@ -144,6 +156,7 @@ function ExpressionTreeEditor({
     connectorPlaceholder,
     placeholderWidth,
     isDraggingNode,
+    isDraggingAnnotation,
     isFullScreen,
     stagePos,
     stageScale,
@@ -162,10 +175,12 @@ function ExpressionTreeEditor({
     addEdgeErrorMessage,
     isAddEdgeErrorSnackbarOpen,
     isSelectedNodeEditable,
+    isSelectedNodeFullyVisible,
     createNodeDescription,
     createNodeInputValue,
     updateLabelInputValue,
     updateTypeInputValue,
+    updateTypeSuperscript,
     updateValueInputValue,
     currentError,
     undoState,
@@ -177,6 +192,18 @@ function ExpressionTreeEditor({
     isSelectedNodeMath,
     // Comments
     isCommentsOpen,
+    selectedNodeCommentable,
+    selectedEdgeCommentable,
+    addingThreadTitle,
+    addingThreadType,
+    addingAnnotationText,
+    addingAnnotationOn,
+    addingAnnotationColor,
+    editingAnnotationColor,
+    annotations,
+    selectedAnnotation,
+    selectedAnnotationEditable,
+    updateAnnotationValueText,
   } = store;
 
   const {
@@ -209,6 +236,7 @@ function ExpressionTreeEditor({
     setStagePos,
     setStagePositionAndScale,
     toggleFullScreen,
+    exitFullScreen,
     // Tree
     stageReset,
     createNode,
@@ -220,6 +248,7 @@ function ExpressionTreeEditor({
     clearSelectedRootNode,
     updateNode,
     updateNodeType,
+    updateNodeTypeSuperscript,
     updateNodeValue,
     setStartingOrderedNodes,
     setOrderedNodes,
@@ -240,6 +269,31 @@ function ExpressionTreeEditor({
     setIsCreatingMathNode,
     // Comments
     toggleComments,
+    setCommentsOpen,
+    setCommentsClose,
+    setAddingThreadTitle,
+    setAddingThreadType,
+    startCommentThread,
+    toggleExpandedThread,
+    shrinkAllThreads,
+    addComment,
+    deleteThread,
+    deleteComment,
+    toggleResolvedThread,
+    setAnnotationText,
+    toggleAddAnnotation,
+    setAnnotationColor,
+    createAnnotation,
+    setIsDraggingAnnotation,
+    updateAnnotationCoordinates,
+    updateAnnotationCoordinatesAndFinishDragging,
+    setSelectedAnnotation,
+    clearSelectedAnnotation,
+    clearAddingAnnotation,
+    removeAnnotation,
+    setEditingAnnotationColor,
+    updateAnnotationValue,
+    setUpdateAnnotationValue,
   } = actions;
 
   const {
@@ -253,6 +307,8 @@ function ExpressionTreeEditor({
     updateEdgeChildCoordinates,
     computeNodeWidth,
     computeNodeHeight,
+    computeAnnotationWidth,
+    computeAnnotationHeight,
     parseLabelPieces,
     sanitizeNodesAndEdges,
     computeEdgesCoordinates,
@@ -260,6 +316,7 @@ function ExpressionTreeEditor({
     computeEdgeChildCoordinates,
     computeEdgeParentCoordinates,
     reorderNodes,
+    createAnnotationFromText,
   } = utils;
 
   useEffect(() => {
@@ -318,6 +375,10 @@ function ExpressionTreeEditor({
 
   const handleUpdateNodeTypeChange = useCallback((value) => {
     updateNodeType(value);
+  });
+
+  const handleUpdateTypeSuperscriptChange = useCallback((value) => {
+    updateNodeTypeSuperscript(value);
   });
 
   const handleUpdateNodeValueChange = useCallback((value) => {
@@ -418,11 +479,14 @@ function ExpressionTreeEditor({
   // then the stage will be repositioned,
   // in order to have all the nodes inside the viewport
   const handleZoomToFitButtonAction = () => {
-    if (Object.keys(nodes).length === 0) {
+    if (
+      Object.keys(nodes).length === 0 &&
+      Object.keys(annotations).length === 0
+    ) {
       return;
     }
 
-    const paddingLeft = isDrawerOpen && showDrawer ? 330 : 30;
+    const paddingLeft = isDrawerOpen ? 330 : isCommentsOpen ? 430 : 30;
     const paddingRight = 30;
     const paddingTop = 30;
     const paddingBottom = 30;
@@ -443,7 +507,7 @@ function ExpressionTreeEditor({
   };
 
   const handleZoomToActualSizeButtonAction = () => {
-    const paddingLeft = isDrawerOpen && showDrawer ? 330 : 30;
+    const paddingLeft = isDrawerOpen ? 330 : isCommentsOpen ? 430 : 30;
     const paddingTop = 30;
     // get the bounding box of layer contents
     const box = layerRef.current.getClientRect({
@@ -464,6 +528,10 @@ function ExpressionTreeEditor({
         initialValue && initialValue.nodes ? initialValue.nodes : nodes;
       const tempEdges =
         initialValue && initialValue.edges ? initialValue.edges : edges;
+      const tempAnnotations =
+        initialValue && initialValue.annotations
+          ? initialValue.annotations
+          : annotations;
 
       // TODO: Determine whether need to clone nodes before calling layout
       /*
@@ -479,11 +547,14 @@ function ExpressionTreeEditor({
       // eslint-disable-next-line no-undef
       const orderedNodes = structuredClone(tempNodes);
       // const orderedNodes = tempNodes;
+      const orderedAnnotations = structuredClone(tempAnnotations);
       const [diagramWidth, diagramHeight] = layout(
         orderedNodes,
         tempEdges,
+        orderedAnnotations,
         selectedRootNode,
         isDrawerOpen && showDrawer,
+        isCommentsOpen,
         computeStageWidth(),
       );
       //console.log('node layout: diagram width: ', diagramWidth, 'diagram height: ', diagramHeight);
@@ -496,6 +567,7 @@ function ExpressionTreeEditor({
         setStartingOrderedNodes({
           nodes: orderedNodes,
           edges: orderedEdges,
+          annotations: orderedAnnotations,
           stagePos: position,
           stageScale: scale,
         });
@@ -503,6 +575,7 @@ function ExpressionTreeEditor({
         setOrderedNodes({
           nodes: orderedNodes,
           edges: orderedEdges,
+          annotations: orderedAnnotations,
           stagePos: position,
           stageScale: scale,
         });
@@ -511,6 +584,7 @@ function ExpressionTreeEditor({
     [
       nodes,
       edges,
+      annotations,
       isDrawerOpen,
       showDrawer,
       computeEdgesCoordinates,
@@ -522,12 +596,8 @@ function ExpressionTreeEditor({
 
   const isAllVisible = useMemo(
     () =>
-      Object.keys(nodes).every(
-        (nodeId) => nodes[nodeId].isVisible && !nodes[nodeId].isTransparent,
-      ) &&
-      Object.keys(edges).every(
-        (edgeId) => edges[edgeId].isVisible && !edges[edgeId].isTransparent,
-      ),
+      Object.keys(nodes).every((nodeId) => nodes[nodeId].visibility === 0) &&
+      Object.keys(edges).every((edgeId) => edges[edgeId].visibility === 0),
     [nodes, edges],
   );
 
@@ -543,6 +613,7 @@ function ExpressionTreeEditor({
       stagePos: uploadStagePos,
       stageScale: uploadStageScale,
       connectorPlaceholder: uploadConnectorPlaceholder,
+      annotations: uploadAnnotations,
     }) => {
       stageReset({
         nodes: uploadNodes,
@@ -551,6 +622,7 @@ function ExpressionTreeEditor({
         stagePos: uploadStagePos,
         stageScale: uploadStageScale,
         connectorPlaceholder: uploadConnectorPlaceholder,
+        annotations: uploadAnnotations,
       });
     },
   );
@@ -562,11 +634,14 @@ function ExpressionTreeEditor({
     stageRef.current
       .find(".deleteButton")
       .forEach((shape) => shape.visible(inverse));
+    stageRef.current
+      .find(".selectedAddCommentsButton")
+      .forEach((shape) => shape.visible(inverse));
   });
 
   // downloading the image of the current visible stage portion
   // Moreover, embed the state in a custom PNG metadata chunk, serializing the current editor state
-  // (note: only nodes, edges, placeholder, selected root node, stage position and stage scale
+  // (note: only nodes, edges, annotations, placeholder, selected root node, stage position and stage scale
   // are serialized)
   const handleTakeScreenshotButtonAction = useCallback(() => {
     handlePrepareUIForImageDownload();
@@ -577,20 +652,14 @@ function ExpressionTreeEditor({
       stagePos,
       stageScale,
       connectorPlaceholder,
+      annotations,
     };
 
     if (typeof document !== "undefined") {
-      const jsonRepr = JSON.stringify(currentState, null, 0);
-
-      // Mark location of special math characters and escape them
-      let validJsonRepr = "";
-      jsonRepr.split("").forEach((char, i) => {
-        if (char.charCodeAt(0) > 127) {
-          validJsonRepr += "$" + escape(char) + "$";
-        } else {
-          validJsonRepr += char;
-        }
-      });
+      // Need to encode to support math special characters around the editor (in nodes pieces and in nodes type/value)
+      const jsonRepr = encodeURIComponent(
+        JSON.stringify(currentState, null, 0),
+      );
 
       const downloadElement = document.createElement("a");
       const boundingBox = layerRef.current.getClientRect();
@@ -607,7 +676,7 @@ function ExpressionTreeEditor({
       downloadElement.href = addMetadataFromBase64DataURI(
         imageBase64,
         ET_KEY,
-        validJsonRepr,
+        jsonRepr,
       );
       downloadElement.download = "expression_editor_image.png";
       document.body.appendChild(downloadElement);
@@ -620,9 +689,11 @@ function ExpressionTreeEditor({
   const handleFullScreenButtonAction = useCallback(() => {
     if (!fscreen.fullscreenElement) {
       fscreen.requestFullscreen(containerRef.current);
+      fullScreenHeight = window.innerHeight;
       toggleFullScreen();
     } else {
       fscreen.exitFullscreen();
+      fullScreenHeight = null;
       toggleFullScreen();
     }
   });
@@ -723,11 +794,13 @@ function ExpressionTreeEditor({
     const {
       sanitizedNodes,
       sanitizedEdges,
+      sanitizedAnnotations,
       sanitizedStagePos,
       sanitizedStageScale,
     } = sanitizeNodesAndEdges(
       propNodes,
       propEdges,
+      propAnnotations,
       propSelectedRootNode,
       propStagePos,
       propStageScale,
@@ -738,6 +811,7 @@ function ExpressionTreeEditor({
       stageRef,
       computeStageWidth,
       isDrawerOpen,
+      isCommentsOpen,
       showDrawer,
       propHighlightedNodes,
       propHighlightedEdges,
@@ -752,8 +826,201 @@ function ExpressionTreeEditor({
       stageScale: sanitizedStageScale || defaultProps.stageScale,
       connectorPlaceholder:
         propConnectorPlaceholder || defaultProps.connectorPlaceholder,
+      annotations: sanitizedAnnotations,
     });
   };
+
+  const handleAnnotationColorChange = useCallback((addingAnnotationColor) => {
+    setAnnotationColor(addingAnnotationColor);
+  });
+
+  const handleAnnotationChange = useCallback((addingAnnotationText) => {
+    setAnnotationText(addingAnnotationText);
+  });
+
+  const handleToggleAddAnnotation = useCallback(() => {
+    toggleAddAnnotation();
+  });
+
+  const handleCreateAnnotation = useCallback(() => {
+    const pointerPos = stageRef.current.getPointerPosition();
+    const newAnnotation = createAnnotationFromText(addingAnnotationText);
+    newAnnotation.x = (pointerPos.x - stagePos.x) / stageScale.x;
+    newAnnotation.y = (pointerPos.y - stagePos.y) / stageScale.y;
+    newAnnotation.color = addingAnnotationColor;
+    createAnnotation(newAnnotation);
+  });
+
+  const handleAnnotationDragStart = useCallback((e, annotationId) => {
+    if (isFullDisabled) {
+      return;
+    }
+    e.currentTarget.moveToTop();
+    setIsDraggingAnnotation(annotationId);
+  });
+
+  const handleAnnotationDragMove = useCallback((e, annotationId) => {
+    e.cancelBubble = true;
+    if (isFullDisabled) {
+      return;
+    }
+
+    if (isDraggingAnnotation) {
+      const x = e.target.x();
+      const y = e.target.y();
+
+      const annotation = annotations[annotationId];
+      const updatedAnnotation = {
+        ...annotation,
+        x,
+        y,
+      };
+
+      updateAnnotationCoordinates({
+        annotationId,
+        updatedAnnotation,
+      });
+    }
+  });
+
+  const handleAnnotationDragEnd = useCallback((e, annotationId) => {
+    e.cancelBubble = true;
+    if (isFullDisabled) {
+      return;
+    }
+    if (isDraggingAnnotation) {
+      const x = e.target.x();
+      const y = e.target.y();
+
+      const annotation = annotations[annotationId];
+      const updatedAnnotation = {
+        ...annotation,
+        x,
+        y,
+      };
+      setCursor("grab");
+      updateAnnotationCoordinatesAndFinishDragging({
+        annotationId,
+        updatedAnnotation,
+      });
+    }
+  });
+
+  const handleAnnotationClick = useCallback((e, annotationId) => {
+    if (isFullDisabled) {
+      return;
+    }
+
+    if (isCreatingNode || isCreatingMathNode) {
+      handleCreateNode();
+    } else if (addingAnnotationOn) {
+      handleCreateAnnotation();
+    } else {
+      e.currentTarget.moveToTop();
+      const selectingAnnotation = annotations[annotationId];
+      if (selectedAnnotation !== selectingAnnotation.id) {
+        setSelectedAnnotation(selectingAnnotation.id);
+      }
+    }
+  });
+
+  const handleAnnotationValueUpdate = useCallback(() => {
+    const annotation = annotations[selectedAnnotation];
+    if (
+      annotation.text !== updateAnnotationValueText ||
+      annotation.color.hex !== editingAnnotationColor.hex
+    ) {
+      const updatedWidth = computeAnnotationWidth(updateAnnotationValueText);
+      const updatedHeight = computeAnnotationHeight(updateAnnotationValueText);
+      const updatedAnnotation = {
+        ...annotation,
+        text: updateAnnotationValueText,
+        color: editingAnnotationColor,
+        width: updatedWidth,
+        height: updatedHeight,
+      };
+      updateAnnotationValue({ selectedAnnotation, updatedAnnotation });
+    }
+  });
+
+  const handleAnnotationValueUpdateChange = useCallback(
+    (updateAnnotationValue) => {
+      setUpdateAnnotationValue(updateAnnotationValue);
+    },
+  );
+
+  const handleEditingAnnotationColorChange = useCallback(
+    (editingAnnotationColor) => {
+      setEditingAnnotationColor(editingAnnotationColor);
+    },
+  );
+
+  const handleAddingThreadTitleChange = useCallback((threadTitle) => {
+    setAddingThreadTitle(threadTitle);
+  });
+
+  const handleAddingThreadTypeChange = useCallback((threadType) => {
+    setAddingThreadType(threadType);
+  });
+
+  const handleStartCommentThread = useCallback(() => {
+    startCommentThread({
+      selection: { selectedNode: selectedNode, selectedEdge: selectedEdge },
+      addingThreadTitle,
+      addingThreadType,
+    });
+  });
+
+  const handleToggleExpandedThread = useCallback((threadId) => {
+    toggleExpandedThread({
+      selection: { selectedNode: selectedNode, selectedEdge: selectedEdge },
+      threadId,
+    });
+  });
+
+  const handleShrinkAllThreads = useCallback(() => {
+    shrinkAllThreads();
+  });
+
+  const handleAddComment = useCallback((threadId, commentValue) => {
+    addComment({
+      selection: { selectedNode: selectedNode, selectedEdge: selectedEdge },
+      threadId,
+      commentValue,
+    });
+  });
+
+  const handleDeleteThread = useCallback((threadId) => {
+    deleteThread({
+      selection: { selectedNode: selectedNode, selectedEdge: selectedEdge },
+      threadId,
+    });
+  });
+
+  const handleDeleteComment = useCallback((threadId, commentId) => {
+    deleteComment({
+      selection: { selectedNode: selectedNode, selectedEdge: selectedEdge },
+      threadId,
+      commentId,
+    });
+  });
+
+  const handleToggleResolvedThread = useCallback((threadId) => {
+    toggleResolvedThread({
+      selection: { selectedNode: selectedNode, selectedEdge: selectedEdge },
+      threadId,
+    });
+  });
+
+  const selectionCommentThreads = useMemo(() => {
+    if (selectedNode) {
+      return nodes[selectedNode].commentThreads;
+    } else if (selectedEdge) {
+      return edges[selectedEdge].commentThreads;
+    } else {
+      return [];
+    }
+  }, [nodes, edges, selectedNode, selectedEdge]);
 
   useEffect(() => {
     if (autofit) {
@@ -836,8 +1103,17 @@ function ExpressionTreeEditor({
           primary: { main: toolbarPrimaryColor },
           secondary: { main: toolbarSecondaryColor },
         },
+        props: {
+          // Set the container where the Popovers are rendered inside,
+          // so that they are not rendered by default in document.body
+          // If we don't do that, when the container is put in fullscreen,
+          // the color picker will not be shown in fullscreen
+          MuiPopover: {
+            container: containerRef.current,
+          },
+        },
       }),
-    [toolbarPrimaryColor, toolbarSecondaryColor],
+    [toolbarPrimaryColor, toolbarSecondaryColor, containerRef.current],
   );
 
   // State hooks
@@ -872,6 +1148,14 @@ function ExpressionTreeEditor({
     containerRef,
     isFullDisabled,
   );
+
+  // Effect to correctly set the isFullScreen value when pressing the 'Esc' button in fullscreen (no keypress event fired)
+  useEffect(() => {
+    if (!fscreen.fullscreenElement) {
+      fullScreenHeight = null;
+      exitFullScreen();
+    }
+  }, [fscreen.fullscreenElement]);
 
   const handleConnectorDragStart = useCallback(
     (isParent, nodeId, x, y, pieceId) => {
@@ -1068,12 +1352,25 @@ function ExpressionTreeEditor({
         nodes,
       );
 
+      const targetExistingEdgeIds = targetParentPiece
+        ? nodes[targetParentPiece.parentNodeId].parentEdges[
+            targetParentPiece.parentPieceId
+          ]
+        : [];
+
       // If the edge already existed
       if (oldEdgeId !== null && oldEdgeId !== undefined) {
         const oldEdge = edges[oldEdgeId];
 
-        // If it does not point to a valid target, remove the edge
-        if (targetParentPiece === null || !targetParentPiece === undefined) {
+        // If it does not point to a valid target, or is not fully visible, or the subtree edges are not fully visible, remove the edge
+        if (
+          targetParentPiece === null ||
+          !targetParentPiece === undefined ||
+          nodes[targetParentPiece.parentNodeId].visibility !== 0 ||
+          !targetExistingEdgeIds.every(
+            (edgeId) => edges[edgeId].visibility === 0,
+          )
+        ) {
           removeEdge(oldEdgeId);
           return;
         }
@@ -1109,8 +1406,15 @@ function ExpressionTreeEditor({
           .then(() => fulfillUpdate(oldEdgeId, newEdge, true))
           .catch(rejectCallback);
       } else {
-        // If the edge is new and does not point to a target piece, do nothing
-        if (targetParentPiece === null || !targetParentPiece === undefined) {
+        // If the edge is new and does not point to a target piece, or is not fully visible, or the subtree edges are not fully visible, do nothing
+        if (
+          targetParentPiece === null ||
+          !targetParentPiece === undefined ||
+          nodes[targetParentPiece.parentNodeId].visibility !== 0 ||
+          !targetExistingEdgeIds.every(
+            (edgeId) => edges[edgeId].visibility === 0,
+          )
+        ) {
           clearDragEdge();
           return;
         }
@@ -1154,7 +1458,11 @@ function ExpressionTreeEditor({
         const oldEdge = edges[oldEdgeId];
 
         // If it does not point to a valid target, remove the edge
-        if (targetChildId === null || targetChildId === undefined) {
+        if (
+          targetChildId === null ||
+          targetChildId === undefined ||
+          nodes[targetChildId].visibility !== 0
+        ) {
           removeEdge(oldEdgeId);
           return;
         }
@@ -1189,7 +1497,11 @@ function ExpressionTreeEditor({
           .catch(rejectCallback);
       } else {
         // If it does not point to a valid target, do nothing
-        if (targetChildId === null || targetChildId === undefined) {
+        if (
+          targetChildId === null ||
+          targetChildId === undefined ||
+          nodes[targetChildId].visibility !== 0
+        ) {
           clearDragEdge();
           return;
         }
@@ -1285,6 +1597,8 @@ function ExpressionTreeEditor({
         y,
       );
 
+      setCursor("pointer");
+
       updateNodeCoordinatesAndFinishDragging({
         updatedEdges,
         nodeId,
@@ -1296,6 +1610,14 @@ function ExpressionTreeEditor({
   useEffect(() => {
     if (isBackpasceOrDeleteKeyPressed) {
       if (selectedNode !== null && selectedNode !== undefined) {
+        // Added support for subtree visibility also here, if in the future this feature is activated again
+        // nodes[selectedNode].parentEdges.forEach((edgeId, i) => {
+        //   setSubtreeVisibility({
+        //     subtreeStartingNodeId: selectedNode,
+        //     subtreeStartingPieceId: i,
+        //     currentVisibility: 2,
+        //   });
+        // });
         // if (nodes[selectedNode].editable.delete) {
         //   removeNode(selectedNode);
         // }
@@ -1309,10 +1631,18 @@ function ExpressionTreeEditor({
     if (isEscapedKeyPressed) {
       if (isCreatingNode || isCreatingMathNode) {
         clearIsCreatingNode();
-      } else if (selectedNode !== undefined && selectedNode !== null) {
+      }
+      if (addingAnnotationOn) {
+        clearAddingAnnotation();
+      }
+      if (selectedNode !== undefined && selectedNode !== null) {
         clearSelectedNode();
-      } else if (selectedEdge !== undefined && selectedEdge !== null) {
+      }
+      if (selectedEdge !== undefined && selectedEdge !== null) {
         clearSelectedEdge();
+      }
+      if (selectedAnnotation !== undefined && selectedAnnotation !== null) {
+        clearSelectedAnnotation();
       }
     }
   }, [isEscapedKeyPressed]);
@@ -1325,6 +1655,8 @@ function ExpressionTreeEditor({
     transformerRef.current.nodes([]);
     if (isCreatingNode || isCreatingMathNode) {
       handleCreateNode();
+    } else if (addingAnnotationOn) {
+      handleCreateAnnotation();
     } else {
       e.currentTarget.moveToTop();
       const selectingNode = nodes[nodeId];
@@ -1355,6 +1687,8 @@ function ExpressionTreeEditor({
 
     if (isCreatingNode || isCreatingMathNode) {
       handleCreateNode();
+    } else if (addingAnnotationOn) {
+      handleCreateAnnotation();
     } else {
       e.cancelBubble = true;
       if (
@@ -1381,6 +1715,8 @@ function ExpressionTreeEditor({
 
     if (isCreatingNode || isCreatingMathNode) {
       handleCreateNode();
+    } else if (addingAnnotationOn) {
+      handleCreateAnnotation();
     } else {
       transformerRef.current.nodes([]);
       setIsSelectedRectVisible(false);
@@ -1389,6 +1725,9 @@ function ExpressionTreeEditor({
       }
       if (selectedEdge !== undefined || selectedEdge !== null) {
         clearSelectedEdge();
+      }
+      if (selectedAnnotation !== undefined || selectedAnnotation !== null) {
+        clearSelectedAnnotation();
       }
     }
   };
@@ -1419,6 +1758,7 @@ function ExpressionTreeEditor({
         tabIndex={0}
       >
         <StageDrawer
+          editorHeight={containerHeight}
           containerRef={containerRef}
           connectorPlaceholder={connectorPlaceholder}
           downloadKey={ET_KEY}
@@ -1427,10 +1767,15 @@ function ExpressionTreeEditor({
           isFullDisabled={isFullDisabled}
           isDrawerOpen={isDrawerOpen}
           isFullScreen={isFullScreen}
+          isSelectedNode={selectedNode !== undefined}
+          isSelectedEdge={selectedEdge !== undefined}
           isSelectedNodeEditable={isSelectedNodeEditable}
+          isSelectedNodeMath={isSelectedNodeMath}
+          isSelectedNodeFullyVisible={isSelectedNodeFullyVisible}
           createNodeInputValue={createNodeInputValue}
           updateLabelInputValue={updateLabelInputValue}
           updateTypeInputValue={updateTypeInputValue}
+          updateTypeSuperscript={updateTypeSuperscript}
           updateValueInputValue={updateValueInputValue}
           showToolbar={showToolbar}
           showToolbarButtons={showToolbarButtons}
@@ -1453,6 +1798,7 @@ function ExpressionTreeEditor({
           handleResetState={handleResetState}
           handleUpdateLabelPiecesChange={handleUpdateLabelPiecesChange}
           handleUpdateNodeTypeChange={handleUpdateNodeTypeChange}
+          handleUpdateTypeSuperscriptChange={handleUpdateTypeSuperscriptChange}
           handleUpdateNodeValueChange={handleUpdateNodeValueChange}
           handleUndoButtonAction={handleUndoButtonAction}
           handleRedoButtonAction={handleRedoButtonAction}
@@ -1491,18 +1837,49 @@ function ExpressionTreeEditor({
           setCurrentMathSelection={setCurrentMathSelection}
           isCreatingMathNode={isCreatingMathNode}
           setIsCreatingMathNode={setIsCreatingMathNode}
-          isSelectedNodeMath={isSelectedNodeMath}
           isCommentsOpen={isCommentsOpen}
           toggleComments={toggleComments}
+          threadsEnabledActions={threadsEnabledActions}
+          selectedNodeCommentable={selectedNodeCommentable}
+          selectedEdgeCommentable={selectedEdgeCommentable}
+          selectionCommentThreads={selectionCommentThreads}
+          addingThreadTitle={addingThreadTitle}
+          addingThreadType={addingThreadType}
+          annotationOnFunctions={annotationOnFunctions}
+          selectedAnnotationEditable={selectedAnnotationEditable}
+          addingAnnotationText={addingAnnotationText}
+          updateAnnotationValueText={updateAnnotationValueText}
+          addingAnnotationOn={addingAnnotationOn}
+          addingAnnotationColor={addingAnnotationColor}
+          editingAnnotationColor={editingAnnotationColor}
+          handleAnnotationColorChange={handleAnnotationColorChange}
+          handleAnnotationChange={handleAnnotationChange}
+          handleAnnotationValueUpdate={handleAnnotationValueUpdate}
+          handleAnnotationValueUpdateChange={handleAnnotationValueUpdateChange}
+          handleEditingAnnotationColorChange={
+            handleEditingAnnotationColorChange
+          }
+          handleToggleAddAnnotation={handleToggleAddAnnotation}
+          handleAddingThreadTitleChange={handleAddingThreadTitleChange}
+          handleAddingThreadTypeChange={handleAddingThreadTypeChange}
+          handleStartCommentThread={handleStartCommentThread}
+          handleToggleExpandedThread={handleToggleExpandedThread}
+          handleShrinkAllThreads={handleShrinkAllThreads}
+          handleAddComment={handleAddComment}
+          handleDeleteThread={handleDeleteThread}
+          handleDeleteComment={handleDeleteComment}
+          handleToggleResolvedThread={handleToggleResolvedThread}
         />
         <div>
           {/* Stage component containing the layer component */}
           <Stage
             ref={stageRef}
             width={computeStageWidth()}
-            height={height}
+            height={containerHeight}
             style={{
-              cursor: (isCreatingNode || isCreatingMathNode) && "crosshair",
+              cursor:
+                (isCreatingNode || isCreatingMathNode || addingAnnotationOn) &&
+                "crosshair",
             }}
             onClick={handleStageClick}
             onTap={handleStageClick}
@@ -1567,8 +1944,7 @@ function ExpressionTreeEditor({
                   isDraggingSelectionRect={isDraggingSelectionRect}
                   isSelected={id === selectedEdge}
                   isHighlighted={edges[id].isHighlighted}
-                  isVisible={edges[id].isVisible}
-                  isTransparent={edges[id].isTransparent}
+                  visibility={edges[id].visibility}
                   clearEdgeSelection={clearSelectedEdge}
                   // Event Listeners
                   handleEdgeClick={handleEdgeClick}
@@ -1629,6 +2005,11 @@ function ExpressionTreeEditor({
                   parentConnectorHighlightFillColor={
                     edgeStyle.parentConnectorHighlightFillColor
                   }
+                  commentThreads={edges[id].commentThreads}
+                  setCommentsOpen={setCommentsOpen}
+                  setCommentsClose={setCommentsClose}
+                  isCommentsOpen={isCommentsOpen}
+                  commentsButtonStyle={edgeStyle.commentsButtonStyle}
                 />
               ))}
               {/* Map all the state nodes */}
@@ -1641,6 +2022,7 @@ function ExpressionTreeEditor({
                   positionX={nodes[id].x}
                   positionY={nodes[id].y}
                   typeText={nodes[id].type}
+                  typeSuperscriptText={nodes[id].typeSuperscript}
                   valueText={nodes[id].value}
                   childEdges={nodes[id].childEdges}
                   parentEdges={nodes[id].parentEdges}
@@ -1648,11 +2030,12 @@ function ExpressionTreeEditor({
                   placeholderWidth={placeholderWidth}
                   stageRef={stageRef}
                   stageWidth={containerWidth}
-                  stageHeight={height}
+                  stageHeight={containerHeight}
                   transformerRef={transformerRef}
                   nodeWidth={nodes[id].width}
                   nodeHeight={nodes[id].height}
                   edges={edges}
+                  setSubtreeVisibility={setSubtreeVisibility}
                   removeNode={removeNode}
                   setCursor={setCursor}
                   isDraggingSelectionRect={isDraggingSelectionRect}
@@ -1663,13 +2046,17 @@ function ExpressionTreeEditor({
                   isSelected={id === selectedNode}
                   isSelectedRoot={id === selectedRootNode}
                   isHighlighted={nodes[id].isHighlighted}
-                  isVisible={nodes[id].isVisible}
-                  isTransparent={nodes[id].isTransparent}
+                  visibility={nodes[id].visibility}
                   isTypeLabelHighlighted={nodes[id].isTypeLabelHighlighted}
                   isValueLabelHighlighted={nodes[id].isValueLabelHighlighted}
                   isFullDisabled={isFullDisabled}
                   isMathNode={nodes[id].isMathNode}
                   mathPieces={nodes[id].mathPieces}
+                  commentable={nodes[id].commentable}
+                  commentThreads={nodes[id].commentThreads}
+                  setCommentsOpen={setCommentsOpen}
+                  setCommentsClose={setCommentsClose}
+                  isCommentsOpen={isCommentsOpen}
                   handleNodeClick={(e) => handleNodeClick(e, id)}
                   handleNodeDblClick={(e) => handleNodeDblClick(e, id)}
                   handleNodeDragStart={(e) => handleNodeDragStart(e, id)}
@@ -1700,6 +2087,10 @@ function ExpressionTreeEditor({
                   topConnectorStyle={nodeStyle.topConnectorStyle}
                   deleteButtonStyle={nodeStyle.deleteButtonStyle}
                   typeValueStyle={nodeStyle.typeValueStyle}
+                  commentsButtonStyle={nodeStyle.commentsButtonStyle}
+                  isCreatingNode={isCreatingNode}
+                  isCreatingMathNode={isCreatingMathNode}
+                  addingAnnotationOn={addingAnnotationOn}
                 />
               ))}
               {/* Multiple selection rectangle component */}
@@ -1737,6 +2128,51 @@ function ExpressionTreeEditor({
                 resizeEnabled={false}
                 visible={isSelectedRectVisible}
               />
+              {/* Map all the annotations */}
+              {Object.keys(annotations).map((id) => (
+                <Annotation
+                  key={`Annotation-${id}`}
+                  id={id}
+                  positionX={annotations[id].x}
+                  positionY={annotations[id].y}
+                  annotationColor={annotations[id].color}
+                  annotationText={annotations[id].text}
+                  isFullDisabled={isFullDisabled}
+                  annotationWidth={annotations[id].width}
+                  annotationHeight={annotations[id].height}
+                  fontSize={fontSize}
+                  fontFamily={fontFamily}
+                  paddingX={nodePaddingX}
+                  paddingY={nodePaddingY}
+                  strokeColor={nodeStyle.nodeStrokeColor}
+                  strokeWidth={nodeStyle.nodeStrokeWidth}
+                  stageRef={stageRef}
+                  stageWidth={containerWidth}
+                  stageHeight={containerHeight}
+                  isSelected={id === selectedAnnotation}
+                  isDraggingSelectionRect={isDraggingSelectionRect}
+                  deleteButtonStyle={nodeStyle.deleteButtonStyle}
+                  isCreatingNode={isCreatingNode}
+                  isCreatingMathNode={isCreatingMathNode}
+                  addingAnnotationOn={addingAnnotationOn}
+                  editableDelete={
+                    annotationOnFunctions.removeAnnotation &&
+                    annotations[id].editable.delete
+                  }
+                  setCursor={setCursor}
+                  removeAnnotation={removeAnnotation}
+                  handleAnnotationDragStart={(e) =>
+                    handleAnnotationDragStart(e, id)
+                  }
+                  handleAnnotationDragMove={(e) =>
+                    handleAnnotationDragMove(e, id)
+                  }
+                  handleAnnotationDragEnd={(e) =>
+                    handleAnnotationDragEnd(e, id)
+                  }
+                  handleAnnotationClick={(e) => handleAnnotationClick(e, id)}
+                />
+              ))}
               {/* DragEdge component */}
               {dragEdge && (
                 <DragEdge
@@ -2018,6 +2454,19 @@ ExpressionTreeEditor.propTypes = {
     parentConnectorDraggingFillColor: PropTypes.string,
     parentConnectorErrorFillColor: PropTypes.string,
     parentConnectorHighlightFillColor: PropTypes.string,
+    commentsButtonStyle: PropTypes.exact({
+      iconFillColor: PropTypes.string,
+      iconBackgroundColor: PropTypes.string,
+      iconStrokeColor: PropTypes.string,
+      iconStrokeWidth: PropTypes.number,
+      counterRadius: PropTypes.number,
+      counterBackgroundColor: PropTypes.string,
+      counterStrokeColor: PropTypes.string,
+      counterStrokeWidth: PropTypes.number,
+      counterTextColor: PropTypes.string,
+      counterFontSize: PropTypes.number,
+      counterFontFamily: PropTypes.string,
+    }),
   }),
   nodeStyle: PropTypes.exact({
     nodeStrokeColor: PropTypes.string,
@@ -2081,6 +2530,19 @@ ExpressionTreeEditor.propTypes = {
       pointerWidth: PropTypes.number,
       pointerHeight: PropTypes.number,
     }),
+    commentsButtonStyle: PropTypes.exact({
+      iconFillColor: PropTypes.string,
+      iconBackgroundColor: PropTypes.string,
+      iconStrokeColor: PropTypes.string,
+      iconStrokeWidth: PropTypes.number,
+      counterRadius: PropTypes.number,
+      counterBackgroundColor: PropTypes.string,
+      counterStrokeColor: PropTypes.string,
+      counterStrokeWidth: PropTypes.number,
+      counterTextColor: PropTypes.string,
+      counterFontSize: PropTypes.number,
+      counterFontFamily: PropTypes.string,
+    }),
   }),
   selectionRectangleStyle: PropTypes.exact({
     fillColor: PropTypes.string,
@@ -2092,6 +2554,26 @@ ExpressionTreeEditor.propTypes = {
     editNodeInputPlaceholder: PropTypes.string,
     typeInputPlaceholder: PropTypes.string,
     valueInputPlaceholder: PropTypes.string,
+  }),
+  annotationOnFunctions: PropTypes.shape({
+    addAnnotation: PropTypes.bool,
+    removeAnnotation: PropTypes.bool,
+    editAnnotation: PropTypes.bool,
+  }),
+  annotations: PropTypes.objectOf(
+    PropTypes.shape({
+      x: PropTypes.number,
+      y: PropTypes.number,
+      color: PropTypes.string,
+      text: PropTypes.string,
+    }),
+  ),
+  threadsEnabledActions: PropTypes.shape({
+    startThread: PropTypes.bool,
+    removeThread: PropTypes.bool,
+    addComment: PropTypes.bool,
+    removeComment: PropTypes.bool,
+    toggleResolved: PropTypes.bool,
   }),
 };
 
@@ -2176,6 +2658,19 @@ ExpressionTreeEditor.defaultProps = {
   toolbarPrimaryColor: "#3F51B5",
   toolbarSecondaryColor: "#F44336",
   drawerPlaceholders: {},
+  annotationOnFunctions: {
+    addAnnotation: true,
+    removeAnnotation: true,
+    editAnnotation: true,
+  },
+  annotations: {},
+  threadsEnabledActions: {
+    startThread: true,
+    removeThread: true,
+    addComment: true,
+    removeComment: true,
+    toggleResolved: true,
+  },
 };
 
 export default ExpressionTreeEditor;

@@ -32,6 +32,7 @@ function useStore({
   propTemplateNodes,
   propHighlightedNodes,
   propHighlightedEdges,
+  propAnnotations,
 }) {
   const {
     sanitizedFontSize,
@@ -83,6 +84,7 @@ function useStore({
   const {
     sanitizedNodes,
     sanitizedEdges,
+    sanitizedAnnotations,
     sanitizedStagePos,
     sanitizedStageScale,
   } = useMemo(
@@ -90,6 +92,7 @@ function useStore({
       utils.sanitizeNodesAndEdges(
         propNodes,
         propEdges,
+        propAnnotations,
         propSelectedRootNode,
         propStagePos,
         propStageScale,
@@ -100,6 +103,7 @@ function useStore({
         stageRef,
         computeStageWidth,
         true,
+        false,
         true,
         propHighlightedNodes,
         propHighlightedEdges,
@@ -107,6 +111,7 @@ function useStore({
     [
       propNodes,
       propEdges,
+      propAnnotations,
       propSelectedRootNode,
       propStagePos,
       propStageScale,
@@ -148,6 +153,7 @@ function useStore({
       templateNodesDescription,
       propHighlightedNodes,
       propHighlightedEdges,
+      sanitizedAnnotations,
     ),
   );
 

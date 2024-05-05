@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Group, Rect } from "react-konva";
 
 import NodeLabel from "./NodeLabel/NodeLabel";
+import NodeCommentsButton from "./NodeCommentsButton/NodeCommentsButton";
 import NodeDeleteButton from "./NodeDeleteButton/NodeDeleteButton";
 import NodeTopConnector from "./NodeTopConnector/NodeTopConnector";
 import NodeTypeValue from "./NodeTypeValue/NodeTypeValue";
@@ -14,6 +15,7 @@ function Node({
   positionX,
   positionY,
   typeText,
+  typeSuperscriptText,
   valueText,
   edges,
   childEdges,
@@ -26,6 +28,7 @@ function Node({
   nodeWidth,
   nodeHeight,
   currentErrorLocation,
+  setSubtreeVisibility,
   removeNode,
   setCursor,
   isDraggingSelectionRect,
@@ -38,8 +41,7 @@ function Node({
   isHighlighted,
   isTypeLabelHighlighted,
   isValueLabelHighlighted,
-  isVisible,
-  isTransparent,
+  visibility,
   isFullDisabled,
   handleNodeClick,
   handleNodeDblClick,
@@ -71,6 +73,15 @@ function Node({
   typeValueStyle,
   isMathNode,
   mathPieces,
+  commentable,
+  commentThreads,
+  setCommentsOpen,
+  setCommentsClose,
+  isCommentsOpen,
+  commentsButtonStyle,
+  isCreatingNode,
+  isCreatingMathNode,
+  addingAnnotationOn,
 }) {
   const hasChildEdges = useMemo(() => childEdges.length > 0, [childEdges]);
 
@@ -82,14 +93,40 @@ function Node({
   const subtreesVisibility = useMemo(
     () =>
       parentEdges.map((pieceEdges) =>
-        pieceEdges.every((pieceEdgeId) => edges[pieceEdgeId].isTransparent)
-          ? "transparent"
-          : !pieceEdges.every((pieceEdgeId) => edges[pieceEdgeId].isVisible)
-          ? "hidden"
-          : "visible",
+        pieceEdges.length === 0 ||
+        pieceEdges.every(
+          (pieceEdgeId) =>
+            edges[pieceEdgeId].visibility === undefined ||
+            edges[pieceEdgeId].visibility === 0,
+        )
+          ? 0
+          : pieceEdges.every(
+              (pieceEdgeId) => edges[pieceEdgeId].visibility === 1,
+            )
+          ? 1
+          : 2,
       ),
-    [isVisible, isTransparent, childEdges, parentEdges, edges],
+
+    [visibility, childEdges, parentEdges, edges],
   );
+
+  const commentThreadsCount = useMemo(
+    () => commentThreads.length,
+    [commentThreads],
+  );
+
+  const handleNodeDeleteButtonClick = useCallback(() => {
+    if (!isCreatingNode && !isCreatingMathNode && !addingAnnotationOn) {
+      parentEdges.forEach((edgeId, i) => {
+        setSubtreeVisibility({
+          subtreeStartingNodeId: id,
+          subtreeStartingPieceId: i,
+          currentVisibility: 2,
+        });
+      });
+      removeNode(id);
+    }
+  }, [isCreatingNode, isCreatingMathNode, addingAnnotationOn, parentEdges, id]);
 
   const checkDragBound = useCallback((pos) => {
     const stageScale = stageRef.current.scale();
@@ -114,11 +151,15 @@ function Node({
   const handlePlaceholderConnectorDragStart = useCallback((e, nodeId) => {
     e.cancelBubble = true;
 
-    if (isFullDisabled) {
+    const pieceId = e.target.getAttr("plugId");
+
+    if (
+      isFullDisabled ||
+      visibility !== 0 ||
+      subtreesVisibility[pieceId] !== 0
+    ) {
       return;
     }
-
-    const pieceId = e.target.getAttr("plugId");
 
     if (!isMathNode) {
       handleConnectorDragStart(
@@ -159,7 +200,7 @@ function Node({
   const handleTopNodeConnectorDragStart = useCallback((e) => {
     e.cancelBubble = true;
 
-    if (isFullDisabled) {
+    if (isFullDisabled || visibility !== 0) {
       return;
     }
 
@@ -239,7 +280,9 @@ function Node({
     return defaultStrokeWidth;
   };
 
-  const opacity = useMemo(() => (isTransparent ? 0.35 : 1), [isTransparent]);
+  const isVisible = useMemo(() => visibility !== 2, [visibility]);
+  const opacity = useMemo(() => (visibility === 1 ? 0.25 : 1), [visibility]);
+  const showDeleteButton = useMemo(() => visibility === 0, [visibility]);
 
   return (
     /**
@@ -248,6 +291,7 @@ function Node({
      *  - NodeTopConnector: the circle on the top edge, used for connect Edges
      *  - NodeLabel: the content of the node
      *  - NodeDeleteButton: the button for removing the node
+     *  - NodeCommentsButton: the button for adding comment threads to the node
      */
     <Group
       key={`Node-${id}`}
@@ -297,6 +341,7 @@ function Node({
         isSelectedRoot={isSelectedRoot}
         isFullDisabled={isFullDisabled}
         isSelected={isSelected}
+        visibility={visibility}
         handleNodeConnectorDragStart={handleTopNodeConnectorDragStart}
         handleConnectorDragMove={handleConnectorDragMove}
         handleConnectorDragEnd={handleConnectorDragEnd}
@@ -324,6 +369,7 @@ function Node({
         hasParentEdges={hasParentEdges}
         subtreesVisibility={subtreesVisibility}
         isFullDisabled={isFullDisabled}
+        visibility={visibility}
         handlePlaceholderConnectorDragStart={
           handlePlaceholderConnectorDragStart
         }
@@ -350,17 +396,14 @@ function Node({
         mathPieces={mathPieces}
       />
       <NodeDeleteButton
-        nodeId={id}
         nodeWidth={nodeWidth}
         nodeHeight={nodeHeight}
         isSelected={isSelected}
-        editableLabel={editableLabel}
-        editableType={editableType}
-        editableValue={editableValue}
         editableDelete={editableDelete}
         isFullDisabled={isFullDisabled}
         isDraggingSelectionRect={isDraggingSelectionRect}
-        removeNode={removeNode}
+        showDeleteButton={showDeleteButton}
+        handleNodeDeleteButtonClick={handleNodeDeleteButtonClick}
         strokeWidth={deleteButtonStyle.strokeWidth}
         radius={deleteButtonStyle.radius}
         strokeColor={deleteButtonStyle.strokeColor}
@@ -369,12 +412,19 @@ function Node({
         overStrokeColor={deleteButtonStyle.overStrokeColor}
         overFillColor={deleteButtonStyle.overFillColor}
         overTextColor={deleteButtonStyle.overTextColor}
+        isCreatingNode={isCreatingNode}
+        isCreatingMathNode={isCreatingMathNode}
+        addingAnnotationOn={addingAnnotationOn}
+        isCreatingNode={isCreatingNode}
+        isCreatingMathNode={isCreatingMathNode}
+        addingAnnotationOn={addingAnnotationOn}
       />
       <NodeTypeValue
         nodeWidth={nodeWidth}
         isTypeLabelHighlighted={isTypeLabelHighlighted}
         isValueLabelHighlighted={isValueLabelHighlighted}
         typeText={typeText}
+        typeSuperscriptText={typeSuperscriptText}
         valueText={valueText}
         fontFamily={fontFamily}
         fontSize={typeValueStyle.fontSize}
@@ -393,6 +443,24 @@ function Node({
         pointerWidth={typeValueStyle.pointerWidth}
         pointerHeight={typeValueStyle.pointerHeight}
       />
+      <NodeCommentsButton
+        commentThreadsCount={commentThreadsCount}
+        setCommentsOpen={setCommentsOpen}
+        setCommentsClose={setCommentsClose}
+        isCommentsOpen={isCommentsOpen}
+        iconFillColor={commentsButtonStyle.iconFillColor}
+        iconBackgroundColor={commentsButtonStyle.iconBackgroundColor}
+        iconStrokeColor={commentsButtonStyle.iconStrokeColor}
+        iconStrokeWidth={commentsButtonStyle.iconStrokeWidth}
+        counterRadius={commentsButtonStyle.counterRadius}
+        counterBackgroundColor={commentsButtonStyle.counterBackgroundColor}
+        counterStrokeColor={commentsButtonStyle.counterStrokeColor}
+        counterStrokeWidth={commentsButtonStyle.counterStrokeWidth}
+        counterTextColor={commentsButtonStyle.counterTextColor}
+        counterFontSize={commentsButtonStyle.counterFontSize}
+        counterFontFamily={commentsButtonStyle.counterFontFamily}
+        isSelected={isSelected}
+      />
     </Group>
   );
 }
@@ -404,6 +472,7 @@ Node.propTypes = {
   positionX: PropTypes.number.isRequired,
   positionY: PropTypes.number.isRequired,
   typeText: PropTypes.string,
+  typeSuperscriptText: PropTypes.string,
   valueText: PropTypes.string,
   childEdges: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)),
   parentEdges: PropTypes.arrayOf(PropTypes.string),
@@ -422,6 +491,7 @@ Node.propTypes = {
     node: PropTypes.string,
     nodeId: PropTypes.number,
   }),
+  setSubtreeVisibility: PropTypes.func,
   removeNode: PropTypes.func,
   setCursor: PropTypes.func,
   isDraggingSelectionRect: PropTypes.bool,
@@ -432,8 +502,7 @@ Node.propTypes = {
   isSelected: PropTypes.bool,
   isSelectedRoot: PropTypes.bool,
   isHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
-  isVisible: PropTypes.bool,
-  isTransparent: PropTypes.bool,
+  visibility: PropTypes.number,
   isTypeLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   isValueLabelHighlighted: PropTypes.oneOf(PropTypes.bool, PropTypes.string),
   isFullDisabled: PropTypes.bool,
@@ -525,10 +594,45 @@ Node.propTypes = {
       fontSize: PropTypes.number,
     }),
   ),
+  commentable: PropTypes.shape({
+    addThread: PropTypes.bool,
+    deleteThread: PropTypes.bool,
+    addComment: PropTypes.bool,
+    deleteComment: PropTypes.bool,
+  }),
+  commentThreads: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string,
+      content: PropTypes.arrayOf(PropTypes.string),
+      type: PropTypes.string,
+      expanded: PropTypes.bool,
+      resolved: PropTypes.bool,
+    }),
+  ),
+  isCommentsOpen: PropTypes.bool,
+  setCommentsOpen: PropTypes.func,
+  setCommentsClose: PropTypes.func,
+  commentsButtonStyle: PropTypes.exact({
+    iconFillColor: PropTypes.string,
+    iconBackgroundColor: PropTypes.string,
+    iconStrokeColor: PropTypes.string,
+    iconStrokeWidth: PropTypes.number,
+    counterRadius: PropTypes.number,
+    counterBackgroundColor: PropTypes.string,
+    counterStrokeColor: PropTypes.string,
+    counterStrokeWidth: PropTypes.number,
+    counterTextColor: PropTypes.string,
+    counterFontSize: PropTypes.number,
+    counterFontFamily: PropTypes.string,
+  }),
+  isCreatingNode: PropTypes.bool,
+  isCreatingMathNode: PropTypes.bool,
+  addingAnnotationOn: PropTypes.bool,
 };
 
 Node.defaultProps = {
   typeText: "",
+  typeSuperscriptText: "",
   valueText: "",
   childEdges: [],
   parentEdges: [],
@@ -543,9 +647,9 @@ Node.defaultProps = {
   isHighlighted: false,
   isTypeLabelHighlighted: false,
   isValueLabelHighlighted: false,
-  isVisible: true,
-  isTransparent: false,
+  visibility: 0,
   isFullDisabled: false,
+  setSubtreeVisibility: () => {},
   removeNode: () => {},
   setCursor: () => {},
   handleNodeClick: () => {},
@@ -563,9 +667,9 @@ Node.defaultProps = {
   nodePaddingX: 12,
   nodePaddingY: 12,
   nodeStrokeColor: "#000000",
-  nodeStrokeWidth: 0,
+  nodeStrokeWidth: 1,
   nodeSelectedStrokeWidth: 2,
-  nodeHighlightedStrokeWidth: 0,
+  nodeHighlightedStrokeWidth: 1,
   nodeCornerRadius: 5,
   nodeFillColor: "#208020",
   nodeErrorColor: "#ff2f2f",
@@ -578,6 +682,20 @@ Node.defaultProps = {
   typeValueStyle: {},
   isMathNode: false,
   mathPieces: [],
+  commentable: {
+    addThread: true,
+    deleteThread: true,
+    addComment: true,
+    deleteComment: true,
+  },
+  commentThreads: [],
+  setCommentsOpen: () => {},
+  setCommentsClose: () => {},
+  isCommentsOpen: false,
+  commentsButtonStyle: {},
+  isCreatingNode: false,
+  isCreatingMathNode: false,
+  addingAnnotationOn: false,
 };
 
 export default Node;

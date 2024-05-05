@@ -75,12 +75,14 @@
 
 // constants used in layout computations below
 const topMargin = 80;
-const leftMargin = 340;
+const leftMarginDrawer = 330;
+const leftMarginComments = 430;
 const rightMargin = 40;
 const nodeHorizontalGap = 20;
 const nodeVerticalGap = 60;
 const treeGap = 60;
 const forestSingletonsGap = 100;
+const singletonsAnnotationsGap = 50;
 
 /**
  * Return an array of node IDs for all children of the given parent node ID,
@@ -140,29 +142,42 @@ export function getSingletonNodeIds(nodes, edges) {
 }
 
 // --- Size computation functions
-export function computeDescendantsWidth(rootId, nodes, edges) {
+export function computeDescendantsWidth(rootId, nodes, edges, visitedNodes) {
   return getSortedChildIds(rootId, nodes, edges).reduce(
     (width, childId, index) =>
       width +
-      computeTreeWidth(childId, nodes, edges) +
+      computeTreeWidth(childId, nodes, edges, visitedNodes) +
       (index > 0 ? nodeHorizontalGap : 0),
     0,
   );
 }
 
-export function computeTreeWidth(rootId, nodes, edges) {
+export function computeTreeWidth(rootId, nodes, edges, visitedNodes) {
   const rootNode = nodes[rootId];
   const myWidth = rootNode.width;
-  const descendantsWidth = computeDescendantsWidth(rootId, nodes, edges);
+  if (visitedNodes.includes(rootId)) {
+    return 0;
+  }
+  visitedNodes.push(rootId);
+  const descendantsWidth = computeDescendantsWidth(
+    rootId,
+    nodes,
+    edges,
+    visitedNodes,
+  );
   return Math.max(myWidth, descendantsWidth);
 }
 
-export function computeTreeHeight(rootId, nodes, edges) {
+export function computeTreeHeight(rootId, nodes, edges, visitedNodes) {
   const rootNode = nodes[rootId];
   const myHeight = rootNode.height;
+  if (visitedNodes.includes(rootId)) {
+    return 0;
+  }
+  visitedNodes.push(rootId);
   const descendantsHeight = getSortedChildIds(rootId, nodes, edges).reduce(
     (height, childId) =>
-      Math.max(height, computeTreeHeight(childId, nodes, edges)),
+      Math.max(height, computeTreeHeight(childId, nodes, edges, visitedNodes)),
     0,
   );
   return (
@@ -171,11 +186,17 @@ export function computeTreeHeight(rootId, nodes, edges) {
 }
 
 // --- Layout functions (they mutate the nodes!)
-export function layoutTree(rootId, nodes, edges, x, y) {
+export function layoutTree(rootId, nodes, edges, x, y, visitedNodes) {
+  if (visitedNodes.includes(rootId)) {
+    return [0, 0];
+  }
+  visitedNodes.push(rootId);
   const rootNode = nodes[rootId];
   const rootWidth = rootNode.width;
   const rootHeight = rootNode.height;
-  const descendantsWidth = computeDescendantsWidth(rootId, nodes, edges);
+  const descendantsWidth = computeDescendantsWidth(rootId, nodes, edges, [
+    rootId,
+  ]);
   const rootIndent =
     rootWidth > descendantsWidth ? 0 : (descendantsWidth - rootWidth) / 2;
   const descendantsIndent =
@@ -184,14 +205,14 @@ export function layoutTree(rootId, nodes, edges, x, y) {
   const dy = y + rootHeight + nodeVerticalGap;
   const childIds = getSortedChildIds(rootId, nodes, edges);
   childIds.forEach((childId, index) => {
-    const [dw, dh] = layoutTree(childId, nodes, edges, dx, dy);
+    const [dw, dh] = layoutTree(childId, nodes, edges, dx, dy, visitedNodes);
     dx += dw + (index < childIds.length - 1 ? nodeHorizontalGap : 0);
   });
   const root = nodes[rootId];
   root.x = x + rootIndent;
   root.y = y;
-  const treeWidth = computeTreeWidth(rootId, nodes, edges);
-  const treeHeight = computeTreeHeight(rootId, nodes, edges);
+  const treeWidth = computeTreeWidth(rootId, nodes, edges, []);
+  const treeHeight = computeTreeHeight(rootId, nodes, edges, []);
   return [treeWidth, treeHeight];
 }
 
@@ -203,12 +224,18 @@ export function placeSingleton(node, x, y) {
 export function layout(
   nodes,
   edges,
+  annotations,
   selectedRootNodeId,
-  hasLeftMargin,
+  hasLeftMarginDrawer,
+  hasLeftMarginComments,
   canvasWidth,
 ) {
   // top/left position of the drawing
-  const x = hasLeftMargin ? leftMargin : topMargin;
+  const x = hasLeftMarginDrawer
+    ? leftMarginDrawer
+    : hasLeftMarginComments
+    ? leftMarginComments
+    : topMargin;
   const y = topMargin;
   // width/height of forest part of the drawing
   let forestWidth = 0;
@@ -225,6 +252,7 @@ export function layout(
       y +
         forestLevelsMaxHeight.slice(0, forestLevel).reduce((a, b) => a + b, 0) +
         forestLevel * treeGap,
+      [],
     );
     forestWidth += treeWidth + treeGap;
     forestLevelsWidth[forestLevel] += treeWidth + treeGap;
@@ -240,7 +268,6 @@ export function layout(
       forestLevelsWidth.push(0);
     }
   });
-  // forestHeight = Math.max(forestHeight, treeHeight);
   forestHeight =
     forestLevelsMaxHeight.reduce((a, b) => a + b, 0) + forestLevel * treeGap;
   // width/height of singletons part of the drawing
@@ -282,12 +309,61 @@ export function layout(
   singletonsHeight =
     singletonsLevelsMaxHeight.reduce((a, b) => a + b, 0) +
     singletonsLevel * nodeVerticalGap;
+
+  // width/height of annotations part of the drawing
+  let annotationsWidth = 0;
+  let annotationsHeight = 0;
+  let annotationsLevel = 0;
+  let annotationsLevelsMaxHeight = [0];
+  let annotationsLevelsWidth = [0];
+  Object.keys(annotations).forEach((annotationId) => {
+    const annotation = annotations[annotationId];
+    const annotationWidth = annotation.width;
+    const annotationHeight = annotation.height;
+    const annotationsNewLevel =
+      x + annotationsWidth + annotationWidth + rightMargin > canvasWidth;
+    if (annotationsNewLevel) {
+      annotationsWidth = 0;
+      annotationsLevel += 1;
+      annotationsLevelsMaxHeight.push(0);
+      annotationsLevelsWidth.push(0);
+    }
+    placeSingleton(
+      annotation,
+      x + annotationsWidth,
+      y +
+        forestHeight +
+        (forestHeight === 0 ? 0 : forestSingletonsGap) +
+        singletonsHeight +
+        (singletonsHeight === 0 ? 0 : singletonsAnnotationsGap) +
+        annotationsLevelsMaxHeight
+          .slice(0, annotationsLevel)
+          .reduce((a, b) => a + b, 0) +
+        annotationsLevel * nodeVerticalGap,
+    );
+    annotationsWidth += annotationWidth + nodeHorizontalGap;
+    annotationsLevelsWidth[annotationsLevel] +=
+      annotationWidth + nodeHorizontalGap;
+    annotationsLevelsMaxHeight[annotationsLevel] = Math.max(
+      annotationsLevelsMaxHeight[annotationsLevel],
+      annotationHeight,
+    );
+  });
+  annotationsHeight =
+    annotationsLevelsMaxHeight.reduce((a, b) => a + b, 0) +
+    annotationsLevel * nodeVerticalGap;
+
   // return width/height of the drawing
   return [
     Math.max(
       Math.max(...forestLevelsWidth),
       Math.max(...singletonsLevelsWidth),
+      Math.max(...annotationsLevelsWidth),
     ),
-    forestHeight + forestSingletonsGap + singletonsHeight,
+    forestHeight +
+      (forestHeight === 0 ? 0 : forestSingletonsGap) +
+      singletonsHeight +
+      (singletonsHeight === 0 ? 0 : singletonsAnnotationsGap) +
+      annotationsHeight,
   ];
 }

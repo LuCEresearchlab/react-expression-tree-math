@@ -2,6 +2,8 @@ import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 import { Line, Circle, Group } from "react-konva";
 
+import EdgeCommentsButton from "./EdgeCommentsButton/EdgeCommentsButton";
+
 function Edge({
   id,
   childX,
@@ -15,8 +17,7 @@ function Edge({
   isFullDisabled,
   isSelected,
   isHighlighted,
-  isVisible,
-  isTransparent,
+  visibility,
   currentErrorLocation,
   handleEdgeClick,
   handleConnectorDragStart,
@@ -46,6 +47,11 @@ function Edge({
   parentConnectorDraggingFillColor,
   parentConnectorErrorFillColor,
   parentConnectorHighlightFillColor,
+  commentThreads,
+  setCommentsOpen,
+  setCommentsClose,
+  isCommentsOpen,
+  commentsButtonStyle,
 }) {
   const handleNodeConnectorDragStart = useCallback((e) => {
     e.cancelBubble = true;
@@ -91,6 +97,14 @@ function Edge({
     setCursor("grab");
   });
 
+  const handleMouseLeave = useCallback((e) => {
+    e.cancelBubble = true;
+    if (isFullDisabled) {
+      return;
+    }
+    setCursor("default");
+  });
+
   const onEdgeClick = useCallback((e) => handleEdgeClick(e, id));
 
   /**
@@ -129,7 +143,14 @@ function Edge({
     return defaultColor;
   };
 
-  const opacity = useMemo(() => (isTransparent ? 0.35 : 1), [isTransparent]);
+  const isVisible = useMemo(() => visibility !== 2, [visibility]);
+  const opacity = useMemo(() => (visibility === 1 ? 0.25 : 1), [visibility]);
+  const isListening = useMemo(() => visibility === 0, [visibility]);
+
+  const commentThreadsCount = useMemo(
+    () => commentThreads.length,
+    [commentThreads],
+  );
 
   return (
     // Edge is a Group composed of a Line and two Circles
@@ -140,6 +161,8 @@ function Edge({
       onTap={onEdgeClick}
       visible={isVisible}
       opacity={opacity}
+      listening={isListening}
+      onMouseLeave={handleMouseLeave}
     >
       <Line
         key={`edge-${id}`}
@@ -193,6 +216,28 @@ function Edge({
         // onDragMove={handleConnectorDragMove}
         // onDragEnd={handleConnectorDragEnd}
       />
+      <EdgeCommentsButton
+        childX={childX}
+        childY={childY}
+        parentX={parentX}
+        parentY={parentY}
+        commentThreadsCount={commentThreadsCount}
+        setCommentsOpen={setCommentsOpen}
+        setCommentsClose={setCommentsClose}
+        isCommentsOpen={isCommentsOpen}
+        iconFillColor={commentsButtonStyle.iconFillColor}
+        iconBackgroundColor={commentsButtonStyle.iconBackgroundColor}
+        iconStrokeColor={commentsButtonStyle.iconStrokeColor}
+        iconStrokeWidth={commentsButtonStyle.iconStrokeWidth}
+        counterRadius={commentsButtonStyle.counterRadius}
+        counterBackgroundColor={commentsButtonStyle.counterBackgroundColor}
+        counterStrokeColor={commentsButtonStyle.counterStrokeColor}
+        counterStrokeWidth={commentsButtonStyle.counterStrokeWidth}
+        counterTextColor={commentsButtonStyle.counterTextColor}
+        counterFontSize={commentsButtonStyle.counterFontSize}
+        counterFontFamily={commentsButtonStyle.counterFontFamily}
+        isSelected={isSelected}
+      />
     </Group>
   );
 }
@@ -210,8 +255,7 @@ Edge.propTypes = {
   isFullDisabled: PropTypes.bool,
   isSelected: PropTypes.bool,
   isHighlighted: PropTypes.oneOfType(PropTypes.bool, PropTypes.string),
-  isVisible: PropTypes.bool,
-  isTransparent: PropTypes.bool,
+  visibility: PropTypes.number,
   currentErrorLocation: PropTypes.shape({
     edge: PropTypes.string,
     edgeId: PropTypes.string,
@@ -244,6 +288,29 @@ Edge.propTypes = {
   parentConnectorDraggingFillColor: PropTypes.string,
   parentConnectorErrorFillColor: PropTypes.string,
   parentConnectorHighlightFillColor: PropTypes.string,
+  commentThreads: PropTypes.arrayOf(
+    PropTypes.shape({
+      title: PropTypes.string,
+      content: PropTypes.arrayOf(PropTypes.string),
+      type: PropTypes.string,
+      expanded: PropTypes.bool,
+      resolved: PropTypes.bool,
+    }),
+  ),
+  isCommentsOpen: PropTypes.bool,
+  commentsButtonStyle: PropTypes.exact({
+    iconFillColor: PropTypes.string,
+    iconBackgroundColor: PropTypes.string,
+    iconStrokeColor: PropTypes.string,
+    iconStrokeWidth: PropTypes.number,
+    counterRadius: PropTypes.number,
+    counterBackgroundColor: PropTypes.string,
+    counterStrokeColor: PropTypes.string,
+    counterStrokeWidth: PropTypes.number,
+    counterTextColor: PropTypes.string,
+    counterFontSize: PropTypes.number,
+    counterFontFamily: PropTypes.string,
+  }),
 };
 
 Edge.defaultProps = {
@@ -251,8 +318,7 @@ Edge.defaultProps = {
   isFullDisabled: false,
   isSelected: false,
   isHighlighted: false,
-  isVisible: true,
-  isTransparent: false,
+  visibility: 0,
   currentErrorLocation: null,
   handleEdgeClick: () => {},
   handleConnectorDragStart: () => {},
@@ -267,7 +333,7 @@ Edge.defaultProps = {
   lineHighlightColor: "#cc78c5",
   childConnectorRadiusSize: 6,
   childConnectorStrokeColor: "#000000",
-  childConnectorStrokeWidth: 1,
+  childConnectorStrokeWidth: 0,
   childConnectorFillColor: "#555555",
   childConnectorSelectedFillColor: "#f2a200",
   childConnectorDraggingFillColor: "#f2d280",
@@ -275,12 +341,15 @@ Edge.defaultProps = {
   childConnectorHighlightFillColor: "#cc78c5",
   parentConnectorRadiusSize: 6,
   parentConnectorStrokeColor: "#000000",
-  parentConnectorStrokeWidth: 1,
+  parentConnectorStrokeWidth: 0,
   parentConnectorFillColor: "#555555",
   parentConnectorSelectedFillColor: "#f2a200",
   parentConnectorDraggingFillColor: "#f2d280",
   parentConnectorErrorFillColor: "#ff2f2f",
   parentConnectorHighlightFillColor: "#cc78c5",
+  commentThreads: [],
+  isCommentsOpen: false,
+  commentsButtonStyle: {},
 };
 
 export default Edge;

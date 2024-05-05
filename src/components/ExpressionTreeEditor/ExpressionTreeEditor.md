@@ -205,10 +205,43 @@ Example with initial object state and final nodes:
 />
 ```
 
-Example with initial array state:
+Example with initial array state and annotations (editable, deletable and final):
 
 ```js
 <ExpressionTreeEditor
+  threadsEnabledActions={{
+    startThread: true,
+    removeThread: true,
+    addComment: true,
+    removeComment: true,
+    toggleResolved: true,
+  }}
+  annotations={{
+    a1: {
+      x: 100,
+      y: 100,
+      text: "Hello World!",
+      editable: { value: false, delete: false },
+    },
+    a2: {
+      x: 200,
+      y: 200,
+      text: "Hello World2!",
+      editable: { value: true, delete: true },
+    },
+    a3: {
+      x: 300,
+      y: 200,
+      text: "Hello World3!",
+      editable: { value: false, delete: true },
+    },
+    a4: {
+      x: 400,
+      y: 200,
+      text: "Hello World4!",
+      editable: { value: true, delete: false },
+    },
+  }}
   height={700}
   autolayout={true}
   isFullDisabled={false}
@@ -343,6 +376,14 @@ Example without initial state:
     multiEdgeOnNodeConnector: true,
   }}
   connectorPlaceholder='#'
+  templateNodeTypesAndValues={{
+    Variable: ["x", "y", " ", "z"],
+    Number: ["1", "2", "3", "ℕ", "ℤ", "ℚ", "ℝ", "ℂ", "𝕀"],
+    Function: [],
+    Boolean: ["true", "false"],
+    Undefined: ["undefined"],
+    Null: ["null"],
+  }}
   nodeTypes={[
     {
       type: "String",

@@ -122,7 +122,53 @@ function DialogEditorInfo({ containerRef, isDialogOpen, setIsDialogOpen }) {
           <li>
             <b>Layout nodes: </b>
             All the connected nodes will be reordered as rows of trees, the
-            remaining singleton nodes will be reordered as compact rows.
+            remaining singleton nodes and annotations will be reordered as
+            compact rows.
+          </li>
+          <br />
+          <li>
+            <b>Annotation creation: </b>
+            Open the comments drawer, select the annotation color, add the
+            annotation content and click the <i>+</i> button to add it into the
+            editor canvas.
+          </li>
+          <br />
+          <li>
+            <b>Annotation click: </b>
+            Select an annotation to edit its color and content in the comments
+            drawer.
+          </li>
+          <br />
+          <li>
+            <b>Annotation deletion: </b>
+            Select an annotation and click on the annotation's <i>X</i> red
+            button.
+          </li>
+          <br />
+          <li>
+            <b>Annotation drag: </b>
+            Move an annotation.
+          </li>
+          <br />
+          <li>
+            <b>Comment Thread creation: </b>
+            With the comments drawer opened, select a node or an edge, choose
+            the thread type and insert the thread title, then click on the{" "}
+            <i>start thread</i> button.
+          </li>
+          <br />
+          <li>
+            <b>Comment Thread deletion: </b>
+            With the comments drawer opened, select a node or an edge, then
+            click on the corresponding thread <i>delete</i> button.
+          </li>
+          <br />
+          <li>
+            <b>Resolve Comment Thread: </b>
+            With the comments drawer opened, select a node or an edge, then
+            click on the corresponding thread <i>resolve thread</i> toggle
+            button to set a thread as resolved or not resolved. Creation and
+            deletion of comments is disabled on a resolved thread.
           </li>
         </ul>
       </DialogContent>
