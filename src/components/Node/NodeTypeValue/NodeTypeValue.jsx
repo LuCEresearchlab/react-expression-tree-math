@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
 
-import { Label, Tag, Text } from "react-konva";
+import { Label, Tag, Text, Line } from "react-konva";
 import Konva from "konva";
 
 function NodeTypeValue({
@@ -125,7 +125,7 @@ function NodeTypeValue({
 
   return (
     <>
-      {typeText !== "" || valueText !== "" ? (
+      {(typeText !== "" || valueText !== "") && (
         <Label x={pointerX} y={pointerY}>
           <Tag
             fill='black'
@@ -135,8 +135,8 @@ function NodeTypeValue({
             pointerHeight={pointerHeight}
           />
         </Label>
-      ) : null}
-      {typeText !== "" ? (
+      )}
+      {typeText !== "" && (
         <>
           <Label x={typeX} y={typeY}>
             <Tag
@@ -157,31 +157,45 @@ function NodeTypeValue({
               padding={padding}
             />
           </Label>
-          <Label x={typeSuperscriptX} y={typeSuperscriptY}>
-            <Tag
-              fill={computeColor(
-                fillTypeColor,
-                fillTypeHighlightColor,
-                isTypeLabelHighlighted,
-              )}
-              stroke={strokeColor}
-              strokeWidth={strokeWidth}
-              cornerRadius={typeSuperscriptCornerRadius}
-            />
-            <Text
-              fill={textValueColor}
-              fontFamily={fontFamily}
-              fontSize={fontSize * 0.6}
-              text={typeSuperscriptText}
-              verticalAlign='top'
-              padding={typeSuperscriptText ? 3 : 0}
-              // Only way to have the superscript label of the same height as the type and value labels is to manually set the superscript text height
-              height={fontSize + 2 * padding}
-            />
-          </Label>
+          {typeSuperscriptText !== "" && (
+            <Label x={typeSuperscriptX} y={typeSuperscriptY}>
+              <Tag
+                fill={computeColor(
+                  fillTypeColor,
+                  fillTypeHighlightColor,
+                  isTypeLabelHighlighted,
+                )}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                cornerRadius={typeSuperscriptCornerRadius}
+              />
+              <Text
+                fill={textValueColor}
+                fontFamily={fontFamily}
+                fontSize={fontSize * 0.6}
+                text={typeSuperscriptText}
+                verticalAlign='top'
+                padding={typeSuperscriptText ? 3 : 0}
+                // Only way to have the superscript label of the same height as the type and value labels is to manually set the superscript text height
+                height={fontSize + 2 * padding}
+              />
+              {/* Konva doesn't support borders of different colors, the only way to hide the extra border on the left when superscript is not empty
+              is to cover it with a line of the same color as the type color */}
+              <Line
+                // y from 0.5 to height - 0.5 so that it doesn't cover the outside border
+                points={[0, 0.5, 0, fontSize - 0.5 + 2 * padding]}
+                stroke={computeColor(
+                  fillTypeColor,
+                  fillTypeHighlightColor,
+                  isTypeLabelHighlighted,
+                )}
+                strokeWidth={strokeWidth + 0.5}
+              />
+            </Label>
+          )}
         </>
-      ) : null}
-      {valueText !== "" ? (
+      )}
+      {valueText !== "" && (
         <Label x={valueX} y={valueY}>
           <Tag
             fill={computeColor(
@@ -201,7 +215,7 @@ function NodeTypeValue({
             padding={padding}
           />
         </Label>
-      ) : null}
+      )}
     </>
   );
 }
@@ -246,8 +260,8 @@ NodeTypeValue.defaultProps = {
   fillValueHighlightColor: "#b2a3c4",
   textTypeColor: "#ffffff",
   textValueColor: "#ffffff",
-  strokeColor: "#3f51b5",
-  strokeWidth: 0,
+  strokeColor: "#000000",
+  strokeWidth: 1,
   pointerDirection: "down",
   pointerWidth: 3,
   pointerHeight: 4,

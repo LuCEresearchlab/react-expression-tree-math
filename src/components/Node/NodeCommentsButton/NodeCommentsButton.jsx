@@ -83,6 +83,7 @@ function NodeCommentsButton({
     [isSelected, hasCommentThreads, isCommentsOpen],
   );
 
+  // Since icons Path have transparent backgrounds, fixed it with various shapes
   return (
     <Group
       visible={iconVisible}
@@ -90,6 +91,7 @@ function NodeCommentsButton({
       onTap={onClickFunction}
       name={groupName}
     >
+      {/* Main background rectangle behind add comment and open drawer icons*/}
       <Rect
         x={-8}
         y={-5}
@@ -98,6 +100,7 @@ function NodeCommentsButton({
         fill={iconBackgroundColor}
         visible={isRectBackgroundVisible}
       />
+      {/* Triangle behind close drawer icon */}
       <RegularPolygon
         visible={!isRectBackgroundVisible}
         x={4}
@@ -107,6 +110,7 @@ function NodeCommentsButton({
         radius={7}
         fill={iconBackgroundColor}
       />
+      {/* Triangle behind close drawer icon */}
       <RegularPolygon
         visible={!isRectBackgroundVisible}
         x={-4}
@@ -128,6 +132,7 @@ function NodeCommentsButton({
         stroke={iconStrokeColor}
         strokeWidth={iconStrokeWidth}
       />
+      {/* Border line on close drawer icon */}
       <Line
         visible={!isRectBackgroundVisible}
         stroke={iconStrokeColor}

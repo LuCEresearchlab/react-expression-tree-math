@@ -112,10 +112,10 @@
     "worker-loader": "^3.0.6"
   },
   "scripts": {
-    "start": "NODE_ENV=development BABEL_ENV=development styleguidist server --open",
+    "start": "NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=development BABEL_ENV=development styleguidist server --open",
     "test": "jest",
-    "styleguide:build": "NODE_ENV=production BABEL_ENV=production styleguidist build",
-    "build": "NODE_ENV=production BABEL_ENV=production webpack --mode=production"
+    "styleguide:build": "NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production BABEL_ENV=production styleguidist build",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production BABEL_ENV=production webpack --mode=production"
   },
   "keywords": [
     "react",

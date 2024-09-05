@@ -379,6 +379,12 @@ Example without initial state:
   templateNodeTypesAndValues={{
     Variable: ["x", "y", " ", "z"],
     Number: ["1", "2", "3", "ℕ", "ℤ", "ℚ", "ℝ", "ℂ", "𝕀"],
+    ℕ: ["1", "2", "3", "4", "5"],
+    ℤ: ["-3", "-2", "-1", "0", "1", "2", "3"],
+    ℚ: [],
+    ℝ: [],
+    ℂ: [],
+    𝕀: [],
     Function: [],
     Boolean: ["true", "false"],
     Undefined: ["undefined"],
