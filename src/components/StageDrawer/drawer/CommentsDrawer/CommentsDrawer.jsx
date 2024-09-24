@@ -189,19 +189,19 @@ function CommentsDrawer({
 
   const annotationPalette = useMemo(
     () => ({
+      lightBlue: "#35BFFF",
       red: "#ff0000",
       blue: "#0000ff",
       green: "#00ff00",
       yellow: "yellow",
       cyan: "cyan",
-      lime: "lime",
+      brown: "brown",
       gray: "gray",
       orange: "orange",
       purple: "purple",
       black: "black",
       white: "white",
       pink: "pink",
-      darkblue: "darkblue",
     }),
     [],
   );

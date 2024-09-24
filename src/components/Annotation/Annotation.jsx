@@ -81,7 +81,7 @@ function Annotation({
   const textColor = useMemo(() => {
     const rgb = annotationColor.rgb;
     const luminance = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
-    return luminance > 186 ? "black" : "white";
+    return luminance > 149 ? "black" : "white";
   }, [annotationColor]);
 
   return (

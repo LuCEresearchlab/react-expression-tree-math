@@ -389,6 +389,7 @@ Example without initial state:
     Boolean: ["true", "false"],
     Undefined: ["undefined"],
     Null: ["null"],
+    boolean: ["true", "false"],
   }}
   nodeTypes={[
     {
